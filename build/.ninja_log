@@ -1,19 +1,19 @@
 # ninja log v5
-12	920	8034083191111978	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/ti_msp_dl_config.c	f8c10822e3f88e99
+13	926	8034013912322616	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/ti_msp_dl_config.c	4873b2e8b3714a21
 969	2001	8034083201930459	CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/dpl/AppHooks_freertos.c.obj	e756378958bc51ee
-12	920	8034083191111978	syscfg/device_linker.lds	f8c10822e3f88e99
+13	926	8034013912322616	syscfg/device_linker.lds	4873b2e8b3714a21
 995	3053	8034083212507338	bsp/CMakeFiles/bsp.dir/flash/bsp_flash.c.obj	f662047b827b3000
 921	2435	8034083206318896	CMakeFiles/MSPM0G3507_BASIC.elf.dir/empty.c.obj	5923fb453abc4ad2
 932	1807	8034083199961547	CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/croutine.c.obj	d85ea5f9d7a7e1d1
-12	920	8034083191111978	syscfg/ti_msp_dl_config.h	f8c10822e3f88e99
-12	920	8034083191111978	syscfg/ti_msp_dl_config.c	f8c10822e3f88e99
-12	920	8034083191111978	syscfg/device.opt	f8c10822e3f88e99
-12	920	8034083191111978	syscfg/device.lds.genlibs	f8c10822e3f88e99
-12	920	8034083191111978	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device.opt	f8c10822e3f88e99
-12	920	8034083191111978	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/ti_msp_dl_config.h	f8c10822e3f88e99
-12	920	8034083191111978	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device_linker.lds	f8c10822e3f88e99
+13	926	8034013912322616	syscfg/ti_msp_dl_config.h	4873b2e8b3714a21
+13	926	8034013912322616	syscfg/ti_msp_dl_config.c	4873b2e8b3714a21
+13	926	8034013912322616	syscfg/device.opt	4873b2e8b3714a21
+13	926	8034013912322616	syscfg/device.lds.genlibs	4873b2e8b3714a21
+13	926	8034013912322616	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device.opt	4873b2e8b3714a21
+13	926	8034013912322616	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/ti_msp_dl_config.h	4873b2e8b3714a21
+13	926	8034013912322616	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device_linker.lds	4873b2e8b3714a21
 930	1365	8034083195566886	CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/gcc/startup_mspm0g350x_gcc.c.obj	941d94a0c4ad2cf
-12	920	8034083191111978	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device.lds.genlibs	f8c10822e3f88e99
+13	926	8034013912322616	D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device.lds.genlibs	4873b2e8b3714a21
 938	2006	8034083201955520	CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/list.c.obj	cab2c4cf36e97dd6
 1021	3129	8034083213296824	bsp/CMakeFiles/bsp.dir/usart/bsp_usart.c.obj	f9347b5789041546
 973	2007	8034083201955520	CMakeFiles/MSPM0G3507_BASIC.elf.dir/app/freertos_hooks.c.obj	56d1d1812b4430ab
@@ -29,7 +29,7 @@
 927	2453	8034083206491163	CMakeFiles/MSPM0G3507_BASIC.elf.dir/syscfg/ti_msp_dl_config.c.obj	d76f238ee4502ed0
 950	2474	8034083206704561	CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/tasks.c.obj	d40272c36f23728d
 1008	2009	8034083201955520	bsp/CMakeFiles/bsp.dir/log/bsp_log.c.obj	d17077b7aec0f2a8
-343	591	8034084146056171	MSPM0G3507_BASIC.elf	9ff189ac0631ac12
+1018	1284	8034101992620446	MSPM0G3507_BASIC.elf	9ff189ac0631ac12
 991	1442	8034083196343699	bsp/CMakeFiles/bsp.dir/adc/bsp_adc.c.obj	6a4deccbb266cf58
 12	263	8034084143317910	bsp/CMakeFiles/bsp.dir/bsp_tools.c.obj	42d5649a1e8d53eb
 977	2958	8034083211554932	bsp/CMakeFiles/bsp.dir/bsp_init.c.obj	f87efb6a2d44dbd2
@@ -38,4 +38,4 @@
 1012	3106	8034083213053140	bsp/CMakeFiles/bsp.dir/pwm/bsp_pwm.c.obj	d74104230496ae03
 1003	3117	8034083213162563	bsp/CMakeFiles/bsp.dir/iic/bsp_iic.c.obj	631a2256bc57b4f9
 1018	3118	8034083213152463	bsp/CMakeFiles/bsp.dir/spi/bsp_spi.c.obj	498f076b5264509d
-264	343	8034084144134005	bsp/libbsp.a	8dea81f6f9943f2b
+927	1018	8034101990534785	bsp/libbsp.a	cfb5741297772241
