@@ -706,17 +706,17 @@ LOAD linker stubs
  .debug_rnglists
                 0x000002c4       0x1f CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/gcc/startup_mspm0g350x_gcc.c.obj
 
-.debug_line     0x00000000     0x749e
- .debug_line    0x00000000      0x481 CMakeFiles/MSPM0G3507_BASIC.elf.dir/empty.c.obj
- .debug_line    0x00000481      0x335 CMakeFiles/MSPM0G3507_BASIC.elf.dir/app/syscalls_stub.c.obj
- .debug_line    0x000007b6     0x11aa CMakeFiles/MSPM0G3507_BASIC.elf.dir/syscfg/ti_msp_dl_config.c.obj
- .debug_line    0x00001960      0x253 CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/gcc/startup_mspm0g350x_gcc.c.obj
- .debug_line    0x00001bb3      0x5d5 D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_adc12.o)
- .debug_line    0x00002188      0x425 D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_common.o)
- .debug_line    0x000025ad      0xaac D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_i2c.o)
- .debug_line    0x00003059     0x107b D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_spi.o)
- .debug_line    0x000040d4     0x24ea D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_timer.o)
- .debug_line    0x000065be      0xee0 D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_uart.o)
+.debug_line     0x00000000     0x749c
+ .debug_line    0x00000000      0x47f CMakeFiles/MSPM0G3507_BASIC.elf.dir/empty.c.obj
+ .debug_line    0x0000047f      0x335 CMakeFiles/MSPM0G3507_BASIC.elf.dir/app/syscalls_stub.c.obj
+ .debug_line    0x000007b4     0x11aa CMakeFiles/MSPM0G3507_BASIC.elf.dir/syscfg/ti_msp_dl_config.c.obj
+ .debug_line    0x0000195e      0x253 CMakeFiles/MSPM0G3507_BASIC.elf.dir/D_/tools/ti/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/gcc/startup_mspm0g350x_gcc.c.obj
+ .debug_line    0x00001bb1      0x5d5 D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_adc12.o)
+ .debug_line    0x00002186      0x425 D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_common.o)
+ .debug_line    0x000025ab      0xaac D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_i2c.o)
+ .debug_line    0x00003057     0x107b D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_spi.o)
+ .debug_line    0x000040d2     0x24ea D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_timer.o)
+ .debug_line    0x000065bc      0xee0 D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a(dl_uart.o)
 
 .debug_str      0x00000000     0x6d71
  .debug_str     0x00000000     0x6d71 CMakeFiles/MSPM0G3507_BASIC.elf.dir/empty.c.obj

@@ -35,18 +35,7 @@
 #ifdef USE_FREERTOS
 #include "FreeRTOS.h"
 #include "task.h"
-
-static void app_main_task(void *argument)
-{
-    (void) argument;
-
-    while (1) {
-#if defined(GPIO_GRP_0_PORT) && defined(GPIO_GRP_0_PIN_0_PIN)
-        DL_GPIO_togglePins(GPIO_GRP_0_PORT, GPIO_GRP_0_PIN_0_PIN);
-#endif
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-}
+#include "robot.h"
 #endif
 
 int main(void)
@@ -54,17 +43,11 @@ int main(void)
     SYSCFG_DL_init();
 
 #ifdef USE_FREERTOS
-    if (xTaskCreate(app_main_task, "app", configMINIMAL_STACK_SIZE, NULL,
-            tskIDLE_PRIORITY + 1, NULL) != pdPASS) {
-        while (1) {
-        }
-    }
-
+    RobotInit();
     vTaskStartScheduler();
 #endif
 
-    while (1) {
-
-        
+    while (1)
+    {
     }
 }

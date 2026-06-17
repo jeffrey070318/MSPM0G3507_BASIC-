@@ -14,6 +14,7 @@ typedef enum {
     osPriorityIdle = tskIDLE_PRIORITY,
     osPriorityLow = tskIDLE_PRIORITY + 1,
     osPriorityNormal = tskIDLE_PRIORITY + 2,
+    osPriorityAboveNormal = tskIDLE_PRIORITY + 3,
     osPriorityHigh = tskIDLE_PRIORITY + 3,
     osPriorityRealtime = tskIDLE_PRIORITY + 4,
 } osPriority;
@@ -27,6 +28,11 @@ typedef struct {
 } osThreadDef_t;
 
 #define osWaitForever portMAX_DELAY
+#define osThreadDef(name, function, priority, instances, stacksz) \
+    static const osThreadDef_t os_thread_def_##name = {           \
+        #name, function, priority, instances, stacksz              \
+    }
+#define osThread(name) (&os_thread_def_##name)
 
 static inline osThreadId osThreadCreate(
     const osThreadDef_t *thread_def, void *argument)
@@ -63,6 +69,11 @@ static inline uint32_t osSignalWait(uint32_t signals, uint32_t millisec)
     return value;
 }
 
+static inline void osDelay(uint32_t millisec)
+{
+    vTaskDelay(pdMS_TO_TICKS(millisec));
+}
+
 #else
 
 typedef void *osThreadId;
@@ -77,7 +88,13 @@ typedef struct {
 } osThreadDef_t;
 
 #define osPriorityNormal (0)
+#define osPriorityAboveNormal (1)
 #define osWaitForever (0xFFFFFFFFU)
+#define osThreadDef(name, function, priority, instances, stacksz) \
+    static const osThreadDef_t os_thread_def_##name = {           \
+        #name, function, priority, instances, stacksz              \
+    }
+#define osThread(name) (&os_thread_def_##name)
 
 static inline osThreadId osThreadCreate(
     const osThreadDef_t *thread_def, void *argument)
@@ -97,6 +114,11 @@ static inline uint32_t osSignalWait(uint32_t signals, uint32_t millisec)
 {
     (void) millisec;
     return signals;
+}
+
+static inline void osDelay(uint32_t millisec)
+{
+    (void) millisec;
 }
 
 #endif

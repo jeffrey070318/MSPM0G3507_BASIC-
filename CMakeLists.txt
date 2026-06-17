@@ -14,6 +14,28 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 option(USE_FREERTOS "Build with the MSPM0 SDK FreeRTOS kernel" ON)
 
+function(target_include_directories_logged target scope)
+    foreach(include_dir ${ARGN})
+        if(IS_ABSOLUTE "${include_dir}")
+            set(display_include_dir "${include_dir}")
+        else()
+            get_filename_component(display_include_dir
+                "${include_dir}" ABSOLUTE
+                BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+        endif()
+
+        get_property(logged_include_dirs GLOBAL PROPERTY MSPM0_LOGGED_INCLUDE_DIRECTORIES)
+        if(NOT display_include_dir IN_LIST logged_include_dirs)
+            message("Adding include directory: " "${display_include_dir}")
+            list(APPEND logged_include_dirs "${display_include_dir}")
+            set_property(GLOBAL PROPERTY MSPM0_LOGGED_INCLUDE_DIRECTORIES
+                "${logged_include_dirs}")
+        endif()
+    endforeach()
+
+    target_include_directories(${target} ${scope} ${ARGN})
+endfunction()
+
 set(SYSCFG_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/empty.syscfg")
 set(SYSCFG_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/syscfg")
 set(SYSCFG_C_FILE "${SYSCFG_OUTPUT_DIR}/ti_msp_dl_config.c")
@@ -65,11 +87,11 @@ add_executable(${PROJECT_NAME}.elf
 
 add_dependencies(${PROJECT_NAME}.elf syscfg)
 
-target_include_directories(${PROJECT_NAME}.elf PRIVATE
+target_include_directories_logged(${PROJECT_NAME}.elf PRIVATE
     ${MSPM0_INCLUDE_DIRS})
 
 if(USE_FREERTOS)
-    target_include_directories(${PROJECT_NAME}.elf PRIVATE
+    target_include_directories_logged(${PROJECT_NAME}.elf PRIVATE
         ${MSPM0_FREERTOS_INCLUDE_DIRS})
     target_compile_definitions(${PROJECT_NAME}.elf PRIVATE
         USE_FREERTOS=1)

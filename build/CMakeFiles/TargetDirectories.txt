@@ -10,5 +10,6 @@ D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/bsp/CMakeFiles/edit_cache.dir
 D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/bsp/CMakeFiles/rebuild_cache.dir
 D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/module/CMakeFiles/edit_cache.dir
 D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/module/CMakeFiles/rebuild_cache.dir
+D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/app/CMakeFiles/app.dir
 D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/app/CMakeFiles/edit_cache.dir
 D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/app/CMakeFiles/rebuild_cache.dir
