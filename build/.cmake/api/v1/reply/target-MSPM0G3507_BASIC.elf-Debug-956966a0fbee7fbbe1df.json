@@ -1,0 +1,551 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "MSPM0G3507_BASIC.elf"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_link_options",
+			"target_link_libraries",
+			"add_dependencies",
+			"add_custom_command",
+			"target_compile_options",
+			"target_compile_definitions",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 63,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 94,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 88,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 66,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 107,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 78,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 74,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 68,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 72,
+				"parent" : 0
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"compileDependencies" : 
+	[
+		{
+			"backtrace" : 3,
+			"id" : "app::@5f5a17c01335469806cb"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "module::@938c084cc1e01fd7b9cd"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "bsp::@96b238adef3af577cb54"
+		}
+	],
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -std=gnu99"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-mcpu=cortex-m0plus"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-march=armv6-m"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-mthumb"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-mfloat-abi=soft"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-O2"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-ffunction-sections"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-fdata-sections"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-g"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-gstrict-dwarf"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "@D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device.opt"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 7,
+					"define" : "USE_FREERTOS=1"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 8,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC"
+				},
+				{
+					"backtrace" : 8,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg"
+				},
+				{
+					"backtrace" : 8,
+					"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/source"
+				},
+				{
+					"backtrace" : 8,
+					"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include"
+				},
+				{
+					"backtrace" : 9,
+					"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/builds/LP_MSPM0G3507/release"
+				},
+				{
+					"backtrace" : 9,
+					"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/include"
+				},
+				{
+					"backtrace" : 9,
+					"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/portable/GCC/ARM_CM0"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/app"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/module"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/adc"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/flash"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/gpio"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/iic"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/log"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/pwm"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/spi"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/usart"
+				}
+			],
+			"language" : "C",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "99"
+			},
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 4,
+			"id" : "syscfg::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "bsp::@96b238adef3af577cb54"
+		}
+	],
+	"id" : "MSPM0G3507_BASIC.elf::@6890427a1f51a3e7e1df",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-g",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-mcpu=cortex-m0plus",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-march=armv6-m",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-mthumb",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-mfloat-abi=soft",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-nostartfiles",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-static",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-Wl,--gc-sections",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-LD:/tools/ti/mspm0_sdk_2_10_00_04/source",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-LD:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-TD:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device.lds.genlibs",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-Wl,-T,D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/device_linker.lds",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-Wl,-Map,D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/MSPM0G3507_BASIC.map",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "--specs=nano.specs",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "--specs=nosys.specs",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "bsp\\libbsp.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "D:\\tools\\ti\\mspm0_sdk_2_10_00_04\\source\\ti\\driverlib\\lib\\gcc\\m0p\\mspm0g1x0x_g3x0x\\driverlib.a",
+				"role" : "libraries"
+			}
+		],
+		"language" : "C"
+	},
+	"linkLibraries" : 
+	[
+		{
+			"backtrace" : 3,
+			"id" : "app::@5f5a17c01335469806cb"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "module::@938c084cc1e01fd7b9cd"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "bsp::@96b238adef3af577cb54"
+		},
+		{
+			"backtrace" : 3,
+			"fragment" : "D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a"
+		}
+	],
+	"name" : "MSPM0G3507_BASIC.elf",
+	"nameOnDisk" : "MSPM0G3507_BASIC.elf",
+	"orderDependencies" : 
+	[
+		{
+			"backtrace" : 4,
+			"id" : "syscfg::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "MSPM0G3507_BASIC.elf::@6890427a1f51a3e7e1df"
+		}
+	],
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				16
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "empty.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "app/syscalls_stub.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "build/syscfg/ti_msp_dl_config.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/source/ti/devices/msp/m0p/startup_system_files/gcc/startup_mspm0g350x_gcc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/croutine.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/event_groups.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/list.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/queue.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/stream_buffer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/tasks.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/timers.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/portable/MemMang/heap_4.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/portable/GCC/ARM_CM0/port.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/Source/portable/GCC/ARM_CM0/portasm.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/tools/ti/mspm0_sdk_2_10_00_04/kernel/freertos/dpl/AppHooks_freertos.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "app/freertos_hooks.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "build/syscfg/ti_msp_dl_config.c.rule",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "EXECUTABLE"
+}

@@ -1,0 +1,180 @@
+{
+	"configurations" : 
+	[
+		{
+			"abstractTargets" : 
+			[
+				{
+					"directoryIndex" : 3,
+					"id" : "app::@5f5a17c01335469806cb",
+					"jsonFile" : "target-app-Debug-7bbed3c8989fdc9b9f9e.json",
+					"name" : "app",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "module::@938c084cc1e01fd7b9cd",
+					"jsonFile" : "target-module-Debug-3bf153b11151de1874e5.json",
+					"name" : "module",
+					"projectIndex" : 0
+				}
+			],
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3
+					],
+					"jsonFile" : "directory-.-Debug-f6f22219c74102c3da70.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						2,
+						3,
+						4,
+						5
+					]
+				},
+				{
+					"build" : "bsp",
+					"jsonFile" : "directory-bsp-Debug-2c9e668e8db2658f8c4f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "bsp",
+					"targetIndexes" : 
+					[
+						1
+					]
+				},
+				{
+					"abstractTargetIndexes" : 
+					[
+						1
+					],
+					"build" : "module",
+					"jsonFile" : "directory-module-Debug-da756414ece52032a664.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "module"
+				},
+				{
+					"abstractTargetIndexes" : 
+					[
+						0
+					],
+					"build" : "app",
+					"jsonFile" : "directory-app-Debug-1263e082e6b8e9b17c43.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "app"
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"abstractTargetIndexes" : 
+					[
+						0,
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					],
+					"name" : "MSPM0G3507_BASIC",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "MSPM0G3507_BASIC.elf::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-MSPM0G3507_BASIC.elf-Debug-956966a0fbee7fbbe1df.json",
+					"name" : "MSPM0G3507_BASIC.elf",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "bsp::@96b238adef3af577cb54",
+					"jsonFile" : "target-bsp-Debug-1ab5ac98d385bc9016a8.json",
+					"name" : "bsp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "erase::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-erase-Debug-0988d8406c19c7c05913.json",
+					"name" : "erase",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "flash::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-flash-Debug-115ac6f9cb43f4dbb22c.json",
+					"name" : "flash",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "probe::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-probe-Debug-430612f495c41fefff7c.json",
+					"name" : "probe",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "syscfg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-syscfg-Debug-120d404d34d390aa15cb.json",
+					"name" : "syscfg",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/build",
+		"source" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	}
+}
