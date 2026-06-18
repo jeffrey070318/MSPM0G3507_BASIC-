@@ -1,5 +1,5 @@
-/build
-/build-nortos
+build/
+build-nortos/
 
 # Prerequisites
 *.d
