@@ -1,32 +1,137 @@
 [
    {
-      "directory" : "D:/tools/ti/tiproject/empty/Debug",
-      "command"   : "clang++ -I\"D:/tools/ti/tiproject/empty\" -I\"D:/tools/ti/tiproject/empty/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
-      "file"      : "D:/tools/ti/tiproject/empty/build/CMakeFiles/3.28.1/CompilerIdC/CMakeCCompilerId.c"
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/app/chassis/chassis.c"
    },
    {
-      "directory" : "D:/tools/ti/tiproject/empty/Debug",
-      "command"   : "clang++ -I\"D:/tools/ti/tiproject/empty\" -I\"D:/tools/ti/tiproject/empty/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
-      "file"      : "D:/tools/ti/tiproject/empty/build/CMakeFiles/4.2.1/CompilerIdC/CMakeCCompilerId.c"
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/app/cmd/robot_cmd.c"
    },
    {
-      "directory" : "D:/tools/ti/tiproject/empty/Debug",
-      "command"   : "clang++ -I\"D:/tools/ti/tiproject/empty\" -I\"D:/tools/ti/tiproject/empty/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
-      "file"      : "D:/tools/ti/tiproject/empty/build/syscfg/ti_msp_dl_config.c"
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/app/freertos_hooks.c"
    },
    {
-      "directory" : "D:/tools/ti/tiproject/empty/Debug",
-      "command"   : "clang++ -I\"D:/tools/ti/tiproject/empty\" -I\"D:/tools/ti/tiproject/empty/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
-      "file"      : "D:/tools/ti/tiproject/empty/empty.c"
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/app/robot.c"
    },
    {
-      "directory" : "D:/tools/ti/tiproject/empty/Debug",
-      "command"   : "clang++ -I\"D:/tools/ti/tiproject/empty\" -I\"D:/tools/ti/tiproject/empty/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
-      "file"      : "D:/tools/ti/tiproject/empty/app/freertos_hooks.c"
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/app/syscalls_stub.c"
    },
    {
-      "directory" : "D:/tools/ti/tiproject/empty/Debug",
-      "command"   : "clang++ -I\"D:/tools/ti/tiproject/empty\" -I\"D:/tools/ti/tiproject/empty/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
-      "file"      : "D:/tools/ti/tiproject/empty/app/syscalls_stub.c"
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/adc/bsp_adc.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/bsp_init.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/bsp_mspm0_compat.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/bsp_tools.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/dwt/bsp_dwt.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/flash/bsp_flash.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/gpio/bsp_gpio.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/iic/bsp_iic.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/log/bsp_log.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/pwm/bsp_pwm.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/spi/bsp_spi.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/usart/bsp_usart.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/bsp/usb/bsp_usb.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/CMakeFiles/3.28.1/CompilerIdC/CMakeCCompilerId.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/CMakeFiles/4.2.1/CompilerIdC/CMakeCCompilerId.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/build/syscfg/ti_msp_dl_config.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/build-nortos/CMakeFiles/3.28.1/CompilerIdC/CMakeCCompilerId.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/build-nortos/syscfg/ti_msp_dl_config.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/empty.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/module/message_center/message_center.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/module/oled/oled.c"
+   },
+   {
+      "directory" : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug",
+      "command"   : "clang++ -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC\" -I\"D:/tools/ti/tiproject/MSPM0G3507_BASIC/Debug\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"D:/tools/ti/mspm0_sdk_2_10_00_04/source\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c++/v1\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/lib/clang/18/include\" -isystem\"D:/tools/ti/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/include/c\" -xc",
+      "file"      : "D:/tools/ti/tiproject/MSPM0G3507_BASIC/module/standard_cmd/std_cmd.c"
    }
 ]

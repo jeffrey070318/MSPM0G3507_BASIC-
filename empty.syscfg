@@ -11,6 +11,9 @@
  */
 const ADC12         = scripting.addModule("/ti/driverlib/ADC12", {}, false);
 const ADC121        = ADC12.addInstance();
+const CAPTURE       = scripting.addModule("/ti/driverlib/CAPTURE", {}, false);
+const CAPTURE1      = CAPTURE.addInstance();
+const CAPTURE2      = CAPTURE.addInstance();
 const CRC           = scripting.addModule("/ti/driverlib/CRC");
 const DMA           = scripting.addModule("/ti/driverlib/DMA");
 const GPIO          = scripting.addModule("/ti/driverlib/GPIO", {}, false);
@@ -39,6 +42,12 @@ ADC121.$name               = "ADC12_0";
 ADC121.adcPin0Config.$name = "ti_driverlib_gpio_GPIOPinGeneric0";
 
 const Board = scripting.addModule("/ti/driverlib/Board", {}, false);
+
+CAPTURE1.$name               = "CAPTURE_0";
+CAPTURE1.ccp0PinConfig.$name = "ti_driverlib_gpio_GPIOPinGeneric17";
+
+CAPTURE2.$name               = "CAPTURE_1";
+CAPTURE2.ccp0PinConfig.$name = "ti_driverlib_gpio_GPIOPinGeneric18";
 
 
 GPIO1.$name                   = "GPIO_GRP_0";
@@ -82,9 +91,15 @@ SYSCTL.forceDefaultClkConfig = true;
 
 TIMER1.$name = "TIMER_0";
 
-UART1.$name             = "UART_0";
-UART1.txPinConfig.$name = "ti_driverlib_gpio_GPIOPinGeneric7";
-UART1.rxPinConfig.$name = "ti_driverlib_gpio_GPIOPinGeneric8";
+UART1.$name                = "UART_0";
+UART1.targetBaudRate       = 115200;
+UART1.enabledInterrupts    = ["BREAK_ERROR","CTS_DONE","DMA_DONE_RX","DMA_DONE_TX","EOT_DONE","FRAMING_ERROR","NOISE_ERROR","OVERRUN_ERROR","PARITY_ERROR","RX","RXD_NEG_EDGE","RXD_POS_EDGE","RX_TIMEOUT_ERROR","TX"];
+UART1.enabledDMARXTriggers = "DL_UART_DMA_INTERRUPT_RX";
+UART1.enabledDMATXTriggers = "DL_UART_DMA_INTERRUPT_TX";
+UART1.txPinConfig.$name    = "ti_driverlib_gpio_GPIOPinGeneric7";
+UART1.rxPinConfig.$name    = "ti_driverlib_gpio_GPIOPinGeneric8";
+UART1.DMA_CHANNEL_RX.$name = "DMA_CH0";
+UART1.DMA_CHANNEL_TX.$name = "DMA_CH1";
 
 ProjectConfig.genLibCMSIS = true;
 
@@ -93,35 +108,41 @@ ProjectConfig.genLibCMSIS = true;
  * version of the tool will not impact the pinmux you originally saw.  These lines can be completely deleted in order to
  * re-solve from scratch.
  */
-ADC121.peripheral.$suggestSolution           = "ADC0";
-ADC121.peripheral.adcPin0.$suggestSolution   = "PA27";
-Board.peripheral.$suggestSolution            = "DEBUGSS";
-Board.peripheral.swclkPin.$suggestSolution   = "PA20";
-Board.peripheral.swdioPin.$suggestSolution   = "PA19";
-CRC.peripheral.$suggestSolution              = "CRC";
-GPIO1.associatedPins[0].pin.$suggestSolution = "PB13";
-I2C1.peripheral.$suggestSolution             = "I2C0";
-I2C1.peripheral.sdaPin.$suggestSolution      = "PA0";
-I2C1.peripheral.sclPin.$suggestSolution      = "PA1";
-PWM1.peripheral.$suggestSolution             = "TIMG7";
-PWM1.peripheral.ccp0Pin.$suggestSolution     = "PA17";
-PWM1.peripheral.ccp1Pin.$suggestSolution     = "PA18";
-PWM2.peripheral.$suggestSolution             = "TIMG6";
-PWM2.peripheral.ccp0Pin.$suggestSolution     = "PA21";
-PWM2.peripheral.ccp1Pin.$suggestSolution     = "PA22";
-PWM3.peripheral.$suggestSolution             = "TIMG0";
-PWM3.peripheral.ccp0Pin.$suggestSolution     = "PA12";
-PWM3.peripheral.ccp1Pin.$suggestSolution     = "PA13";
-PWM4.peripheral.$suggestSolution             = "TIMA1";
-PWM4.peripheral.ccp0Pin.$suggestSolution     = "PA10";
-PWM4.peripheral.ccp1Pin.$suggestSolution     = "PA11";
-SPI1.peripheral.$suggestSolution             = "SPI0";
-SPI1.peripheral.sclkPin.$suggestSolution     = "PA6";
-SPI1.peripheral.mosiPin.$suggestSolution     = "PA14";
-SPI1.peripheral.misoPin.$suggestSolution     = "PA4";
-SPI1.peripheral.cs0Pin.$suggestSolution      = "PA2";
-SYSCTL.peripheral.$suggestSolution           = "SYSCTL";
-TIMER1.peripheral.$suggestSolution           = "TIMA0";
-UART1.peripheral.$suggestSolution            = "UART0";
-UART1.peripheral.rxPin.$suggestSolution      = "PA31";
-UART1.peripheral.txPin.$suggestSolution      = "PA28";
+ADC121.peripheral.$suggestSolution               = "ADC1";
+ADC121.peripheral.adcPin0.$suggestSolution       = "PA15";
+Board.peripheral.$suggestSolution                = "DEBUGSS";
+Board.peripheral.swclkPin.$suggestSolution       = "PA20";
+Board.peripheral.swdioPin.$suggestSolution       = "PA19";
+CAPTURE1.peripheral.$suggestSolution             = "TIMA1";
+CAPTURE1.peripheral.ccp0Pin.$suggestSolution     = "PA17";
+CAPTURE2.peripheral.$suggestSolution             = "TIMA0";
+CAPTURE2.peripheral.ccp0Pin.$suggestSolution     = "PA21";
+CRC.peripheral.$suggestSolution                  = "CRC";
+GPIO1.associatedPins[0].pin.$suggestSolution     = "PB14";
+I2C1.peripheral.$suggestSolution                 = "I2C0";
+I2C1.peripheral.sdaPin.$suggestSolution          = "PA28";
+I2C1.peripheral.sclPin.$suggestSolution          = "PA31";
+PWM1.peripheral.$suggestSolution                 = "TIMG12";
+PWM1.peripheral.ccp0Pin.$suggestSolution         = "PB13";
+PWM1.peripheral.ccp1Pin.$suggestSolution         = "PA25";
+PWM2.peripheral.$suggestSolution                 = "TIMG8";
+PWM2.peripheral.ccp0Pin.$suggestSolution         = "PA26";
+PWM2.peripheral.ccp1Pin.$suggestSolution         = "PA27";
+PWM3.peripheral.$suggestSolution                 = "TIMG7";
+PWM3.peripheral.ccp0Pin.$suggestSolution         = "PA23";
+PWM3.peripheral.ccp1Pin.$suggestSolution         = "PA18";
+PWM4.peripheral.$suggestSolution                 = "TIMG6";
+PWM4.peripheral.ccp0Pin.$suggestSolution         = "PA29";
+PWM4.peripheral.ccp1Pin.$suggestSolution         = "PA22";
+SPI1.peripheral.$suggestSolution                 = "SPI0";
+SPI1.peripheral.sclkPin.$suggestSolution         = "PA11";
+SPI1.peripheral.mosiPin.$suggestSolution         = "PA14";
+SPI1.peripheral.misoPin.$suggestSolution         = "PA10";
+SPI1.peripheral.cs0Pin.$suggestSolution          = "PA2";
+SYSCTL.peripheral.$suggestSolution               = "SYSCTL";
+TIMER1.peripheral.$suggestSolution               = "TIMG0";
+UART1.peripheral.$suggestSolution                = "UART0";
+UART1.peripheral.rxPin.$suggestSolution          = "PA1";
+UART1.peripheral.txPin.$suggestSolution          = "PA0";
+UART1.DMA_CHANNEL_RX.peripheral.$suggestSolution = "DMA_CH1";
+UART1.DMA_CHANNEL_TX.peripheral.$suggestSolution = "DMA_CH0";
