@@ -1,6 +1,6 @@
 #  MSPM0G3507_BASIC  
 
-@author  zhengjiafeng
+@author  zhengjiafeng /  Jeffrey070318
 
 专门针对于MSPM0G3507的芯片设计所做的RM嵌入式通用方案的适配工程，目前移植了跃鹿框架的app-module-bsp三层架构，在底层做好适配，以及RM通用的扩展，debug等方案，主要面向电赛控制类的快速适应
 

@@ -42,14 +42,17 @@ USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
             LOGERROR("[bsp_usart] USART exceed max instance count!");
 
     for (uint8_t i = 0; i < idx; i++) // 检查是否已经注册过
-        if (usart_instance[i]->usart_handle == init_config->usart_handle)
+        if (usart_instance[i]->usart_handle->Instance ==
+            init_config->usart_handle->Instance)
             while (1)
                 LOGERROR("[bsp_usart] USART instance already registered!");
 
     USARTInstance *instance = (USARTInstance *)malloc(sizeof(USARTInstance));
     memset(instance, 0, sizeof(USARTInstance));
 
-    instance->usart_handle = init_config->usart_handle;
+    /* The current board exposes one physical UART. Normalize YueLu aliases
+     * so IRQ state, RX buffers, and callbacks all use one handle. */
+    instance->usart_handle = &huart0;
     instance->recv_buff_size = init_config->recv_buff_size;
     instance->module_callback = init_config->module_callback;
 
@@ -103,7 +106,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     for (uint8_t i = 0; i < idx; ++i)
     { // find the instance which is being handled
-        if (huart == usart_instance[i]->usart_handle)
+        if (huart->Instance == usart_instance[i]->usart_handle->Instance)
         { // call the callback function if it is not NULL
             if (usart_instance[i]->module_callback != NULL)
             {
@@ -128,7 +131,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     for (uint8_t i = 0; i < idx; ++i)
     {
-        if (huart == usart_instance[i]->usart_handle)
+        if (huart->Instance == usart_instance[i]->usart_handle->Instance)
         {
             HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle, usart_instance[i]->recv_buff, usart_instance[i]->recv_buff_size);
             __HAL_DMA_DISABLE_IT(usart_instance[i]->usart_handle->hdmarx, DMA_IT_HT);

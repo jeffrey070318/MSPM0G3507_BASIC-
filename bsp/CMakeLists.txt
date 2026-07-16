@@ -1,6 +1,7 @@
 add_library(bsp STATIC
     bsp_init.c
     bsp_mspm0_compat.c
+    mspm0_irq.c
     bsp_tools.c
     adc/bsp_adc.c
     dwt/bsp_dwt.c
