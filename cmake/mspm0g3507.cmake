@@ -21,6 +21,8 @@ set(MSPM0_DRIVERLIB_A
 set(MSPM0_STARTUP_FILE
     "${MSPM0_SDK_DIR}/source/ti/devices/msp/m0p/startup_system_files/gcc/startup_mspm0g350x_gcc.c")
 set(MSPM0_FREERTOS_CONFIG_DIR
+    "${CMAKE_SOURCE_DIR}/config/freertos")
+set(MSPM0_FREERTOS_SDK_CONFIG_DIR
     "${MSPM0_SDK_DIR}/kernel/freertos/builds/LP_MSPM0G3507/release")
 
 foreach(_required_path
@@ -28,6 +30,7 @@ foreach(_required_path
         "${MSPM0_DRIVERLIB_A}"
         "${MSPM0_STARTUP_FILE}"
         "${MSPM0_FREERTOS_CONFIG_DIR}/FreeRTOSConfig.h"
+        "${MSPM0_FREERTOS_SDK_CONFIG_DIR}/FreeRTOSConfig.h"
         "${SYSCONFIG_CLI}"
         "${OPENOCD_EXE}"
         "${OPENOCD_SCRIPTS_DIR}")

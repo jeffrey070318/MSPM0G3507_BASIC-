@@ -41,6 +41,7 @@
 int main(void)
 {
     SYSCFG_DL_init();
+    DL_SYSCTL_disableSleepOnExit();
 
 #ifdef USE_FREERTOS
     RobotInit();
