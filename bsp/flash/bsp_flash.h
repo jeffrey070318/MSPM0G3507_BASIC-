@@ -1,6 +1,6 @@
 #ifndef _BSP_FLASH_H
 #define _BSP_FLASH_H
-#include "main.h"
+#include "bsp_def.h"
 
 /* Base address of the Flash sectors */
 #define BSP_FLASH_BASE_ADDR ((uint32_t)0x00000000)

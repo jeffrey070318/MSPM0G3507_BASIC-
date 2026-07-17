@@ -3,8 +3,10 @@
 #include "memory.h"
 #include "stdlib.h"
 
+#define IIC_POLL_LIMIT (1000000U)
+
 static uint8_t idx = 0;
-static IICInstance *iic_instance[IIC_DEVICE_CNT] = {NULL};
+static IICInstance *iic_instance[MX_IIC_SLAVE_CNT] = {NULL};
 
 static uint32_t IICAddress7(uint8_t dev_address)
 {
@@ -12,73 +14,139 @@ static uint32_t IICAddress7(uint8_t dev_address)
                                  : (uint32_t) dev_address;
 }
 
-static void IICWaitIdle(I2C_Regs *i2c)
+static bool IICWaitIdle(I2C_Regs *i2c)
 {
-    while ((DL_I2C_getControllerStatus(i2c) &
-               (DL_I2C_CONTROLLER_STATUS_BUSY |
-                   DL_I2C_CONTROLLER_STATUS_BUSY_BUS)) != 0U) {
+    for (uint32_t poll = 0U; poll < IIC_POLL_LIMIT; ++poll) {
+        uint32_t status = DL_I2C_getControllerStatus(i2c);
+
+        if ((status & DL_I2C_CONTROLLER_STATUS_ERROR) != 0U) {
+            return false;
+        }
+        if ((status & DL_I2C_CONTROLLER_STATUS_IDLE) != 0U) {
+            return true;
+        }
     }
+
+    return false;
 }
 
-static HAL_StatusTypeDef IICBlockingTransmit(
-    IICInstance *iic, uint8_t *data, uint16_t size)
+static bool IICWaitTransfer(I2C_Regs *i2c)
 {
-    if ((iic == NULL) || (iic->handle == NULL) || (data == NULL)) {
-        return HAL_ERROR;
+    for (uint32_t poll = 0U; poll < IIC_POLL_LIMIT; ++poll) {
+        uint32_t status = DL_I2C_getControllerStatus(i2c);
+
+        if ((status & DL_I2C_CONTROLLER_STATUS_ERROR) != 0U) {
+            return false;
+        }
+        if ((status & DL_I2C_CONTROLLER_STATUS_BUSY) == 0U) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static Device_Status_e IICBlockingTransmitEx(
+    IICInstance *iic, uint8_t *data, uint16_t size, bool stop_enable,
+    bool wait_idle)
+{
+    if ((iic == NULL) || (iic->handle == NULL) ||
+        (iic->handle->Instance == NULL) ||
+        (data == NULL) || (size == 0U)) {
+        return DEVICE_ERROR;
     }
 
     I2C_Regs *i2c = iic->handle->Instance;
-    IICWaitIdle(i2c);
-    DL_I2C_startControllerTransfer(
-        i2c, IICAddress7(iic->dev_address), DL_I2C_CONTROLLER_DIRECTION_TX, size);
+    if (wait_idle && !IICWaitIdle(i2c)) {
+        return DEVICE_TIMEOUT;
+    }
+
+    DL_I2C_startControllerTransferAdvanced(i2c, IICAddress7(iic->dev_address),
+        DL_I2C_CONTROLLER_DIRECTION_TX, size, DL_I2C_CONTROLLER_START_ENABLE,
+        stop_enable ? DL_I2C_CONTROLLER_STOP_ENABLE
+                     : DL_I2C_CONTROLLER_STOP_DISABLE,
+        DL_I2C_CONTROLLER_ACK_DISABLE);
 
     for (uint16_t i = 0U; i < size; ++i) {
+        uint32_t poll = 0U;
         while (DL_I2C_isControllerTXFIFOFull(i2c)) {
+            if ((DL_I2C_getControllerStatus(i2c) &
+                    DL_I2C_CONTROLLER_STATUS_ERROR) != 0U ||
+                ++poll >= IIC_POLL_LIMIT) {
+                DL_I2C_resetControllerTransfer(i2c);
+                return (poll >= IIC_POLL_LIMIT) ? DEVICE_TIMEOUT
+                                                : DEVICE_ERROR;
+            }
         }
         DL_I2C_transmitControllerData(i2c, data[i]);
     }
 
-    IICWaitIdle(i2c);
-    return ((DL_I2C_getControllerStatus(i2c) & DL_I2C_CONTROLLER_STATUS_ERROR) != 0U)
-               ? HAL_ERROR
-               : HAL_OK;
+    if (!IICWaitTransfer(i2c)) {
+        DL_I2C_resetControllerTransfer(i2c);
+        return DEVICE_TIMEOUT;
+    }
+
+    return DEVICE_OK;
 }
 
-static HAL_StatusTypeDef IICBlockingReceive(
-    IICInstance *iic, uint8_t *data, uint16_t size)
+static Device_Status_e IICBlockingReceiveEx(
+    IICInstance *iic, uint8_t *data, uint16_t size, bool wait_idle)
 {
-    if ((iic == NULL) || (iic->handle == NULL) || (data == NULL)) {
-        return HAL_ERROR;
+    if ((iic == NULL) || (iic->handle == NULL) ||
+        (iic->handle->Instance == NULL) ||
+        (data == NULL) || (size == 0U)) {
+        return DEVICE_ERROR;
     }
 
     I2C_Regs *i2c = iic->handle->Instance;
-    IICWaitIdle(i2c);
-    DL_I2C_startControllerTransfer(
-        i2c, IICAddress7(iic->dev_address), DL_I2C_CONTROLLER_DIRECTION_RX, size);
+    if (wait_idle && !IICWaitIdle(i2c)) {
+        return DEVICE_TIMEOUT;
+    }
+
+    DL_I2C_startControllerTransferAdvanced(i2c, IICAddress7(iic->dev_address),
+        DL_I2C_CONTROLLER_DIRECTION_RX, size, DL_I2C_CONTROLLER_START_ENABLE,
+        DL_I2C_CONTROLLER_STOP_ENABLE, DL_I2C_CONTROLLER_ACK_DISABLE);
 
     for (uint16_t i = 0U; i < size; ++i) {
+        uint32_t poll = 0U;
         while (DL_I2C_isControllerRXFIFOEmpty(i2c)) {
+            if ((DL_I2C_getControllerStatus(i2c) &
+                    DL_I2C_CONTROLLER_STATUS_ERROR) != 0U ||
+                ++poll >= IIC_POLL_LIMIT) {
+                DL_I2C_resetControllerTransfer(i2c);
+                return (poll >= IIC_POLL_LIMIT) ? DEVICE_TIMEOUT
+                                                : DEVICE_ERROR;
+            }
         }
         data[i] = DL_I2C_receiveControllerData(i2c);
     }
 
-    IICWaitIdle(i2c);
-    return ((DL_I2C_getControllerStatus(i2c) & DL_I2C_CONTROLLER_STATUS_ERROR) != 0U)
-               ? HAL_ERROR
-               : HAL_OK;
+    if (!IICWaitTransfer(i2c)) {
+        DL_I2C_resetControllerTransfer(i2c);
+        return DEVICE_TIMEOUT;
+    }
+
+    return DEVICE_OK;
 }
 
 IICInstance *IICRegister(IIC_Init_Config_s *conf)
 {
-    if (idx >= MX_IIC_SLAVE_CNT) {
-        while (1) {
-        }
+    if ((conf == NULL) || (conf->handle == NULL) ||
+        (conf->handle->Instance == NULL) ||
+        (idx >= MX_IIC_SLAVE_CNT)) {
+        return NULL;
     }
 
     IICInstance *instance = (IICInstance *) malloc(sizeof(IICInstance));
+    if (instance == NULL) {
+        return NULL;
+    }
     memset(instance, 0, sizeof(IICInstance));
 
-    instance->dev_address = conf->dev_address << 1;
+    /* DriverLib consumes a 7-bit address; accept legacy shifted input too. */
+    instance->dev_address =
+        (conf->dev_address > 0x7FU) ? (conf->dev_address >> 1U)
+                                    : conf->dev_address;
     instance->callback = conf->callback;
     instance->work_mode = conf->work_mode;
     instance->handle = conf->handle;
@@ -103,7 +171,7 @@ void IICTransmit(
         }
     }
 
-    (void) IICBlockingTransmit(iic, data, size);
+    (void) IICBlockingTransmitEx(iic, data, size, true, true);
 }
 
 void IICReceive(
@@ -121,7 +189,8 @@ void IICReceive(
     iic->rx_buffer = data;
     iic->rx_len = size;
 
-    if (IICBlockingReceive(iic, data, size) == HAL_OK && iic->callback != NULL) {
+    if (IICBlockingReceiveEx(iic, data, size, true) == DEVICE_OK &&
+        iic->callback != NULL) {
         iic->callback(iic);
     }
 }
@@ -140,32 +209,28 @@ void IICAccessMem(IICInstance *iic, uint16_t mem_addr, uint8_t *data,
     }
 
     if (mem_mode == IIC_WRITE_MEM) {
-        (void) IICBlockingTransmit(iic, addr_buf, addr_len);
-        (void) IICBlockingTransmit(iic, data, size);
+        if ((iic == NULL) || (data == NULL) ||
+            (size > (uint16_t) (UINT16_MAX - addr_len))) {
+            return;
+        }
+
+        uint16_t tx_len = (uint16_t) (addr_len + size);
+        uint8_t *tx_buf = (uint8_t *) malloc(tx_len);
+        if (tx_buf != NULL) {
+            memcpy(tx_buf, addr_buf, addr_len);
+            memcpy(&tx_buf[addr_len], data, size);
+            (void) IICBlockingTransmitEx(iic, tx_buf, tx_len, true, true);
+            free(tx_buf);
+        }
     } else if (mem_mode == IIC_READ_MEM) {
-        (void) IICBlockingTransmit(iic, addr_buf, addr_len);
-        (void) IICBlockingReceive(iic, data, size);
-        if ((iic != NULL) && (iic->callback != NULL)) {
+        if (IICBlockingTransmitEx(iic, addr_buf, addr_len, false, true) ==
+                DEVICE_OK &&
+            IICBlockingReceiveEx(iic, data, size, false) == DEVICE_OK &&
+            (iic != NULL) && (iic->callback != NULL)) {
             iic->callback(iic);
         }
     } else {
         while (1) {
         }
     }
-}
-
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-    for (uint8_t i = 0; i < idx; i++) {
-        if (iic_instance[i]->handle == hi2c &&
-            iic_instance[i]->callback != NULL) {
-            iic_instance[i]->callback(iic_instance[i]);
-            return;
-        }
-    }
-}
-
-void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-    HAL_I2C_MasterRxCpltCallback(hi2c);
 }

@@ -1,9 +1,10 @@
 add_library(bsp STATIC
     bsp_init.c
-    bsp_mspm0_compat.c
+    bsp_device.c
     mspm0_irq.c
     bsp_tools.c
     adc/bsp_adc.c
+    capture/bsp_capture.c
     dwt/bsp_dwt.c
     flash/bsp_flash.c
     gpio/bsp_gpio.c
@@ -11,6 +12,7 @@ add_library(bsp STATIC
     log/bsp_log.c
     pwm/bsp_pwm.c
     spi/bsp_spi.c
+    timer/bsp_timer.c
     usart/bsp_usart.c)
 
 add_dependencies(bsp syscfg)
@@ -18,6 +20,7 @@ add_dependencies(bsp syscfg)
 target_include_directories_logged(bsp PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/adc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/capture"
     "${CMAKE_CURRENT_SOURCE_DIR}/dwt"
     "${CMAKE_CURRENT_SOURCE_DIR}/flash"
     "${CMAKE_CURRENT_SOURCE_DIR}/gpio"
@@ -25,8 +28,8 @@ target_include_directories_logged(bsp PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/log"
     "${CMAKE_CURRENT_SOURCE_DIR}/pwm"
     "${CMAKE_CURRENT_SOURCE_DIR}/spi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/timer"
     "${CMAKE_CURRENT_SOURCE_DIR}/usart"
-    "${CMAKE_CURRENT_SOURCE_DIR}/usb"
     "${SYSCFG_OUTPUT_DIR}"
     ${MSPM0_INCLUDE_DIRS})
 

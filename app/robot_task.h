@@ -3,8 +3,6 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "main.h"
-#include "cmsis_os.h"
 
 #include "bsp_dwt.h"
 #include "bsp_log.h"
@@ -59,24 +57,24 @@
 #define ROBOT_HAS_BUZZER 0
 #endif
 
-osThreadId insTaskHandle;
-osThreadId robotTaskHandle;
-osThreadId motorTaskHandle;
-osThreadId daemonTaskHandle;
-osThreadId uiTaskHandle;
+TaskHandle_t insTaskHandle;
+TaskHandle_t robotTaskHandle;
+TaskHandle_t motorTaskHandle;
+TaskHandle_t daemonTaskHandle;
+TaskHandle_t uiTaskHandle;
 
 #if ROBOT_HAS_INS_TASK
-void StartINSTASK(void const *argument);
+void StartINSTASK(void *argument);
 #endif
 #if ROBOT_HAS_MOTOR_TASK
-void StartMOTORTASK(void const *argument);
+void StartMOTORTASK(void *argument);
 #endif
 #if ROBOT_HAS_DAEMON_TASK || ROBOT_HAS_BUZZER
-void StartDAEMONTASK(void const *argument);
+void StartDAEMONTASK(void *argument);
 #endif
-void StartROBOTTASK(void const *argument);
+void StartROBOTTASK(void *argument);
 #if ROBOT_HAS_REFEREE_TASK
-void StartUITASK(void const *argument);
+void StartUITASK(void *argument);
 #endif
 
 /**
@@ -85,26 +83,26 @@ void StartUITASK(void const *argument);
 void OSTaskInit()
 {
 #if ROBOT_HAS_INS_TASK
-    osThreadDef(instask, StartINSTASK, osPriorityAboveNormal, 0, 1024);
-    insTaskHandle = osThreadCreate(osThread(instask), NULL);
+    (void) xTaskCreate(StartINSTASK, "instask", 1024U, NULL,
+        tskIDLE_PRIORITY + 3U, &insTaskHandle);
 #endif
 
 #if ROBOT_HAS_MOTOR_TASK
-    osThreadDef(motortask, StartMOTORTASK, osPriorityNormal, 0, 256);
-    motorTaskHandle = osThreadCreate(osThread(motortask), NULL);
+    (void) xTaskCreate(StartMOTORTASK, "motortask", 256U, NULL,
+        tskIDLE_PRIORITY + 2U, &motorTaskHandle);
 #endif
 
 #if ROBOT_HAS_DAEMON_TASK || ROBOT_HAS_BUZZER
-    osThreadDef(daemontask, StartDAEMONTASK, osPriorityNormal, 0, 128);
-    daemonTaskHandle = osThreadCreate(osThread(daemontask), NULL);
+    (void) xTaskCreate(StartDAEMONTASK, "daemontask", 128U, NULL,
+        tskIDLE_PRIORITY + 2U, &daemonTaskHandle);
 #endif
 
-    osThreadDef(robottask, StartROBOTTASK, osPriorityNormal, 0, 1024);
-    robotTaskHandle = osThreadCreate(osThread(robottask), NULL);
+    (void) xTaskCreate(StartROBOTTASK, "robottask", 1024U, NULL,
+        tskIDLE_PRIORITY + 2U, &robotTaskHandle);
 
 #if ROBOT_HAS_REFEREE_TASK
-    osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
-    uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
+    (void) xTaskCreate(StartUITASK, "uitask", 512U, NULL,
+        tskIDLE_PRIORITY + 2U, &uiTaskHandle);
 #endif
 
 #if ROBOT_HAS_HT04
@@ -113,7 +111,7 @@ void OSTaskInit()
 }
 
 #if ROBOT_HAS_INS_TASK
-__attribute__((noreturn)) void StartINSTASK(void const *argument)
+__attribute__((noreturn)) void StartINSTASK(void *argument)
 {
     (void) argument;
     static float ins_start;
@@ -131,13 +129,13 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
 #if ROBOT_HAS_MASTER_PROCESS
         VisionSend();
 #endif
-        osDelay(1);
+        vTaskDelay(pdMS_TO_TICKS(1U));
     }
 }
 #endif
 
 #if ROBOT_HAS_MOTOR_TASK
-__attribute__((noreturn)) void StartMOTORTASK(void const *argument)
+__attribute__((noreturn)) void StartMOTORTASK(void *argument)
 {
     (void) argument;
     static float motor_dt;
@@ -151,13 +149,13 @@ __attribute__((noreturn)) void StartMOTORTASK(void const *argument)
         if (motor_dt > 1.0f) {
             LOGERROR("[freeRTOS] MOTOR Task is being DELAY! dt = [%f]", &motor_dt);
         }
-        osDelay(1);
+        vTaskDelay(pdMS_TO_TICKS(1U));
     }
 }
 #endif
 
 #if ROBOT_HAS_DAEMON_TASK || ROBOT_HAS_BUZZER
-__attribute__((noreturn)) void StartDAEMONTASK(void const *argument)
+__attribute__((noreturn)) void StartDAEMONTASK(void *argument)
 {
     (void) argument;
     static float daemon_dt;
@@ -179,12 +177,12 @@ __attribute__((noreturn)) void StartDAEMONTASK(void const *argument)
         if (daemon_dt > 10.0f) {
             LOGERROR("[freeRTOS] Daemon Task is being DELAY! dt = [%f]", &daemon_dt);
         }
-        osDelay(10);
+        vTaskDelay(pdMS_TO_TICKS(10U));
     }
 }
 #endif
 
-__attribute__((noreturn)) void StartROBOTTASK(void const *argument)
+__attribute__((noreturn)) void StartROBOTTASK(void *argument)
 {
     (void) argument;
     static float robot_dt;
@@ -198,12 +196,12 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument)
         if (robot_dt > 5.0f) {
             LOGERROR("[freeRTOS] ROBOT core Task is being DELAY! dt = [%f]", &robot_dt);
         }
-        osDelay(5);
+        vTaskDelay(pdMS_TO_TICKS(5U));
     }
 }
 
 #if ROBOT_HAS_REFEREE_TASK
-__attribute__((noreturn)) void StartUITASK(void const *argument)
+__attribute__((noreturn)) void StartUITASK(void *argument)
 {
     (void) argument;
 
@@ -212,7 +210,7 @@ __attribute__((noreturn)) void StartUITASK(void const *argument)
     LOGINFO("[freeRTOS] UI Init Done, communication with ref has established");
     for (;;) {
         UITask();
-        osDelay(1);
+        vTaskDelay(pdMS_TO_TICKS(1U));
     }
 }
 #endif

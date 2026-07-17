@@ -1,10 +1,10 @@
 #include "oled.h" 
 #include "oledfont.h"
-#include "main.h"
+#include "bsp_iic.h"
 #include <stdio.h>
 #include <stdarg.h>
 
-extern I2C_HandleTypeDef hi2c2;
+static IICInstance *oled_iic;
 static uint8_t OLED_GRAM[128][8];
 
 /**
@@ -25,7 +25,9 @@ void oled_write_byte(uint8_t dat, uint8_t cmd)
         cmd_data[0] = 0x40;
     }
     cmd_data[1] = dat;
-    HAL_I2C_Master_Transmit(&hi2c2, OLED_I2C_ADDRESS, cmd_data, 2, 10);
+    if (oled_iic != NULL) {
+        IICTransmit(oled_iic, cmd_data, 2U, IIC_SEQ_RELEASE);
+    }
 }
 
 
@@ -36,6 +38,17 @@ void oled_write_byte(uint8_t dat, uint8_t cmd)
   */
 void OLED_init(void)
 {
+    if (oled_iic == NULL) {
+        IIC_Init_Config_s iic_config = {
+            .handle = &hi2c1,
+            .dev_address = OLED_I2C_ADDRESS,
+            .work_mode = IIC_BLOCK_MODE,
+            .callback = NULL,
+            .id = NULL,
+        };
+        oled_iic = IICRegister(&iic_config);
+    }
+
     oled_write_byte(0xAE, OLED_CMD);    //display off
     oled_write_byte(0x20, OLED_CMD);    //Set Memory Addressing Mode	
     oled_write_byte(0x10, OLED_CMD);    //00,Horizontal Addressing Mode;01,Vertical Addressing Mode;10,Page Addressing Mode (RESET);11,Invalid

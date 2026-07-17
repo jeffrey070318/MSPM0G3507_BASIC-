@@ -1,5 +1,20 @@
-# bsp pwm
+# PWM
 
-同一定时器下的pwm通道更改周期时请注意该定时器下是否有其他pwm示例，如果有请注意不要影响其他pwm通道的周期。
-使用pwm dma传输中断时注意占空比的设置，设为0将不会进入中断函数
-默认tim psc已在cubemx设置好，详情可参考cubemx配置文件
+PWM timers, channels, pins and initial periods are generated from
+`empty.syscfg`. A module registers the generated timer instance and a
+`PWM_CHANNEL_x` channel.
+
+```c
+PWM_Init_Config_s config = {
+    .htim = &htim1,
+    .channel = TIM_CHANNEL_1,
+    .period = 0.00005f,
+    .dutyratio = 0.0f,
+};
+
+PWMInstance *pwm = PWMRegister(&config);
+```
+
+Changing a timer period affects every PWM channel on that timer.
+`PWMStartDMA` currently only starts the PWM because SysConfig does not own a
+PWM DMA channel yet.

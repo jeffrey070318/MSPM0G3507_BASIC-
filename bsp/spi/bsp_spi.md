@@ -1,9 +1,18 @@
-# bsp spi
+# SPI
 
-> 预计增加模拟spi
+The current project uses `SPI_0_INST` in Mode 0 at 8 MHz. SysConfig owns the
+controller pins and timing. Chip select is a normal GPIO controlled by the BSP.
 
-初始化传入参数中的GPIOx（GPIOA，GPIOB，...）和cs_pin（GPIO_PIN_1,GPIO_PIN_2, ...）都是HAL库内建的宏，在CubeMX初始化的时候若有给gpio分配标签则填入对应名字即可，否则填入原本的宏。
+```c
+SPI_Init_Config_s config = {
+    .spi_handle = &hspi1,
+    .GPIOx = GPIOB,
+    .cs_pin = GPIO_PIN_14,
+    .spi_work_mode = SPI_BLOCK_MODE,
+};
 
-注意，如果你没有在CubeMX中为spi分配dma通道，请不要使用dma模式
+SPIInstance *device = SPIRegister(&config);
+```
 
-（后续添加安全检查，通过判断hspi的dma handler是否为空来选择模式，如果为空，则自动将DMA转为IT模式以继续传输，并通过log warning 提醒用户）
+The current implementation uses polling transfers with FIFO, timeout and bus
+ownership checks. DMA and interrupt modes are not configured yet.

@@ -1,5 +1,15 @@
-待添加adc的bsp支持,应该提供阻塞/IT/DMA的量测接口
+# ADC
 
-是否需要bsp_adc?由于功能非常简单,似乎可以直接使用HAL的接口,没有必要多此一举进行封装?
+ADC channel, reference, resolution and sample time are configured in
+`empty.syscfg`. The maintained BSP starts one conversion and reads the
+generated ADC memory slot.
 
-回调函数.
+```c
+uint16_t raw_value;
+if (ADCRead(&raw_value, 0U) == DEVICE_OK) {
+    /* Use raw_value. */
+}
+```
+
+A zero timeout selects `ADC_DEFAULT_TIMEOUT`. The timeout is a polling count,
+not a millisecond value.

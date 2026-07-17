@@ -14,8 +14,8 @@
 #ifndef _BSP_DWT_H
 #define _BSP_DWT_H
 
-#include "main.h"
 #include "stdint.h"
+#include "ti_msp_dl_config.h"
 #include "bsp_log.h"
 
 typedef struct
@@ -86,7 +86,7 @@ uint64_t DWT_GetTimeline_us(void);
 /**
  * @brief DWT延时函数,单位为秒/s
  * @attention 该函数不受中断是否开启的影响,可以在临界区和关闭中断时使用
- * @note 禁止在__disable_irq()和__enable_irq()之间使用HAL_Delay()函数,应使用本函数
+ * @note 该函数不依赖RTOS调度，可在中断关闭期间使用
  *
  * @param Delay 延时时间,单位为秒/s
  */

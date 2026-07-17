@@ -1,56 +1,62 @@
-#include <stdarg.h>
-
-#include "cmsis_os.h"
-#include "bsp_log.h"
 #include "bsp_tools.h"
 
-#define MX_SIG_LIST_SIZE 32 // 不可修改,最大信号量数量
+#ifdef USE_FREERTOS
+#include "FreeRTOS.h"
+#include "task.h"
 
-typedef struct
-{
-    void *callback;
-    uint32_t sig;
-    void *ins;
+#define CALLBACK_TASK_CNT 32U
+
+typedef struct {
+    CallbackTaskFunction_t callback;
+    uint32_t signal;
+    void const *instance;
 } CallbackTask_t;
 
-// 递增记录全局信号量的数组,最大32个信号量
-static uint8_t sig_idx = 0;
-static uint32_t tmp_sig = 1; // tmp_sing << sig_idx从而生成对应信号量
+static uint8_t callback_task_count;
+static TaskHandle_t callback_task_handle[CALLBACK_TASK_CNT];
+static CallbackTask_t callback_task_info[CALLBACK_TASK_CNT];
 
-static osThreadId cbkid_list[MX_SIG_LIST_SIZE];
-static CallbackTask_t cbkinfo_list[MX_SIG_LIST_SIZE];
-
-// 死循环任务,执行cbk函数指针,每次执行完毕后等待sig信号
-__attribute__((noreturn)) static void CallbackTaskBase(void const *cbk)
+static void CallbackTaskBase(void *argument)
 {
-    void (*cbk_func)(void const *) = (void (*)(void const *))((CallbackTask_t const *)cbk)->callback;
-    void const *ins = ((CallbackTask_t const *)cbk)->ins;
-    uint32_t sig = ((CallbackTask_t const *)cbk)->sig;
+    CallbackTask_t *task = (CallbackTask_t *) argument;
 
-    for (;;)
-    {
-        cbk_func(ins);
-        osSignalWait(sig, osWaitForever);
+    for (;;) {
+        task->callback(task->instance);
+
+        uint32_t notified_value = 0U;
+        (void) xTaskNotifyWait(
+            0U, task->signal, &notified_value, portMAX_DELAY);
     }
 }
+#endif
 
-uint32_t CreateCallbackTask(char *name, void *cbk, void *ins, osPriority priority)
+uint32_t CreateCallbackTask(const char *name, CallbackTaskFunction_t callback,
+    void *instance, uint32_t priority)
 {
-    if (sig_idx >= MX_SIG_LIST_SIZE)
-        while (1)
-            LOGERROR("[rtos:cbk_register] CreateCallbackTask: sig_idx >= MX_SIG_LIST_SIZE");
+#ifdef USE_FREERTOS
+    if ((name == NULL) || (callback == NULL) ||
+        (callback_task_count >= CALLBACK_TASK_CNT)) {
+        return 0U;
+    }
 
-    cbkinfo_list[sig_idx].callback = cbk;
-    cbkinfo_list[sig_idx].sig = tmp_sig << sig_idx;
-    cbkinfo_list[sig_idx].ins = ins;
+    uint8_t index = callback_task_count;
+    CallbackTask_t *task = &callback_task_info[index];
+    task->callback = callback;
+    task->signal = 1UL << index;
+    task->instance = instance;
 
-    osThreadDef_t threadDef;
-    threadDef.name = name;
-    threadDef.pthread = &CallbackTaskBase;
-    threadDef.tpriority = priority;
-    threadDef.instances = 0;
-    threadDef.stacksize = 128;
-    cbkid_list[sig_idx] = osThreadCreate(&threadDef, (void *)&cbkinfo_list[sig_idx]);
+    if (xTaskCreate(CallbackTaskBase, name, 128U, task,
+            (UBaseType_t) priority, &callback_task_handle[index]) != pdPASS) {
+        return 0U;
+    }
 
-    return cbkinfo_list[sig_idx++].sig; // 返回信号量,同时增加索引
+    callback_task_count++;
+    return task->signal;
+#else
+    (void) name;
+    (void) callback;
+    (void) instance;
+    (void) priority;
+    return 0U;
+#endif
 }

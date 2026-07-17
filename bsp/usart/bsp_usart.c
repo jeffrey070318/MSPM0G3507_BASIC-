@@ -1,142 +1,243 @@
-/**
- * @file bsp_usart.c
- * @author neozng
- * @brief  串口bsp层的实现
- * @version beta
- * @date 2022-11-01
- *
- * @copyright Copyright (c) 2022
- *
- */
 #include "bsp_usart.h"
-#include "bsp_log.h"
-#include "stdlib.h"
-#include "memory.h"
 
-/* usart service instance, modules' info would be recoreded here using USARTRegister() */
-/* usart服务实例,所有注册了usart的模块信息会被保存在这里 */
+#include <stdlib.h>
+#include <string.h>
+
 static uint8_t idx;
 static USARTInstance *usart_instance[DEVICE_USART_CNT] = {NULL};
 
-/**
- * @brief 启动串口服务,会在每个实例注册之后自动启用接收,当前实现为DMA接收,后续可能添加IT和BLOCKING接收
- *
- * @todo 串口服务会在每个实例注册之后自动启用接收,当前实现为DMA接收,后续可能添加IT和BLOCKING接收
- *       可能还要将此函数修改为extern,使得module可以控制串口的启停
- *
- * @param _instance instance owned by module,模块拥有的串口实例
- */
+static USARTInstance *active_tx_instance;
+static uint8_t tx_buffer[USART_TXBUFF_LIMIT];
+static uint16_t tx_size;
+static volatile uint16_t tx_index;
+
+static void USARTStartReceive(USARTInstance *instance)
+{
+    if ((instance == NULL) || (instance->usart_handle == NULL) ||
+        (instance->usart_handle->Instance != UART_0_INST) ||
+        (instance->recv_buff_size == 0U) ||
+        (instance->recv_buff_size > USART_RXBUFF_LIMIT)) {
+        return;
+    }
+
+    instance->recv_count = 0U;
+    DL_DMA_disableChannel(DMA, DMA_CH0_CHAN_ID);
+    DL_DMA_setSrcAddr(DMA, DMA_CH0_CHAN_ID,
+        (uint32_t) &instance->usart_handle->Instance->RXDATA);
+    DL_DMA_setDestAddr(DMA, DMA_CH0_CHAN_ID,
+        (uint32_t) instance->recv_buff);
+    DL_DMA_setTransferSize(
+        DMA, DMA_CH0_CHAN_ID, instance->recv_buff_size);
+    DL_DMA_enableChannel(DMA, DMA_CH0_CHAN_ID);
+
+    NVIC_ClearPendingIRQ(UART_0_INST_INT_IRQN);
+    NVIC_EnableIRQ(UART_0_INST_INT_IRQN);
+}
+
+static void USARTDispatchReceive(USARTInstance *instance, uint16_t size)
+{
+    if (instance == NULL) {
+        return;
+    }
+
+    instance->recv_count = size;
+    if (instance->module_callback != NULL) {
+        instance->module_callback();
+    }
+
+    if (size <= USART_RXBUFF_LIMIT) {
+        memset(instance->recv_buff, 0, size);
+    }
+    USARTStartReceive(instance);
+}
+
+static Device_Status_e USARTSendBlocking(
+    USARTInstance *instance, uint8_t *data, uint16_t size)
+{
+    if ((instance == NULL) || (instance->usart_handle == NULL) ||
+        (instance->usart_handle->Instance == NULL) ||
+        (data == NULL) || (size == 0U)) {
+        return DEVICE_ERROR;
+    }
+
+    instance->tx_busy = 1U;
+    for (uint16_t i = 0U; i < size; ++i) {
+        DL_UART_Main_transmitDataBlocking(
+            instance->usart_handle->Instance, data[i]);
+    }
+    while (DL_UART_Main_isBusy(instance->usart_handle->Instance)) {
+    }
+    instance->tx_busy = 0U;
+    return DEVICE_OK;
+}
+
+static Device_Status_e USARTSendAsync(USARTInstance *instance,
+    uint8_t *data, uint16_t size, bool use_dma)
+{
+    if ((instance == NULL) || (instance->usart_handle == NULL) ||
+        (instance->usart_handle->Instance != UART_0_INST) ||
+        (data == NULL) || (size == 0U) ||
+        (size > USART_TXBUFF_LIMIT)) {
+        return DEVICE_ERROR;
+    }
+    if (active_tx_instance != NULL) {
+        return DEVICE_BUSY;
+    }
+
+    memcpy(tx_buffer, data, size);
+    tx_size = size;
+    tx_index = 0U;
+    active_tx_instance = instance;
+    instance->tx_busy = 1U;
+
+    NVIC_ClearPendingIRQ(UART_0_INST_INT_IRQN);
+    NVIC_EnableIRQ(UART_0_INST_INT_IRQN);
+
+    if (use_dma) {
+        DL_UART_Main_disableInterrupt(
+            UART_0_INST, DL_UART_MAIN_INTERRUPT_TX);
+        DL_DMA_disableChannel(DMA, DMA_CH1_CHAN_ID);
+        DL_DMA_setSrcAddr(
+            DMA, DMA_CH1_CHAN_ID, (uint32_t) tx_buffer);
+        DL_DMA_setDestAddr(DMA, DMA_CH1_CHAN_ID,
+            (uint32_t) &UART_0_INST->TXDATA);
+        DL_DMA_setTransferSize(DMA, DMA_CH1_CHAN_ID, size);
+        DL_DMA_enableChannel(DMA, DMA_CH1_CHAN_ID);
+    } else {
+        DL_UART_Main_enableInterrupt(
+            UART_0_INST, DL_UART_MAIN_INTERRUPT_TX);
+    }
+
+    return DEVICE_OK;
+}
+
 void USARTServiceInit(USARTInstance *_instance)
 {
-    HAL_UARTEx_ReceiveToIdle_DMA(_instance->usart_handle, _instance->recv_buff, _instance->recv_buff_size);
-    // 关闭dma half transfer中断防止两次进入HAL_UARTEx_RxEventCallback()
-    // 这是HAL库的一个设计失误,发生DMA传输完成/半完成以及串口IDLE中断都会触发HAL_UARTEx_RxEventCallback()
-    // 我们只希望处理第一种和第三种情况,因此直接关闭DMA半传输中断
-    __HAL_DMA_DISABLE_IT(_instance->usart_handle->hdmarx, DMA_IT_HT);
+    USARTStartReceive(_instance);
 }
 
 USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
 {
-    if (idx >= DEVICE_USART_CNT) // 超过最大实例数
-        while (1)
-            LOGERROR("[bsp_usart] USART exceed max instance count!");
+    if ((init_config == NULL) ||
+        (init_config->usart_handle == NULL) ||
+        (init_config->usart_handle->Instance != UART_0_INST) ||
+        (init_config->recv_buff_size == 0U) ||
+        (init_config->recv_buff_size > USART_RXBUFF_LIMIT) ||
+        (idx >= DEVICE_USART_CNT)) {
+        return NULL;
+    }
 
-    for (uint8_t i = 0; i < idx; i++) // 检查是否已经注册过
+    for (uint8_t i = 0U; i < idx; ++i) {
         if (usart_instance[i]->usart_handle->Instance ==
-            init_config->usart_handle->Instance)
-            while (1)
-                LOGERROR("[bsp_usart] USART instance already registered!");
+            init_config->usart_handle->Instance) {
+            return NULL;
+        }
+    }
 
-    USARTInstance *instance = (USARTInstance *)malloc(sizeof(USARTInstance));
+    USARTInstance *instance =
+        (USARTInstance *) malloc(sizeof(USARTInstance));
+    if (instance == NULL) {
+        return NULL;
+    }
     memset(instance, 0, sizeof(USARTInstance));
 
-    /* The current board exposes one physical UART. Normalize YueLu aliases
-     * so IRQ state, RX buffers, and callbacks all use one handle. */
-    instance->usart_handle = &huart0;
+    instance->usart_handle = init_config->usart_handle;
     instance->recv_buff_size = init_config->recv_buff_size;
     instance->module_callback = init_config->module_callback;
-
     usart_instance[idx++] = instance;
+
     USARTServiceInit(instance);
     return instance;
 }
 
-/* @todo 当前仅进行了形式上的封装,后续要进一步考虑是否将module的行为与bsp完全分离 */
-void USARTSend(USARTInstance *_instance, uint8_t *send_buf, uint16_t send_size, USART_TRANSFER_MODE mode)
+void USARTSend(USARTInstance *_instance, uint8_t *send_buf,
+    uint16_t send_size, USART_TRANSFER_MODE mode)
 {
-    switch (mode)
-    {
+    switch (mode) {
     case USART_TRANSFER_BLOCKING:
-        HAL_UART_Transmit(_instance->usart_handle, send_buf, send_size, 100);
+        (void) USARTSendBlocking(_instance, send_buf, send_size);
         break;
     case USART_TRANSFER_IT:
-        HAL_UART_Transmit_IT(_instance->usart_handle, send_buf, send_size);
+        (void) USARTSendAsync(_instance, send_buf, send_size, false);
         break;
     case USART_TRANSFER_DMA:
-        HAL_UART_Transmit_DMA(_instance->usart_handle, send_buf, send_size);
+        (void) USARTSendAsync(_instance, send_buf, send_size, true);
         break;
     default:
-        while (1)
-            ; // illegal mode! check your code context! 检查定义instance的代码上下文,可能出现指针越界
         break;
     }
 }
 
-/* 串口发送时,gstate会被设为BUSY_TX */
 uint8_t USARTIsReady(USARTInstance *_instance)
 {
-    if ((_instance->usart_handle->gState & HAL_UART_STATE_BUSY_TX) != 0U)
-        return 0;
-    else
-        return 1;
+    return ((_instance != NULL) && (_instance->tx_busy == 0U)) ? 1U : 0U;
 }
 
-/**
- * @brief 每次dma/idle中断发生时，都会调用此函数.对于每个uart实例会调用对应的回调进行进一步的处理
- *        例如:视觉协议解析/遥控器解析/裁判系统解析
- *
- * @note  通过__HAL_DMA_DISABLE_IT(huart->hdmarx,DMA_IT_HT)关闭dma half transfer中断防止两次进入HAL_UARTEx_RxEventCallback()
- *        这是HAL库的一个设计失误,发生DMA传输完成/半完成以及串口IDLE中断都会触发HAL_UARTEx_RxEventCallback()
- *        我们只希望处理，因此直接关闭DMA半传输中断第一种和第三种情况
- *
- * @param huart 发生中断的串口
- * @param Size 此次接收到的总数居量,暂时没用
- */
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+void USARTIRQHandler(void)
 {
-    for (uint8_t i = 0; i < idx; ++i)
-    { // find the instance which is being handled
-        if (huart->Instance == usart_instance[i]->usart_handle->Instance)
-        { // call the callback function if it is not NULL
-            if (usart_instance[i]->module_callback != NULL)
-            {
-                usart_instance[i]->module_callback();
-                memset(usart_instance[i]->recv_buff, 0, Size); // 接收结束后清空buffer,对于变长数据是必要的
-            }
-            HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle, usart_instance[i]->recv_buff, usart_instance[i]->recv_buff_size);
-            __HAL_DMA_DISABLE_IT(usart_instance[i]->usart_handle->hdmarx, DMA_IT_HT);
-            return; // break the loop
+    DL_UART_IIDX pending = DL_UART_Main_getPendingInterrupt(UART_0_INST);
+    USARTInstance *rx_instance = (idx > 0U) ? usart_instance[0] : NULL;
+
+    if (pending == DL_UART_IIDX_DMA_DONE_RX) {
+        if (rx_instance != NULL) {
+            USARTDispatchReceive(rx_instance, rx_instance->recv_buff_size);
         }
+        return;
     }
-}
 
-/**
- * @brief 当串口发送/接收出现错误时,会调用此函数,此时这个函数要做的就是重新启动接收
- *
- * @note  最常见的错误:奇偶校验/溢出/帧错误
- *
- * @param huart 发生错误的串口
- */
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
-    for (uint8_t i = 0; i < idx; ++i)
-    {
-        if (huart->Instance == usart_instance[i]->usart_handle->Instance)
-        {
-            HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle, usart_instance[i]->recv_buff, usart_instance[i]->recv_buff_size);
-            __HAL_DMA_DISABLE_IT(usart_instance[i]->usart_handle->hdmarx, DMA_IT_HT);
-            LOGWARNING("[bsp_usart] USART error callback triggered, instance idx [%d]", i);
-            return;
+    if (pending == DL_UART_IIDX_RX_TIMEOUT_ERROR) {
+        if (rx_instance != NULL) {
+            DL_DMA_disableChannel(DMA, DMA_CH0_CHAN_ID);
+            uint16_t remaining =
+                DL_DMA_getTransferSize(DMA, DMA_CH0_CHAN_ID);
+            uint16_t received =
+                (remaining <= rx_instance->recv_buff_size)
+                    ? (uint16_t) (rx_instance->recv_buff_size - remaining)
+                    : 0U;
+            if (received != 0U) {
+                USARTDispatchReceive(rx_instance, received);
+            } else {
+                USARTStartReceive(rx_instance);
+            }
+        }
+        return;
+    }
+
+    if (pending == DL_UART_IIDX_DMA_DONE_TX) {
+        DL_DMA_disableChannel(DMA, DMA_CH1_CHAN_ID);
+        return;
+    }
+
+    if (pending == DL_UART_IIDX_TX) {
+        while ((tx_index < tx_size) &&
+               !DL_UART_Main_isTXFIFOFull(UART_0_INST)) {
+            DL_UART_Main_transmitData(
+                UART_0_INST, tx_buffer[tx_index++]);
+        }
+        if (tx_index >= tx_size) {
+            DL_UART_Main_disableInterrupt(
+                UART_0_INST, DL_UART_MAIN_INTERRUPT_TX);
+        }
+        return;
+    }
+
+    if (pending == DL_UART_IIDX_EOT_DONE) {
+        if (active_tx_instance != NULL) {
+            active_tx_instance->tx_busy = 0U;
+        }
+        active_tx_instance = NULL;
+        tx_size = 0U;
+        tx_index = 0U;
+        return;
+    }
+
+    if ((pending == DL_UART_IIDX_OVERRUN_ERROR) ||
+        (pending == DL_UART_IIDX_BREAK_ERROR) ||
+        (pending == DL_UART_IIDX_PARITY_ERROR) ||
+        (pending == DL_UART_IIDX_FRAMING_ERROR) ||
+        (pending == DL_UART_IIDX_NOISE_ERROR)) {
+        if (rx_instance != NULL) {
+            USARTStartReceive(rx_instance);
         }
     }
 }
