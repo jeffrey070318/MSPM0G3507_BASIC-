@@ -1,7 +1,7 @@
 # IIC
 
 The current project exposes `I2C_0_INST`. Pin mux, bus clock and electrical
-settings are generated from `empty.syscfg`.
+settings are generated from `MSPM0G3507_BASIC.syscfg`.
 
 ```c
 IIC_Init_Config_s config = {

@@ -33,6 +33,10 @@ target_include_directories_logged(bsp PUBLIC
     "${SYSCFG_OUTPUT_DIR}"
     ${MSPM0_INCLUDE_DIRS})
 
+target_compile_definitions(bsp PUBLIC
+    BSP_FLASH_STORAGE_START_ADDR=${MSPM0_FLASH_STORAGE_START}
+    BSP_FLASH_STORAGE_PAGE_COUNT=${MSPM0_FLASH_STORAGE_PAGE_COUNT})
+
 if(USE_FREERTOS)
     target_include_directories_logged(bsp PUBLIC
         ${MSPM0_FREERTOS_INCLUDE_DIRS})

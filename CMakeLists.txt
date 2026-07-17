@@ -14,6 +14,19 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 option(USE_FREERTOS "Build with the MSPM0 SDK FreeRTOS kernel" ON)
 
+set(MSPM0_FLASH_STORAGE_PAGE_COUNT 8 CACHE STRING
+    "Number of 1 KB Flash sectors reserved for parameter storage")
+if(MSPM0_FLASH_STORAGE_PAGE_COUNT LESS 1 OR
+        MSPM0_FLASH_STORAGE_PAGE_COUNT GREATER 127)
+    message(FATAL_ERROR
+        "MSPM0_FLASH_STORAGE_PAGE_COUNT must be between 1 and 127")
+endif()
+math(EXPR MSPM0_FLASH_STORAGE_SIZE
+    "${MSPM0_FLASH_STORAGE_PAGE_COUNT} * 1024")
+math(EXPR MSPM0_FLASH_STORAGE_START
+    "0x00020000 - ${MSPM0_FLASH_STORAGE_SIZE}"
+    OUTPUT_FORMAT HEXADECIMAL)
+
 function(target_include_directories_logged target scope)
     foreach(include_dir ${ARGN})
         if(IS_ABSOLUTE "${include_dir}")
@@ -36,7 +49,7 @@ function(target_include_directories_logged target scope)
     target_include_directories(${target} ${scope} ${ARGN})
 endfunction()
 
-set(SYSCFG_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/empty.syscfg")
+set(SYSCFG_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/MSPM0G3507_BASIC.syscfg")
 set(SYSCFG_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/syscfg")
 set(SYSCFG_C_FILE "${SYSCFG_OUTPUT_DIR}/ti_msp_dl_config.c")
 set(SYSCFG_H_FILE "${SYSCFG_OUTPUT_DIR}/ti_msp_dl_config.h")
@@ -73,7 +86,7 @@ add_subdirectory(module)
 add_subdirectory(app)
 
 set(APP_SOURCES
-    empty.c
+    main.c
     app/syscalls_stub.c
     "${SYSCFG_C_FILE}"
     "${MSPM0_STARTUP_FILE}")
@@ -122,6 +135,8 @@ target_link_options(${PROJECT_NAME}.elf PRIVATE
     "-L${MSPM0_SDK_DIR}/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x"
     "-T${SYSCFG_GENLIBS_LINKER}"
     "-Wl,-T,${SYSCFG_DEVICE_LINKER}"
+    "-Wl,--defsym=__bsp_flash_storage_start=${MSPM0_FLASH_STORAGE_START}"
+    "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/cmake/flash_storage_guard.lds"
     "-Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.map"
     --specs=nano.specs
     --specs=nosys.specs)

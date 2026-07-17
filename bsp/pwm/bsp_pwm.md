@@ -1,7 +1,7 @@
 # PWM
 
 PWM timers, channels, pins and initial periods are generated from
-`empty.syscfg`. A module registers the generated timer instance and a
+`MSPM0G3507_BASIC.syscfg`. A module registers the generated timer instance and a
 `PWM_CHANNEL_x` channel.
 
 ```c

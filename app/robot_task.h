@@ -63,6 +63,19 @@ TaskHandle_t motorTaskHandle;
 TaskHandle_t daemonTaskHandle;
 TaskHandle_t uiTaskHandle;
 
+static void RobotCreateTask(TaskFunction_t task_code, const char *task_name,
+    configSTACK_DEPTH_TYPE stack_depth, UBaseType_t priority,
+    TaskHandle_t *task_handle)
+{
+    BaseType_t status = xTaskCreate(
+        task_code, task_name, stack_depth, NULL, priority, task_handle);
+
+    if (status != pdPASS) {
+        LOGERROR("[freeRTOS] Failed to create task: %s", task_name);
+        configASSERT(status == pdPASS);
+    }
+}
+
 #if ROBOT_HAS_INS_TASK
 void StartINSTASK(void *argument);
 #endif
@@ -83,25 +96,25 @@ void StartUITASK(void *argument);
 void OSTaskInit()
 {
 #if ROBOT_HAS_INS_TASK
-    (void) xTaskCreate(StartINSTASK, "instask", 1024U, NULL,
+    RobotCreateTask(StartINSTASK, "instask", 1024U,
         tskIDLE_PRIORITY + 3U, &insTaskHandle);
 #endif
 
 #if ROBOT_HAS_MOTOR_TASK
-    (void) xTaskCreate(StartMOTORTASK, "motortask", 256U, NULL,
+    RobotCreateTask(StartMOTORTASK, "motortask", 256U,
         tskIDLE_PRIORITY + 2U, &motorTaskHandle);
 #endif
 
 #if ROBOT_HAS_DAEMON_TASK || ROBOT_HAS_BUZZER
-    (void) xTaskCreate(StartDAEMONTASK, "daemontask", 128U, NULL,
+    RobotCreateTask(StartDAEMONTASK, "daemontask", 128U,
         tskIDLE_PRIORITY + 2U, &daemonTaskHandle);
 #endif
 
-    (void) xTaskCreate(StartROBOTTASK, "robottask", 1024U, NULL,
+    RobotCreateTask(StartROBOTTASK, "robottask", 1024U,
         tskIDLE_PRIORITY + 2U, &robotTaskHandle);
 
 #if ROBOT_HAS_REFEREE_TASK
-    (void) xTaskCreate(StartUITASK, "uitask", 512U, NULL,
+    RobotCreateTask(StartUITASK, "uitask", 512U,
         tskIDLE_PRIORITY + 2U, &uiTaskHandle);
 #endif
 

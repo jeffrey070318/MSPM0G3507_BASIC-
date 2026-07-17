@@ -1,6 +1,42 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+enum {
+    FREERTOS_FAULT_NONE = 0U,
+    FREERTOS_FAULT_MALLOC_FAILED = 1U,
+    FREERTOS_FAULT_STACK_OVERFLOW = 2U,
+};
+
+volatile uint32_t g_freertos_fault_code = FREERTOS_FAULT_NONE;
+volatile TaskHandle_t g_freertos_fault_task = NULL;
+const char * volatile g_freertos_fault_task_name = NULL;
+
+static void FreeRTOSFaultStop(
+    uint32_t fault_code, TaskHandle_t task, const char *task_name)
+{
+    taskDISABLE_INTERRUPTS();
+    g_freertos_fault_code = fault_code;
+    g_freertos_fault_task = task;
+    g_freertos_fault_task_name = task_name;
+
+    for (;;) {
+    }
+}
+
+#if (configUSE_MALLOC_FAILED_HOOK == 1)
+void vApplicationMallocFailedHook(void)
+{
+    FreeRTOSFaultStop(FREERTOS_FAULT_MALLOC_FAILED, NULL, NULL);
+}
+#endif
+
+#if (configCHECK_FOR_STACK_OVERFLOW > 0)
+void vApplicationStackOverflowHook(TaskHandle_t task, char *task_name)
+{
+    FreeRTOSFaultStop(FREERTOS_FAULT_STACK_OVERFLOW, task, task_name);
+}
+#endif
+
 #if (configSUPPORT_STATIC_ALLOCATION == 1)
 void vApplicationGetIdleTaskMemory(StaticTask_t **idle_task_tcb,
                                    StackType_t **idle_task_stack,

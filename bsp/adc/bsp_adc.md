@@ -1,7 +1,7 @@
 # ADC
 
 ADC channel, reference, resolution and sample time are configured in
-`empty.syscfg`. The maintained BSP starts one conversion and reads the
+`MSPM0G3507_BASIC.syscfg`. The maintained BSP starts one conversion and reads the
 generated ADC memory slot.
 
 ```c
