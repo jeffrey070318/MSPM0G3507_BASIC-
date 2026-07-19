@@ -91,7 +91,7 @@ void StartUITASK(void *argument);
 #endif
 
 /**
- * @brief 初始化机器人任务,所有持续运行的任务都在这里初始化
+ * @brief 初始化机器人任务,所有持续运行的任务都在这里初始�?
  */
 void OSTaskInit()
 {

@@ -6,6 +6,7 @@ add_library(bsp STATIC
     adc/bsp_adc.c
     capture/bsp_capture.c
     dwt/bsp_dwt.c
+    encoder/bsp_encoder.c
     flash/bsp_flash.c
     gpio/bsp_gpio.c
     iic/bsp_iic.c
@@ -22,6 +23,7 @@ target_include_directories_logged(bsp PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/adc"
     "${CMAKE_CURRENT_SOURCE_DIR}/capture"
     "${CMAKE_CURRENT_SOURCE_DIR}/dwt"
+    "${CMAKE_CURRENT_SOURCE_DIR}/encoder"
     "${CMAKE_CURRENT_SOURCE_DIR}/flash"
     "${CMAKE_CURRENT_SOURCE_DIR}/gpio"
     "${CMAKE_CURRENT_SOURCE_DIR}/iic"

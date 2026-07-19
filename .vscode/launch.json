@@ -8,24 +8,17 @@
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/MSPM0G3507_BASIC.elf",
             "servertype": "openocd",
-            "serverpath": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
-            "searchDir": [
-                "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts"
-            ],
-            "configFiles": [
-                "${workspaceFolder}/openocd/cmsis_dap_mspm0g3507.cfg"
-            ],
-            "gdbPath": "D:/Program Files/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gdb.exe",
+            "serverpath": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+            "searchDir": ["D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts"],
+            "configFiles": ["${workspaceFolder}/openocd/cmsis_dap_mspm0g3507.cfg"],
+            "gdbPath": "D:/Toolchain/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
             "device": "MSPM0G3507",
             "interface": "swd",
             "runToEntryPoint": "main",
             "rtos": "FreeRTOS",
             "preLaunchTask": "CMake: Build",
             "showDevDebugOutput": "none",
-            "liveWatch": {
-                "enabled": true,
-                "samplesPerSecond": 4
-            }
+            "liveWatch": { "enabled": true, "samplesPerSecond": 4 }
         },
         {
             "name": "MSPM0G3507 CMSIS-DAP Attach",
@@ -34,14 +27,45 @@
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/MSPM0G3507_BASIC.elf",
             "servertype": "openocd",
-            "serverpath": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
-            "searchDir": [
-                "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts"
-            ],
-            "configFiles": [
-                "${workspaceFolder}/openocd/cmsis_dap_mspm0g3507.cfg"
-            ],
-            "gdbPath": "D:/Program Files/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gdb.exe",
+            "serverpath": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+            "searchDir": ["D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts"],
+            "configFiles": ["${workspaceFolder}/openocd/cmsis_dap_mspm0g3507.cfg"],
+            "gdbPath": "D:/Toolchain/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
+            "device": "MSPM0G3507",
+            "interface": "swd",
+            "rtos": "FreeRTOS",
+            "showDevDebugOutput": "none"
+        },
+        {
+            "name": "MSPM0G3507 XDS110 Launch",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/MSPM0G3507_BASIC.elf",
+            "servertype": "openocd",
+            "serverpath": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+            "searchDir": ["D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts"],
+            "configFiles": ["${workspaceFolder}/openocd/xds110_mspm0g3507.cfg"],
+            "gdbPath": "D:/Toolchain/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
+            "device": "MSPM0G3507",
+            "interface": "swd",
+            "runToEntryPoint": "main",
+            "rtos": "FreeRTOS",
+            "preLaunchTask": "CMake: Build",
+            "showDevDebugOutput": "none",
+            "liveWatch": { "enabled": true, "samplesPerSecond": 4 }
+        },
+        {
+            "name": "MSPM0G3507 XDS110 Attach",
+            "type": "cortex-debug",
+            "request": "attach",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/MSPM0G3507_BASIC.elf",
+            "servertype": "openocd",
+            "serverpath": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+            "searchDir": ["D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts"],
+            "configFiles": ["${workspaceFolder}/openocd/xds110_mspm0g3507.cfg"],
+            "gdbPath": "D:/Toolchain/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb.exe",
             "device": "MSPM0G3507",
             "interface": "swd",
             "rtos": "FreeRTOS",

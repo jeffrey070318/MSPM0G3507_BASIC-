@@ -1,8 +1,10 @@
 add_library(module STATIC
-    message_center/message_center.c)
+    message_center/message_center.c
+    gray_sensor/gray_sensor.c)
 
 target_include_directories_logged(module PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gray_sensor"
     "${CMAKE_CURRENT_SOURCE_DIR}/message_center")
 
 target_link_libraries(module PUBLIC

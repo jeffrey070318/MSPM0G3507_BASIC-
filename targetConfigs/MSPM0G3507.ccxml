@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <configurations XML_version="1.2" id="configurations_0">
     <configuration XML_version="1.2" id="configuration_0">
         <instance XML_version="1.2" desc="CMSIS-DAP Debug Probe" href="connections/TICMSISDAP_Connection.xml" id="CMSIS-DAP Debug Probe" xml="TICMSISDAP_Connection.xml" xmlpath="connections"/>

@@ -1,9 +1,9 @@
 /**
  * @file robot_def.h
- * @brief 机器人公共定义模板
+ * @brief 机器人公共定义模�?
  *
- * 本文件只保留 app/module 层共享的宏名、枚举名、结构体名和字段名。
- * 具体机器人参数、视觉链路和 app 启用开关需要按实车重新配置。
+ * 本文件只保留 app/module 层共享的宏名、枚举名、结构体名和字段名�?
+ * 具体机器人参数、视觉链路和 app 启用开关需要按实车重新配置�?
  */
 #pragma once
 #ifndef ROBOT_DEF_H
@@ -34,10 +34,10 @@ typedef enum {
 } Enemy_Color_e;
 #endif
 
-/* --------------------------应用启用开关模板-------------------------- */
-/* 按迁移进度打开对应 app。打开前请确认源文件和依赖模块已经完成适配。 */
+/* --------------------------应用启用开关模�?------------------------- */
+/* 按迁移进度打开对应 app。打开前请确认源文件和依赖模块已经完成适配�?*/
 // #define ROBOT_ENABLE_CMD_APP
-// #define ROBOT_ENABLE_CHASSIS_APP
+#define ROBOT_ENABLE_CHASSIS_APP
 // #define ROBOT_ENABLE_GIMBAL_APP
 // #define ROBOT_ENABLE_SHOOT_APP
 
@@ -49,8 +49,8 @@ typedef enum {
 #error Conflict vision definition! Choose VCP or UART.
 #endif
 
-/* --------------------------机器人参数模板-------------------------- */
-/* 以下宏名保留给旧框架代码引用，默认值不代表实际机器人参数。 */
+/* --------------------------机器人参数模�?------------------------- */
+/* 以下宏名保留给旧框架代码引用，默认值不代表实际机器人参数�?*/
 #define YAW_CHASSIS_ALIGN_ECD (0U)
 #define YAW_ECD_GREATER_THAN_4096 (0)
 #define PITCH_HORIZON_ECD (0U)
@@ -74,7 +74,7 @@ typedef enum {
 
 #pragma pack(1)
 
-/* --------------------------基本状态类型-------------------------- */
+/* --------------------------基本状态类�?------------------------- */
 typedef enum {
     ROBOT_STOP = 0,
     ROBOT_READY,

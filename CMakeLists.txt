@@ -151,33 +151,53 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.bin"
     VERBATIM)
 
-add_custom_target(probe
-    COMMAND "${OPENOCD_EXE}"
-        -s "${OPENOCD_SCRIPTS_DIR}"
-        -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/cmsis_dap_mspm0g3507.cfg"
-        -c "init"
-        -c "targets"
-        -c "shutdown"
-    USES_TERMINAL
-    COMMENT "Probing MSPM0G3507 via CMSIS-DAP")
+function(add_openocd_targets target_prefix config_file probe_label flash_label erase_label)
+    add_custom_target(${target_prefix}_probe
+        COMMAND "${OPENOCD_EXE}"
+            -s "${OPENOCD_SCRIPTS_DIR}"
+            -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/${config_file}"
+            -c "init"
+            -c "targets"
+            -c "shutdown"
+        USES_TERMINAL
+        COMMENT "${probe_label}")
 
-add_custom_target(flash
-    COMMAND "${OPENOCD_EXE}"
-        -s "${OPENOCD_SCRIPTS_DIR}"
-        -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/cmsis_dap_mspm0g3507.cfg"
-        -c "program $<TARGET_FILE:${PROJECT_NAME}.elf> verify reset exit"
-    DEPENDS ${PROJECT_NAME}.elf
-    USES_TERMINAL
-    COMMENT "Flashing MSPM0G3507 via CMSIS-DAP")
+    set(FLASH_OCD_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/flash_${target_prefix}.cfg")
+    file(GENERATE OUTPUT "${FLASH_OCD_SCRIPT}"
+        CONTENT "program $<TARGET_FILE:${PROJECT_NAME}.elf> reset exit\n")
+    add_custom_target(${target_prefix}_flash
+        COMMAND "${OPENOCD_EXE}"
+            -s "${OPENOCD_SCRIPTS_DIR}"
+            -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/${config_file}"
+            -f "${FLASH_OCD_SCRIPT}"
+        DEPENDS ${PROJECT_NAME}.elf
+        USES_TERMINAL
+        COMMENT "${flash_label}")
 
-add_custom_target(erase
-    COMMAND "${OPENOCD_EXE}"
-        -s "${OPENOCD_SCRIPTS_DIR}"
-        -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/cmsis_dap_mspm0g3507.cfg"
-        -c "init"
-        -c "mspm0_mass_erase"
-        -c "shutdown"
-    USES_TERMINAL
-    COMMENT "Mass erasing MSPM0G3507 via CMSIS-DAP")
+    add_custom_target(${target_prefix}_erase
+        COMMAND "${OPENOCD_EXE}"
+            -s "${OPENOCD_SCRIPTS_DIR}"
+            -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/${config_file}"
+            -c "init"
+            -c "mspm0_mass_erase"
+            -c "shutdown"
+        USES_TERMINAL
+        COMMENT "${erase_label}")
+endfunction()
+
+add_openocd_targets(cmsis_dap cmsis_dap_mspm0g3507.cfg
+    "Probing MSPM0G3507 via CMSIS-DAP"
+    "Flashing MSPM0G3507 via CMSIS-DAP"
+    "Mass erasing MSPM0G3507 via CMSIS-DAP")
+
+add_openocd_targets(daplink cmsis_dap_mspm0g3507.cfg
+    "Probing MSPM0G3507 via DAPLink"
+    "Flashing MSPM0G3507 via DAPLink"
+    "Mass erasing MSPM0G3507 via DAPLink")
+
+add_openocd_targets(xds110 xds110_mspm0g3507.cfg
+    "Probing MSPM0G3507 via XDS110"
+    "Flashing MSPM0G3507 via XDS110"
+    "Mass erasing MSPM0G3507 via XDS110")
 
   

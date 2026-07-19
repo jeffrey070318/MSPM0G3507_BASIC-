@@ -1,0 +1,47 @@
+﻿{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "3507default",
+            "displayName": "MSPM0G3507 FreeRTOS Debug",
+            "description": "MSPM0G3507 with FreeRTOS, Debug",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/arm-none-eabi-gcc.cmake",
+                "USE_FREERTOS": "ON",
+                "MSPM0_SDK_DIR": "D:/CCSToolchain/mspm0_sdk_2_09_00_01",
+                "SYSCONFIG_CLI": "D:/CCSToolchain/sysconfig/sysconfig_cli.bat",
+                "OPENOCD_EXE": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+                "OPENOCD_SCRIPTS_DIR": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts"
+            }
+        },
+        {
+            "name": "3507nortos",
+            "displayName": "MSPM0G3507 NoRTOS Debug",
+            "description": "MSPM0G3507 without FreeRTOS, Debug",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-nortos",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/arm-none-eabi-gcc.cmake",
+                "USE_FREERTOS": "OFF",
+                "MSPM0_SDK_DIR": "D:/CCSToolchain/mspm0_sdk_2_09_00_01",
+                "SYSCONFIG_CLI": "D:/CCSToolchain/sysconfig/sysconfig_cli.bat",
+                "OPENOCD_EXE": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+                "OPENOCD_SCRIPTS_DIR": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "3507default",
+            "configurePreset": "3507default"
+        },
+        {
+            "name": "3507nortos",
+            "configurePreset": "3507nortos"
+        }
+    ]
+}
