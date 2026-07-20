@@ -31,6 +31,7 @@
  */
 
 #include "ti_msp_dl_config.h"
+#include "framework_runtime.h"
 
 #ifdef USE_FREERTOS
 #include "FreeRTOS.h"
@@ -42,13 +43,19 @@ int main(void)
 {
     SYSCFG_DL_init();
     DL_SYSCTL_disableSleepOnExit();
+    framework_boot_stage = FRAMEWORK_BOOT_SYSCFG_READY;
 
 #ifdef USE_FREERTOS
     RobotInit();
+    framework_boot_stage = FRAMEWORK_BOOT_ROBOT_READY;
     vTaskStartScheduler();
+    framework_boot_stage = FRAMEWORK_BOOT_SCHEDULER_FAILED;
+#else
+    framework_boot_stage = FRAMEWORK_BOOT_NORTOS_RUNNING;
 #endif
 
     while (1)
     {
+        framework_main_heartbeat++;
     }
 }

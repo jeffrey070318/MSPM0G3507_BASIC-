@@ -2,11 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "MSPM0G3507 CMSIS-DAP Launch",
+            "name": "MSPM0G3507 CMSIS-DAP Launch (Download)",
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/MSPM0G3507_BASIC.elf",
+            "loadFiles": [
+                "${workspaceFolder}/build/MSPM0G3507_BASIC.hex"
+            ],
             "servertype": "openocd",
             "serverpath": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
             "searchDir": [
@@ -19,16 +22,15 @@
             "device": "MSPM0G3507",
             "interface": "swd",
             "runToEntryPoint": "main",
-            "rtos": "FreeRTOS",
             "preLaunchTask": "CMake: Build",
-            "showDevDebugOutput": "none",
             "liveWatch": {
                 "enabled": true,
                 "samplesPerSecond": 4
-            }
+            },
+            "showDevDebugOutput": "none"
         },
         {
-            "name": "MSPM0G3507 CMSIS-DAP Attach",
+            "name": "MSPM0G3507 CMSIS-DAP Attach (No Download)",
             "type": "cortex-debug",
             "request": "attach",
             "cwd": "${workspaceFolder}",
@@ -44,7 +46,10 @@
             "gdbPath": "D:/Program Files/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gdb.exe",
             "device": "MSPM0G3507",
             "interface": "swd",
-            "rtos": "FreeRTOS",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
             "showDevDebugOutput": "none"
         }
     ]

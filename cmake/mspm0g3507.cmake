@@ -61,5 +61,4 @@ set(MSPM0_FREERTOS_SOURCES
     "${MSPM0_SDK_DIR}/kernel/freertos/Source/portable/MemMang/heap_4.c"
     "${MSPM0_SDK_DIR}/kernel/freertos/Source/portable/GCC/ARM_CM0/port.c"
     "${MSPM0_SDK_DIR}/kernel/freertos/Source/portable/GCC/ARM_CM0/portasm.c"
-    "${MSPM0_SDK_DIR}/kernel/freertos/dpl/AppHooks_freertos.c"
-    "${CMAKE_SOURCE_DIR}/app/freertos_hooks.c")
+    "${MSPM0_SDK_DIR}/kernel/freertos/dpl/AppHooks_freertos.c")

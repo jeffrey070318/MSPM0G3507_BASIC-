@@ -1,5 +1,7 @@
 build/
 build-nortos/
+build-link-check/
+build-link-check-nortos/
 
 # Prerequisites
 *.d

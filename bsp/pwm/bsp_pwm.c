@@ -1,6 +1,6 @@
 #include "bsp_pwm.h"
+#include "bsp_memory.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 static uint8_t idx;
@@ -39,7 +39,7 @@ PWMInstance *PWMRegister(PWM_Init_Config_s *config)
         return NULL;
     }
 
-    PWMInstance *pwm = (PWMInstance *) malloc(sizeof(PWMInstance));
+    PWMInstance *pwm = (PWMInstance *) BSPMalloc(sizeof(PWMInstance));
     if (pwm == NULL) {
         return NULL;
     }
@@ -54,7 +54,7 @@ PWMInstance *PWMRegister(PWM_Init_Config_s *config)
     pwm->id = config->id;
 
     if (pwm->tclk == 0U) {
-        free(pwm);
+        BSPFree(pwm);
         return NULL;
     }
 

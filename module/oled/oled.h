@@ -14,8 +14,10 @@
 #define OLED_H
 #include <stdint.h>
 
-// the I2C address of oled
-#define OLED_I2C_ADDRESS 0x78
+#include "bsp_def.h"
+
+/* TI DriverLib uses the 7-bit SSD1306 address, not STM32 HAL's shifted 0x78. */
+#define OLED_I2C_ADDRESS 0x3CU
 
 // the resolution of oled   128*64
 #define MAX_COLUMN 128
@@ -43,6 +45,9 @@ typedef enum
  * @retval         none
  */
 extern void OLED_init(void);
+Device_Status_e OLED_init_ex(void);
+uint32_t OLED_get_iic_status(void);
+uint8_t OLED_get_iic_address(void);
 
 /**
  * @brief          打开OLED显示

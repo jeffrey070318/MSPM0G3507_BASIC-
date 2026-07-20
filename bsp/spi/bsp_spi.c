@@ -1,7 +1,7 @@
 #include "bsp_spi.h"
+#include "bsp_memory.h"
 
 #include "memory.h"
-#include "stdlib.h"
 
 #define SPI_POLL_LIMIT (1000000U)
 #define SPI_ERROR_MASK                                                     \
@@ -144,7 +144,8 @@ SPIInstance *SPIRegister(SPI_Init_Config_s *conf)
         return NULL;
     }
 
-    SPIInstance *instance = (SPIInstance *) malloc(sizeof(SPIInstance));
+    SPIInstance *instance =
+        (SPIInstance *) BSPMalloc(sizeof(SPIInstance));
     if (instance == NULL) {
         return NULL;
     }

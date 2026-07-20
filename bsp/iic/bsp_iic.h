@@ -30,6 +30,7 @@ typedef struct iic_temp_s {
     uint8_t rx_len;
     void (*callback)(struct iic_temp_s *);
     void *id;
+    volatile uint32_t controller_status;
 } IICInstance;
 
 typedef struct {
@@ -42,6 +43,9 @@ typedef struct {
 
 IICInstance *IICRegister(IIC_Init_Config_s *conf);
 void IICSetMode(IICInstance *iic, IIC_Work_Mode_e mode);
+uint32_t IICGetLastControllerStatus(IICInstance *iic);
+Device_Status_e IICTransmitEx(
+    IICInstance *iic, uint8_t *data, uint16_t size, IIC_Seq_Mode_e mode);
 void IICTransmit(
     IICInstance *iic, uint8_t *data, uint16_t size, IIC_Seq_Mode_e mode);
 void IICReceive(

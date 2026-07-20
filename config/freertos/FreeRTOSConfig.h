@@ -247,7 +247,7 @@
 	 * writing) the current newlib design implements a system-wide malloc() that must
 	 * be provided with locks. */
 	/* note: system locks required by newlib are not implemented */
-	#define configUSE_NEWLIB_REENTRANT 1
+	#define configUSE_NEWLIB_REENTRANT 0
 #endif
 /******************************************************************************/
 /* Software timer related definitions. ****************************************/
@@ -602,7 +602,8 @@
 #define INCLUDE_vTaskDelay                     1
 #define INCLUDE_xTaskGetSchedulerState         1
 #define INCLUDE_xTaskGetCurrentTaskHandle      1
-#define INCLUDE_uxTaskGetStackHighWaterMark    0
+#define INCLUDE_uxTaskGetStackHighWaterMark    1
+#define INCLUDE_uxTaskGetStackHighWaterMark2   1
 #define INCLUDE_xTaskGetIdleTaskHandle         0
 #define INCLUDE_eTaskGetState                  1
 #define INCLUDE_xEventGroupSetBitFromISR       1

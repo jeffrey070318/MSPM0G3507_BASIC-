@@ -1,0 +1,18 @@
+#ifndef HARDWARE_TEST_CONFIG_H
+#define HARDWARE_TEST_CONFIG_H
+
+#define HARDWARE_TEST_NONE 0
+#define HARDWARE_TEST_GPIO 1
+#define HARDWARE_TEST_PWM  2
+#define HARDWARE_TEST_UART 3
+#define HARDWARE_TEST_OLED 4
+
+/* Select one hardware test here, then rebuild the project. */
+#define HARDWARE_TEST_MODE HARDWARE_TEST_NONE
+
+#if (HARDWARE_TEST_MODE < HARDWARE_TEST_NONE) || \
+    (HARDWARE_TEST_MODE > HARDWARE_TEST_OLED)
+#error "Invalid HARDWARE_TEST_MODE"
+#endif
+
+#endif

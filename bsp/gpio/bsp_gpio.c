@@ -1,6 +1,6 @@
 #include "bsp_gpio.h"
+#include "bsp_memory.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 static uint8_t idx;
@@ -25,7 +25,8 @@ GPIOInstance *GPIORegister(GPIO_Init_Config_s *GPIO_config)
         return NULL;
     }
 
-    GPIOInstance *instance = (GPIOInstance *) malloc(sizeof(GPIOInstance));
+    GPIOInstance *instance =
+        (GPIOInstance *) BSPMalloc(sizeof(GPIOInstance));
     if (instance == NULL) {
         return NULL;
     }

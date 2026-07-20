@@ -6,6 +6,7 @@
 
 static IICInstance *oled_iic;
 static uint8_t OLED_GRAM[128][8];
+static Device_Status_e oled_status = DEVICE_ERROR;
 
 /**
   * @brief          写数据或者指令到OLED， 如果使用的是SPI，请重写这个函数
@@ -13,7 +14,7 @@ static uint8_t OLED_GRAM[128][8];
   * @param[in]      cmd: OLED_CMD 代表写入的字节是指令; OLED_DATA 代表写入的字节是数据
   * @retval         none
   */
-void oled_write_byte(uint8_t dat, uint8_t cmd)
+static Device_Status_e oled_write_byte(uint8_t dat, uint8_t cmd)
 {
     static uint8_t cmd_data[2];
     if(cmd == OLED_CMD)
@@ -26,8 +27,9 @@ void oled_write_byte(uint8_t dat, uint8_t cmd)
     }
     cmd_data[1] = dat;
     if (oled_iic != NULL) {
-        IICTransmit(oled_iic, cmd_data, 2U, IIC_SEQ_RELEASE);
+        return IICTransmitEx(oled_iic, cmd_data, 2U, IIC_SEQ_RELEASE);
     }
+    return DEVICE_ERROR;
 }
 
 
@@ -36,7 +38,7 @@ void oled_write_byte(uint8_t dat, uint8_t cmd)
   * @param[in]      none
   * @retval         none
   */
-void OLED_init(void)
+Device_Status_e OLED_init_ex(void)
 {
     if (oled_iic == NULL) {
         IIC_Init_Config_s iic_config = {
@@ -49,7 +51,15 @@ void OLED_init(void)
         oled_iic = IICRegister(&iic_config);
     }
 
-    oled_write_byte(0xAE, OLED_CMD);    //display off
+    if (oled_iic == NULL) {
+        return DEVICE_ERROR;
+    }
+
+    oled_iic->dev_address = OLED_I2C_ADDRESS;
+    oled_status = oled_write_byte(0xAE, OLED_CMD); // display off
+    if (oled_status != DEVICE_OK) {
+        return oled_status;
+    }
     oled_write_byte(0x20, OLED_CMD);    //Set Memory Addressing Mode	
     oled_write_byte(0x10, OLED_CMD);    //00,Horizontal Addressing Mode;01,Vertical Addressing Mode;10,Page Addressing Mode (RESET);11,Invalid
     oled_write_byte(0xb0, OLED_CMD);    //Set Page Start Address for Page Addressing Mode,0-7
@@ -77,6 +87,22 @@ void OLED_init(void)
     oled_write_byte(0x8d, OLED_CMD);    //--set DC-DC enable
     oled_write_byte(0x14, OLED_CMD);    //
     oled_write_byte(0xaf, OLED_CMD);    //--turn on oled panel
+    return DEVICE_OK;
+}
+
+void OLED_init(void)
+{
+    (void) OLED_init_ex();
+}
+
+uint32_t OLED_get_iic_status(void)
+{
+    return IICGetLastControllerStatus(oled_iic);
+}
+
+uint8_t OLED_get_iic_address(void)
+{
+    return (oled_iic != NULL) ? oled_iic->dev_address : 0U;
 }
 
 
@@ -341,14 +367,19 @@ void OLED_printf(uint8_t row, uint8_t col, const char *fmt,...)
   */
 void OLED_refresh_gram(void)
 {
-    uint8_t i, n;
+    uint8_t page_data[129];
+    page_data[0] = 0x40U;
 
-    for (i = 0; i < 8; i++)
+    for (uint8_t i = 0U; i < 8U; ++i)
     {
         OLED_set_pos(0, i);
-        for (n = 0; n < 128; n++)
-        {
-            oled_write_byte(OLED_GRAM[n][i], OLED_DATA);
+        for (uint8_t n = 0U; n < 128U; ++n) {
+            page_data[n + 1U] = OLED_GRAM[n][i];
+        }
+        oled_status = IICTransmitEx(
+            oled_iic, page_data, sizeof(page_data), IIC_SEQ_RELEASE);
+        if (oled_status != DEVICE_OK) {
+            return;
         }
     }
 }
