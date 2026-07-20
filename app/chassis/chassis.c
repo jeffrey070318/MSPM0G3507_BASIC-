@@ -17,12 +17,14 @@
 static Chassis_Ctrl_Cmd_s chassis_cmd_recv;
 static Chassis_Upload_Data_s chassis_feedback_data;
 
+// 这是胡乱写的，后续需要根据实际底盘结构和功能进行修改，不可能真的函数这么写
+
 /**
  * @brief 接收 robot_cmd 下发的底盘控制命令
  */
 static void ChassisReceiveCommand(void)
 {
-    (void) &chassis_cmd_recv;
+    (void)&chassis_cmd_recv;
 }
 
 /**
@@ -30,7 +32,7 @@ static void ChassisReceiveCommand(void)
  */
 static void ChassisUpdateMode(void)
 {
-    (void) &chassis_cmd_recv;
+    (void)&chassis_cmd_recv;
 }
 
 /**
@@ -38,7 +40,7 @@ static void ChassisUpdateMode(void)
  */
 static void ChassisKinematicsSolve(void)
 {
-    (void) &chassis_cmd_recv;
+    (void)&chassis_cmd_recv;
 }
 
 /**
@@ -53,7 +55,7 @@ static void ChassisApplyOutput(void)
  */
 static void ChassisUpdateFeedback(void)
 {
-    (void) &chassis_feedback_data;
+    (void)&chassis_feedback_data;
 }
 
 /**
@@ -61,7 +63,7 @@ static void ChassisUpdateFeedback(void)
  */
 static void ChassisPublishFeedback(void)
 {
-    (void) &chassis_feedback_data;
+    (void)&chassis_feedback_data;
 }
 
 /**
@@ -75,7 +77,7 @@ void ChassisInit(void)
  * @brief 底盘应用周期任务模板
  */
 void ChassisTask(void)
-{
+{ // 这是胡乱写的，后续需要根据实际底盘结构和功能进行修改，不可能真的函数这么写
     ChassisReceiveCommand();
     ChassisUpdateMode();
     ChassisKinematicsSolve();
