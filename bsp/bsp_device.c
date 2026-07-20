@@ -15,23 +15,17 @@ SPI_HandleTypeDef hspi1 = {
 TIM_HandleTypeDef htim1 = {
     .Instance = PWM_0_INST,
     .tclk_hz = PWM_0_INST_CLK_FREQ,
-    .period_ticks = 4000U,
+    .period_ticks = 1000U,
 };
 
-TIM_HandleTypeDef htim2 = {
-    .Instance = PWM_1_INST,
-    .tclk_hz = PWM_1_INST_CLK_FREQ,
-    .period_ticks = 4000U,
+TIM_HandleTypeDef htim5 = {
+    .Instance = CAPTURE_0_INST,
+    .tclk_hz = 80000000U,
+    .period_ticks = CAPTURE_0_INST_LOAD_VALUE + 1U,
 };
 
-TIM_HandleTypeDef htim3 = {
-    .Instance = PWM_2_INST,
-    .tclk_hz = PWM_2_INST_CLK_FREQ,
-    .period_ticks = 2000U,
-};
-
-TIM_HandleTypeDef htim4 = {
-    .Instance = PWM_3_INST,
-    .tclk_hz = PWM_3_INST_CLK_FREQ,
-    .period_ticks = 4000U,
+TIM_HandleTypeDef htim6 = {
+    .Instance = CAPTURE_1_INST,
+    .tclk_hz = 40000000U,
+    .period_ticks = CAPTURE_1_INST_LOAD_VALUE + 1U,
 };
