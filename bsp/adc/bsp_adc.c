@@ -6,6 +6,10 @@ Device_Status_e ADCRead(uint16_t *value, uint32_t timeout)
         return DEVICE_ERROR;
     }
 
+#ifndef ADC12_0_INST
+    (void) timeout;
+    return DEVICE_ERROR;
+#else
     ADC12_Regs *adc = ADC12_0_INST;
     uint32_t poll_limit = (timeout == 0U) ? ADC_DEFAULT_TIMEOUT : timeout;
 
@@ -24,4 +28,5 @@ Device_Status_e ADCRead(uint16_t *value, uint32_t timeout)
     }
 
     return DEVICE_TIMEOUT;
+#endif
 }

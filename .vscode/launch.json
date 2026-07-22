@@ -51,6 +51,57 @@
                 "samplesPerSecond": 4
             },
             "showDevDebugOutput": "none"
+        },
+        {
+            "name": "MSPM0G3507 XDS110 Launch (Download)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/MSPM0G3507_BASIC.elf",
+            "loadFiles": [
+                "${workspaceFolder}/build/MSPM0G3507_BASIC.hex"
+            ],
+            "servertype": "openocd",
+            "serverpath": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
+            "searchDir": [
+                "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts"
+            ],
+            "configFiles": [
+                "${workspaceFolder}/openocd/xds110_mspm0g3507.cfg"
+            ],
+            "gdbPath": "D:/Program Files/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gdb.exe",
+            "device": "MSPM0G3507",
+            "interface": "swd",
+            "runToEntryPoint": "main",
+            "preLaunchTask": "CMake: Build",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "showDevDebugOutput": "none"
+        },
+        {
+            "name": "MSPM0G3507 XDS110 Attach (No Download)",
+            "type": "cortex-debug",
+            "request": "attach",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/MSPM0G3507_BASIC.elf",
+            "servertype": "openocd",
+            "serverpath": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
+            "searchDir": [
+                "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts"
+            ],
+            "configFiles": [
+                "${workspaceFolder}/openocd/xds110_mspm0g3507.cfg"
+            ],
+            "gdbPath": "D:/Program Files/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gdb.exe",
+            "device": "MSPM0G3507",
+            "interface": "swd",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "showDevDebugOutput": "none"
         }
     ]
 }

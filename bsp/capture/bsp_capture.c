@@ -5,10 +5,14 @@
 static GPTIMER_Regs *CaptureGetInstance(Capture_Device_e capture)
 {
     switch (capture) {
+#ifdef CAPTURE_0_INST
     case CAPTURE_DEVICE_0:
         return CAPTURE_0_INST;
+#endif
+#ifdef CAPTURE_1_INST
     case CAPTURE_DEVICE_1:
         return CAPTURE_1_INST;
+#endif
     default:
         return NULL;
     }
@@ -17,10 +21,14 @@ static GPTIMER_Regs *CaptureGetInstance(Capture_Device_e capture)
 static uint32_t CaptureGetConfiguredClock(Capture_Device_e capture)
 {
     switch (capture) {
+#ifdef CAPTURE_0_INST
     case CAPTURE_DEVICE_0:
         return 80000000U;
+#endif
+#ifdef CAPTURE_1_INST
     case CAPTURE_DEVICE_1:
         return 40000000U;
+#endif
     default:
         return 0U;
     }
@@ -29,10 +37,14 @@ static uint32_t CaptureGetConfiguredClock(Capture_Device_e capture)
 static uint32_t CaptureGetConfiguredPeriod(Capture_Device_e capture)
 {
     switch (capture) {
+#ifdef CAPTURE_0_INST_LOAD_VALUE
     case CAPTURE_DEVICE_0:
         return CAPTURE_0_INST_LOAD_VALUE + 1U;
+#endif
+#ifdef CAPTURE_1_INST_LOAD_VALUE
     case CAPTURE_DEVICE_1:
         return CAPTURE_1_INST_LOAD_VALUE + 1U;
+#endif
     default:
         return 0U;
     }

@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-/* TIMER_0 is configured in SysConfig as a 1 MHz, 1 ms periodic timer. */
-#define TIMER_0_CLOCK_HZ (1000000U)
+/* TIMER_0 is configured in SysConfig as a 40 MHz, 1 ms periodic timer. */
+#define TIMER_0_CLOCK_HZ (40000000U)
 
 void TimerStart(void);
 void TimerStop(void);

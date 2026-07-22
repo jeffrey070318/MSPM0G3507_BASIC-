@@ -14,7 +14,7 @@ Device_Status_e HardwareTestInit(void)
 {
     PWM_Init_Config_s pwm_config = {
         .htim = &htim3,
-        .channel = TIM_CHANNEL_1,
+        .channel = TIM_CHANNEL_2,
         .period = 0.001f,
         .dutyratio = 0.1f,
         .callback = NULL,
