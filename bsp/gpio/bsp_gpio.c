@@ -99,33 +99,6 @@ GPIOInstance *GPIORegister(GPIO_Init_Config_s *GPIO_config)
     return instance;
 }
 
-void GPIOUnregister(GPIOInstance *instance)
-{
-    if (instance == NULL) {
-        return;
-    }
-
-    bool found = false;
-    uint32_t primask = GPIOEnterCritical();
-    for (uint8_t i = 0U; i < idx; i++) {
-        if (gpio_instance[i] != instance) {
-            continue;
-        }
-
-        for (uint8_t j = i; (j + 1U) < idx; j++) {
-            gpio_instance[j] = gpio_instance[j + 1U];
-        }
-        idx--;
-        gpio_instance[idx] = NULL;
-        found = true;
-        break;
-    }
-    GPIOExitCritical(primask);
-    if (found) {
-        BSPFree(instance);
-    }
-}
-
 void GPIOToggel(GPIOInstance *_instance)
 {
     if ((_instance != NULL) && (_instance->GPIOx != NULL)) {

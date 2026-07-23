@@ -17,7 +17,8 @@ GPIOReset(gpio);
 ```
 
 Registration accepts exactly one pin bit and rejects duplicate port/pin pairs.
-GPIO registration and removal are protected against the maintained GPIO ISR.
+Registered pins remain owned until the MCU resets. GPIO registration is
+protected against the maintained GPIO ISR.
 `exti_mode` records module intent only; the real interrupt edge remains owned by
 SysConfig.
 

@@ -57,13 +57,6 @@
 #define ROBOT_HAS_HT04 0
 #endif
 
-#if __has_include("buzzer.h")
-#include "buzzer.h"
-#define ROBOT_HAS_BUZZER 1
-#else
-#define ROBOT_HAS_BUZZER 0
-#endif
-
 TaskHandle_t insTaskHandle;
 TaskHandle_t robotTaskHandle;
 TaskHandle_t motorTaskHandle;
@@ -92,7 +85,7 @@ void StartINSTASK(void *argument);
 #if ROBOT_HAS_MOTOR_TASK
 void StartMOTORTASK(void *argument);
 #endif
-#if ROBOT_HAS_DAEMON_TASK || ROBOT_HAS_BUZZER
+#if ROBOT_HAS_DAEMON_TASK
 void StartDAEMONTASK(void *argument);
 #endif
 void StartROBOTTASK(void *argument);
@@ -115,7 +108,7 @@ void OSTaskInit()
         tskIDLE_PRIORITY + 2U, &motorTaskHandle);
 #endif
 
-#if ROBOT_HAS_DAEMON_TASK || ROBOT_HAS_BUZZER
+#if ROBOT_HAS_DAEMON_TASK
     RobotCreateTask(StartDAEMONTASK, "daemontask", 128U,
         tskIDLE_PRIORITY + 2U, &daemonTaskHandle);
 #endif
@@ -184,14 +177,11 @@ __attribute__((noreturn)) void StartMOTORTASK(void *argument)
 }
 #endif
 
-#if ROBOT_HAS_DAEMON_TASK || ROBOT_HAS_BUZZER
+#if ROBOT_HAS_DAEMON_TASK
 __attribute__((noreturn)) void StartDAEMONTASK(void *argument)
 {
     (void) argument;
 
-#if ROBOT_HAS_BUZZER
-    BuzzerInit();
-#endif
     LOGINFO("[freeRTOS] Daemon Task Start");
     TickType_t last_wake_time = xTaskGetTickCount();
     const TickType_t period_ticks = pdMS_TO_TICKS(10U);
@@ -199,9 +189,6 @@ __attribute__((noreturn)) void StartDAEMONTASK(void *argument)
         TickType_t start_tick = xTaskGetTickCount();
 #if ROBOT_HAS_DAEMON_TASK
         DaemonTask();
-#endif
-#if ROBOT_HAS_BUZZER
-        BuzzerTask();
 #endif
         TickType_t elapsed_ticks = xTaskGetTickCount() - start_tick;
         if (elapsed_ticks > period_ticks) {

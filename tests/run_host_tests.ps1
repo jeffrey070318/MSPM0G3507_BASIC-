@@ -26,6 +26,45 @@ function Invoke-HostTest {
 
 Push-Location $projectRoot
 try {
+    Invoke-HostTest "servo_test" @(
+        "-Itests/motor_stubs", "-Itests/stubs", "-Imodule/servo",
+        "tests/servo_test.c", "module/servo/servo.c"
+    )
+    Invoke-HostTest "key_test" @(
+        "-Itests/motor_stubs", "-Itests/stubs", "-Imodule/key",
+        "tests/key_test.c", "module/key/key.c"
+    )
+    Invoke-HostTest "indicator_test" @(
+        "-Itests/indicator_stubs", "-Itests/motor_stubs", "-Itests/stubs",
+        "-Imodule/led", "-Imodule/buzzer",
+        "tests/indicator_test.c", "module/led/led.c", "module/buzzer/buzzer.c"
+    )
+    Invoke-HostTest "indicator_init_failure_test" @(
+        "-Itests/indicator_stubs", "-Itests/motor_stubs", "-Itests/stubs",
+        "-Imodule/led", "-Imodule/buzzer",
+        "tests/indicator_init_failure_test.c",
+        "module/led/led.c", "module/buzzer/buzzer.c"
+    )
+    Invoke-HostTest "pid_controller_test" @(
+        "-Imodule/algorithm",
+        "tests/pid_controller_test.c", "module/algorithm/pid.c"
+    )
+    Invoke-HostTest "motor_driver_test" @(
+        "-Itests/motor_stubs", "-Itests/stubs", "-Imodule/motor/driver",
+        "tests/motor_driver_test.c",
+        "module/motor/driver/motor_driver.c",
+        "module/motor/driver/drv8701e_driver.c",
+        "module/motor/driver/tb6612_driver.c"
+    )
+    Invoke-HostTest "motor_closed_loop_test" @(
+        "-Itests/motor_stubs", "-Itests/stubs",
+        "-Imodule", "-Imodule/motor", "-Imodule/motor/driver",
+        "tests/motor_closed_loop_test.c",
+        "module/motor/motor.c", "module/algorithm/pid.c",
+        "module/motor/driver/motor_driver.c",
+        "module/motor/driver/drv8701e_driver.c",
+        "module/motor/driver/tb6612_driver.c"
+    )
     Invoke-HostTest "encoder_decode_test" @(
         "-Ibsp/encoder",
         "tests/encoder_decode_test.c",

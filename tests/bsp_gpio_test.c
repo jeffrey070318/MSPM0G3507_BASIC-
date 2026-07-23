@@ -81,10 +81,5 @@ int main(void)
     GPIOToggel(instance_a);
     assert(instance_a->pin_state == GPIO_PIN_RESET);
 
-    GPIOUnregister(instance_b);
-    GPIOInterruptCallbackForPort(&gpio_b, 1UL << 5U);
-    assert(callback_b_count == 1U);
-
-    GPIOUnregister(instance_a);
     return 0;
 }
