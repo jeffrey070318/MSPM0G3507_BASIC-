@@ -272,7 +272,12 @@ add_custom_target(flash
     COMMAND "${OPENOCD_EXE}"
         -s "${OPENOCD_SCRIPTS_DIR}"
         -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/cmsis_dap_mspm0g3507.cfg"
-        -c "program $<TARGET_FILE:${PROJECT_NAME}.elf> verify reset exit"
+        -c "init"
+        -c "reset init"
+        -c "flash write_image erase $<TARGET_FILE:${PROJECT_NAME}.elf>"
+        -c "verify_image $<TARGET_FILE:${PROJECT_NAME}.elf>"
+        -c "reset run"
+        -c "shutdown"
     DEPENDS ${PROJECT_NAME}.elf
     USES_TERMINAL
     COMMENT "Flashing MSPM0G3507 via CMSIS-DAP")

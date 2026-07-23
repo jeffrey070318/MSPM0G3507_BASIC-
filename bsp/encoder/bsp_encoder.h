@@ -2,23 +2,27 @@
 #define BSP_ENCODER_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "bsp_device.h"
 
-typedef uint32_t (*Encoder_ReadCounter_f)(TIM_HandleTypeDef *htim);
+#define ENCODER_MAX_DEVICES 2U
 
 typedef struct {
-    TIM_HandleTypeDef *htim;
-    Encoder_ReadCounter_f read_counter;
-    uint32_t counter_period;
-    int32_t total_cnt;
-    int16_t speed;
-    uint32_t last_cnt;
+    GPIO_TypeDef    *port_a;
+    uint32_t         pin_a;
+    GPIO_TypeDef    *port_b;
+    uint32_t         pin_b;
+    volatile int32_t total_cnt;
+    volatile int16_t speed;
+    int32_t          last_total;
 } Encoder_Device_t;
 
-void Encoder_Start(Encoder_Device_t *dev);
+void Encoder_Init(Encoder_Device_t *dev);
 void Encoder_Update(Encoder_Device_t *dev);
 int32_t Encoder_Get_Total(Encoder_Device_t *dev);
 int16_t Encoder_Get_Speed(Encoder_Device_t *dev);
+
+void Encoder_ISR_ByPortPin(GPIO_TypeDef *port, uint32_t pin);
 
 #endif
