@@ -28,50 +28,6 @@
 static IMU_Handle_t imu_handle;
 static USARTInstance *vofa_usart;
 
-/* ====================== I2C1 JY901S pinmux override ====================== */
-/*
- * Switch I2C from I2C0 (PA28/PA31) to I2C1 (PB2=SCL, PB3=SDA).
- * PB2 = PINCM15, PF=0x4 -> I2C1_SCL
- * PB3 = PINCM16, PF=0x4 -> I2C1_SDA
- */
-static void RobotReconfigI2C1(void)
-{
-    /* 1. Power on and init I2C1 (SysConfig only handles I2C0). */
-    DL_I2C_reset(I2C1);
-    DL_I2C_enablePower(I2C1);
-    delay_cycles(POWER_STARTUP_DELAY);
-
-    static const DL_I2C_ClockConfig clk_cfg = {
-        .clockSel    = DL_I2C_CLOCK_BUSCLK,
-        .divideRatio = DL_I2C_CLOCK_DIVIDE_1,
-    };
-    DL_I2C_setClockConfig(I2C1, (DL_I2C_ClockConfig *)&clk_cfg);
-    DL_I2C_setAnalogGlitchFilterPulseWidth(
-        I2C1, DL_I2C_ANALOG_GLITCH_FILTER_WIDTH_50NS);
-    DL_I2C_enableAnalogGlitchFilter(I2C1);
-
-    DL_I2C_resetControllerTransfer(I2C1);
-    DL_I2C_setTimerPeriod(I2C1, 39);
-    DL_I2C_setControllerTXFIFOThreshold(
-        I2C1, DL_I2C_TX_FIFO_LEVEL_EMPTY);
-    DL_I2C_setControllerRXFIFOThreshold(
-        I2C1, DL_I2C_RX_FIFO_LEVEL_BYTES_1);
-    DL_I2C_enableControllerClockStretching(I2C1);
-    DL_I2C_enableController(I2C1);
-
-    /* 2. Route PB2 (PINCM15) -> I2C1_SCL (PF=0x4). */
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM15] =
-        (IOMUX->SECCFG.PINCM[IOMUX_PINCM15] & ~0xFU) |
-        IOMUX_PINCM15_PF_I2C1_SCL;
-    DL_GPIO_enableHiZ(IOMUX_PINCM15);
-
-    /* 3. Route PB3 (PINCM16) -> I2C1_SDA (PF=0x4). */
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM16] =
-        (IOMUX->SECCFG.PINCM[IOMUX_PINCM16] & ~0xFU) |
-        IOMUX_PINCM16_PF_I2C1_SDA;
-    DL_GPIO_enableHiZ(IOMUX_PINCM16);
-}
-
 void RobotInit()
 {  
     __disable_irq();
@@ -87,12 +43,9 @@ void RobotInit()
         vofa_usart = USARTRegister(&uart_config);
     }
 
-    /* Reconfigure I2C to I2C1 on PB2(SCL)/PB3(SDA) for JY901S. */
-    RobotReconfigI2C1();
-
     {
         IIC_Init_Config_s iic_config = {
-            .handle = &hi2c1,
+            .handle = &hi2c2,
             .dev_address = JY901S_I2C_ADDR,
             .work_mode = IIC_BLOCK_MODE,
             .callback = NULL,

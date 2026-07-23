@@ -292,4 +292,33 @@ add_custom_target(erase
     USES_TERMINAL
     COMMENT "Mass erasing MSPM0G3507 via CMSIS-DAP")
 
+add_custom_target(probe-xds110
+    COMMAND "${OPENOCD_EXE}"
+        -s "${OPENOCD_SCRIPTS_DIR}"
+        -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/xds110_mspm0g3507.cfg"
+        -c "init"
+        -c "targets"
+        -c "shutdown"
+    USES_TERMINAL
+    COMMENT "Probing MSPM0G3507 via XDS110")
+
+add_custom_target(flash-xds110
+    COMMAND "${OPENOCD_EXE}"
+        -s "${OPENOCD_SCRIPTS_DIR}"
+        -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/xds110_mspm0g3507.cfg"
+        -c "program $<TARGET_FILE:${PROJECT_NAME}.elf> verify reset exit"
+    DEPENDS ${PROJECT_NAME}.elf
+    USES_TERMINAL
+    COMMENT "Flashing MSPM0G3507 via XDS110")
+
+add_custom_target(erase-xds110
+    COMMAND "${OPENOCD_EXE}"
+        -s "${OPENOCD_SCRIPTS_DIR}"
+        -f "${CMAKE_CURRENT_SOURCE_DIR}/openocd/xds110_mspm0g3507.cfg"
+        -c "init"
+        -c "mspm0_mass_erase"
+        -c "shutdown"
+    USES_TERMINAL
+    COMMENT "Mass erasing MSPM0G3507 via XDS110")
+
   

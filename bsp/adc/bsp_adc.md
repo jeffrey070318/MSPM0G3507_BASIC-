@@ -1,8 +1,9 @@
 # ADC
 
-ADC channel, reference, resolution and sample time are configured in
-`MSPM0G3507_BASIC.syscfg`. The maintained BSP starts one conversion and reads the
-generated ADC memory slot.
+The current SysConfig does not own an ADC instance, so `ADCRead` returns
+`DEVICE_ERROR`. After an ADC12 instance and memory slot are added to
+`MSPM0G3507_BASIC.syscfg`, update the BSP to use the generated instance and
+memory macros instead of assuming a fixed name.
 
 ```c
 uint16_t raw_value;

@@ -29,14 +29,12 @@
 
 /* ====================== Motor Pin Definitions ====================== */
 #define MOTORA_PWM_HTIM  (&htim1)
-#define MOTORA_PWM_CHAN  TIM_CHANNEL_1
 #define MOTORA_DIR1_PORT GPIOA
 #define MOTORA_DIR1_PIN  GPIO_PIN_17
 #define MOTORA_DIR2_PORT GPIOA
 #define MOTORA_DIR2_PIN  GPIO_PIN_16
 
 #define MOTORB_PWM_HTIM  (&htim2)
-#define MOTORB_PWM_CHAN  TIM_CHANNEL_2
 #define MOTORB_DIR1_PORT GPIOB
 #define MOTORB_DIR1_PIN  GPIO_PIN_4
 #define MOTORB_DIR2_PORT GPIOB
@@ -46,7 +44,7 @@
 typedef struct {
     Motor_Device_t   motor;
     PID_Device_t     speed_pid;
-    Encoder_Device_t encoder;
+    Encoder_Device_t *encoder;
     int16_t          target_speed;
     int16_t          actual_speed;
 } ChassisMotor_t;
@@ -67,43 +65,6 @@ static void ChassisSetMotorOutput(uint8_t idx, int32_t output)
     Motor_SetSpeed(&g_motors[idx].motor, output);
 }
 
-/* ====================== TIMA0 PWM setup ====================== */
-static void ChassisReconfigTIMA0(void)
-{
-    DL_TimerA_stopCounter(TIMER_0_INST);
-
-    static const DL_TimerA_ClockConfig clock_cfg = {
-        .clockSel    = DL_TIMER_CLOCK_BUSCLK,
-        .divideRatio = DL_TIMER_CLOCK_DIVIDE_1,
-    };
-    DL_TimerA_setClockConfig(TIMER_0_INST,
-        (DL_TimerA_ClockConfig *)&clock_cfg);
-
-    DL_TimerA_setLoadValue(TIMER_0_INST, 3999U);
-
-    static const DL_TimerA_TimerConfig pwm_cfg = {
-        .timerMode    = DL_TIMER_TIMER_MODE_PERIODIC,
-        .period       = 3999U,
-        .startTimer   = DL_TIMER_STOP,
-        .genIntermInt = DL_TIMER_INTERM_INT_DISABLED,
-        .counterVal   = 0U,
-    };
-    DL_TimerA_initTimerMode(TIMER_0_INST,
-        (DL_TimerA_TimerConfig *)&pwm_cfg);
-
-    /* Route TIMA0 CCP0 -> PA0 (PINCM1, PF=4). */
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM1] =
-        (IOMUX->SECCFG.PINCM[IOMUX_PINCM1] & ~0xFU) |
-        IOMUX_PINCM1_PF_TIMA0_CCP0;
-    DL_GPIO_enableOutput(GPIOA, DL_GPIO_PIN_0);
-
-    /* Route TIMA0 CCP1 -> PA1 (PINCM2, PF=4). */
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM2] =
-        (IOMUX->SECCFG.PINCM[IOMUX_PINCM2] & ~0xFU) |
-        IOMUX_PINCM2_PF_TIMA0_CCP1;
-    DL_GPIO_enableOutput(GPIOA, DL_GPIO_PIN_1);
-}
-
 /* ====================== Public API ====================== */
 
 void ChassisInit(void)
@@ -111,28 +72,6 @@ void ChassisInit(void)
     if (g_chassis_initialized) {
         return;
     }
-
-    ChassisReconfigTIMA0();
-
-    /* Configure motor direction pins as GPIO outputs
-     * (overrides SysConfig PWM_3 on PA16/PA17).
-     *   AIN1=PA17 (PINCM39), AIN2=PA16 (PINCM38),
-     *   BIN1=PB4  (PINCM17), BIN2=PB1  (PINCM13) */
-    DL_GPIO_initDigitalOutput(IOMUX_PINCM39);
-    DL_GPIO_clearPins(GPIOA, DL_GPIO_PIN_17);
-    DL_GPIO_enableOutput(GPIOA, DL_GPIO_PIN_17);
-
-    DL_GPIO_initDigitalOutput(IOMUX_PINCM38);
-    DL_GPIO_clearPins(GPIOA, DL_GPIO_PIN_16);
-    DL_GPIO_enableOutput(GPIOA, DL_GPIO_PIN_16);
-
-    DL_GPIO_initDigitalOutput(IOMUX_PINCM17);
-    DL_GPIO_clearPins(GPIOB, DL_GPIO_PIN_4);
-    DL_GPIO_enableOutput(GPIOB, DL_GPIO_PIN_4);
-
-    DL_GPIO_initDigitalOutput(IOMUX_PINCM13);
-    DL_GPIO_clearPins(GPIOB, DL_GPIO_PIN_1);
-    DL_GPIO_enableOutput(GPIOB, DL_GPIO_PIN_1);
 
     /* --- Motor A (Left) --- */
     {
@@ -151,7 +90,7 @@ void ChassisInit(void)
         GPIOInstance *dir2 = GPIORegister(&cfg1);
 
         PWM_Init_Config_s pwm_cfg = {
-            .htim = MOTORA_PWM_HTIM, .channel = MOTORA_PWM_CHAN,
+            .htim = MOTORA_PWM_HTIM, .channel = MOTORA_PWM_HTIM->Channel,
             .period = 0.00005f, .dutyratio = 0.0f,
             .callback = NULL, .id = NULL,
         };
@@ -169,12 +108,8 @@ void ChassisInit(void)
                  CHASSIS_SPEED_KP, CHASSIS_SPEED_KI, CHASSIS_SPEED_KD,
                  CHASSIS_SPEED_MAX_OUT, CHASSIS_SPEED_MAX_IOUT);
 
-        Encoder_Device_t *enc = &g_motors[0].encoder;
-        enc->port_a = GPIOA;
-        enc->pin_a  = DL_GPIO_PIN_12;
-        enc->port_b = GPIOA;
-        enc->pin_b  = DL_GPIO_PIN_13;
-        Encoder_Init(enc);
+        g_motors[0].encoder = &hencoder_left;
+        Encoder_Start(g_motors[0].encoder);
     }
 
     /* --- Motor B (Right) --- */
@@ -194,7 +129,7 @@ void ChassisInit(void)
         GPIOInstance *dir2 = GPIORegister(&cfg1);
 
         PWM_Init_Config_s pwm_cfg = {
-            .htim = MOTORB_PWM_HTIM, .channel = MOTORB_PWM_CHAN,
+            .htim = MOTORB_PWM_HTIM, .channel = MOTORB_PWM_HTIM->Channel,
             .period = 0.00005f, .dutyratio = 0.0f,
             .callback = NULL, .id = NULL,
         };
@@ -212,12 +147,8 @@ void ChassisInit(void)
                  CHASSIS_SPEED_KP, CHASSIS_SPEED_KI, CHASSIS_SPEED_KD,
                  CHASSIS_SPEED_MAX_OUT, CHASSIS_SPEED_MAX_IOUT);
 
-        Encoder_Device_t *enc = &g_motors[1].encoder;
-        enc->port_a = GPIOB;
-        enc->pin_a  = DL_GPIO_PIN_22;
-        enc->port_b = GPIOB;
-        enc->pin_b  = DL_GPIO_PIN_23;
-        Encoder_Init(enc);
+        g_motors[1].encoder = &hencoder_right;
+        Encoder_Start(g_motors[1].encoder);
     }
 
     g_cmd.vx = 0.0f;
@@ -236,11 +167,11 @@ void ChassisTask(void)
 
     ChassisReceiveCommand();
 
-    Encoder_Update(&g_motors[0].encoder);
-    Encoder_Update(&g_motors[1].encoder);
+    Encoder_Update(g_motors[0].encoder);
+    Encoder_Update(g_motors[1].encoder);
 
-    g_motors[0].actual_speed = Encoder_Get_Speed(&g_motors[0].encoder);
-    g_motors[1].actual_speed = Encoder_Get_Speed(&g_motors[1].encoder);
+    g_motors[0].actual_speed = Encoder_Get_Speed(g_motors[0].encoder);
+    g_motors[1].actual_speed = Encoder_Get_Speed(g_motors[1].encoder);
 
     ChassisUpdateMode();
 

@@ -3,7 +3,7 @@
 
 #include "bsp_device.h"
 
-#define GPIO_MX_DEVICE_NUM 10U
+#define GPIO_MX_DEVICE_NUM 16U
 
 typedef enum {
     GPIO_EXTI_MODE_RISING,
@@ -37,7 +37,14 @@ void GPIOSet(GPIOInstance *_instance);
 void GPIOReset(GPIOInstance *_instance);
 GPIO_PinState GPIORead(GPIOInstance *_instance);
 
-/* Called by the maintained GPIO IRQ entry after reading the pending pin. */
+/* Convert a DriverLib GPIO IIDX value to its single-pin bit mask. */
+uint32_t GPIOPinFromInterruptIndex(uint32_t interrupt_index);
+
+/* Compatibility dispatch when the port is not available to the caller. */
 void GPIOInterruptCallback(uint32_t gpio_pin);
+
+/* Port-aware dispatch used by the maintained GPIO IRQ entry. */
+void GPIOInterruptCallbackForPort(
+    GPIO_TypeDef *gpio_port, uint32_t gpio_pin);
 
 #endif

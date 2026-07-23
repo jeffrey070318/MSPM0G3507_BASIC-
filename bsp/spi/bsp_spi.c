@@ -8,9 +8,12 @@
     (DL_SPI_INTERRUPT_RX_TIMEOUT | DL_SPI_INTERRUPT_PARITY_ERROR |         \
         DL_SPI_INTERRUPT_RX_OVERFLOW)
 
-static SPIInstance *spi_instance[MX_SPI_BUS_SLAVE_CNT] = {NULL};
 static uint8_t idx = 0;
 uint8_t SPIDeviceOnGoing[SPI_DEVICE_CNT] = {1};
+
+#ifdef SPI_0_INST
+static SPIInstance *spi_instance[MX_SPI_BUS_SLAVE_CNT] = {NULL};
+#endif
 
 static bool SPIHasError(SPI_Regs *spi)
 {
@@ -138,9 +141,15 @@ static bool SPIReleaseCS(SPIInstance *spi_ins)
 SPIInstance *SPIRegister(SPI_Init_Config_s *conf)
 {
     if ((conf == NULL) || (conf->spi_handle == NULL) ||
-        (conf->spi_handle->Instance != SPI_0_INST) ||
         (conf->GPIOx == NULL) || (conf->cs_pin == 0U) ||
         (idx >= MX_SPI_BUS_SLAVE_CNT)) {
+        return NULL;
+    }
+
+#ifndef SPI_0_INST
+    return NULL;
+#else
+    if (conf->spi_handle->Instance != SPI_0_INST) {
         return NULL;
     }
 
@@ -165,6 +174,7 @@ SPIInstance *SPIRegister(SPI_Init_Config_s *conf)
 
     spi_instance[idx++] = instance;
     return instance;
+#endif
 }
 
 void SPITransmit(SPIInstance *spi_ins, uint8_t *ptr_data, uint8_t len)

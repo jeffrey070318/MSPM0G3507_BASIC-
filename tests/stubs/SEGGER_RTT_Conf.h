@@ -1,0 +1,3 @@
+#ifndef TEST_STUB_SEGGER_RTT_CONF_H
+#define TEST_STUB_SEGGER_RTT_CONF_H
+#endif

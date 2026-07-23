@@ -7,9 +7,92 @@
 #define IIC_POLL_LIMIT (1000000U)
 #define IIC_FIFO_SIZE  (8U)
 #define IIC_START_DELAY_CYCLES (32U)
+#define IIC_MAX_TRANSFER_SIZE (0x0FFFU)
+#define IIC_CONTROLLER_FAILURE_MASK                                      \
+    (DL_I2C_CONTROLLER_STATUS_ERROR |                                   \
+        DL_I2C_CONTROLLER_STATUS_ARBITRATION_LOST)
 
 static uint8_t idx = 0;
 static IICInstance *iic_instance[MX_IIC_SLAVE_CNT] = {NULL};
+static I2C_Regs *iic_bus[IIC_DEVICE_CNT] = {NULL};
+static volatile uint8_t iic_bus_busy[IIC_DEVICE_CNT];
+
+static uint32_t IICEnterCritical(void)
+{
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+    return primask;
+}
+
+static void IICExitCritical(uint32_t primask)
+{
+    if (primask == 0U) {
+        __enable_irq();
+    }
+}
+
+static int32_t IICReserveBus(I2C_Regs *bus)
+{
+    int32_t free_index = -1;
+    uint32_t primask = IICEnterCritical();
+    for (uint8_t i = 0U; i < IIC_DEVICE_CNT; ++i) {
+        if (iic_bus[i] == bus) {
+            IICExitCritical(primask);
+            return (int32_t) i;
+        }
+        if ((iic_bus[i] == NULL) && (free_index < 0)) {
+            free_index = (int32_t) i;
+        }
+    }
+    if (free_index >= 0) {
+        iic_bus[free_index] = bus;
+    }
+    IICExitCritical(primask);
+    return free_index;
+}
+
+static Device_Status_e IICAcquireBus(IICInstance *iic)
+{
+    if ((iic == NULL) || (iic->bus_index >= IIC_DEVICE_CNT)) {
+        return DEVICE_ERROR;
+    }
+    if (iic->sequence_held) {
+        return DEVICE_OK;
+    }
+
+    uint32_t primask = IICEnterCritical();
+    if (iic_bus_busy[iic->bus_index] != 0U) {
+        IICExitCritical(primask);
+        return DEVICE_BUSY;
+    }
+    iic_bus_busy[iic->bus_index] = 1U;
+    IICExitCritical(primask);
+    return DEVICE_OK;
+}
+
+static void IICReleaseBus(IICInstance *iic)
+{
+    if ((iic == NULL) || (iic->bus_index >= IIC_DEVICE_CNT)) {
+        return;
+    }
+    uint32_t primask = IICEnterCritical();
+    iic->sequence_held = false;
+    iic_bus_busy[iic->bus_index] = 0U;
+    IICExitCritical(primask);
+}
+
+static Device_Status_e IICFinishOperation(
+    IICInstance *iic, Device_Status_e status, bool hold_bus)
+{
+    if ((status == DEVICE_OK) && hold_bus) {
+        uint32_t primask = IICEnterCritical();
+        iic->sequence_held = true;
+        IICExitCritical(primask);
+        return status;
+    }
+    IICReleaseBus(iic);
+    return status;
+}
 
 static void IICRecordStatus(IICInstance *iic)
 {
@@ -20,18 +103,12 @@ static void IICRecordStatus(IICInstance *iic)
     }
 }
 
-static uint32_t IICAddress7(uint8_t dev_address)
-{
-    return (dev_address > 0x7FU) ? ((uint32_t) dev_address >> 1U)
-                                 : (uint32_t) dev_address;
-}
-
 static Device_Status_e IICWaitIdle(I2C_Regs *i2c)
 {
     for (uint32_t poll = 0U; poll < IIC_POLL_LIMIT; ++poll) {
         uint32_t status = DL_I2C_getControllerStatus(i2c);
 
-        if ((status & DL_I2C_CONTROLLER_STATUS_ERROR) != 0U) {
+        if ((status & IIC_CONTROLLER_FAILURE_MASK) != 0U) {
             return DEVICE_ERROR;
         }
         if ((status & DL_I2C_CONTROLLER_STATUS_IDLE) != 0U) {
@@ -47,7 +124,7 @@ static Device_Status_e IICWaitTransfer(I2C_Regs *i2c)
     for (uint32_t poll = 0U; poll < IIC_POLL_LIMIT; ++poll) {
         uint32_t status = DL_I2C_getControllerStatus(i2c);
 
-        if ((status & DL_I2C_CONTROLLER_STATUS_ERROR) != 0U) {
+        if ((status & IIC_CONTROLLER_FAILURE_MASK) != 0U) {
             return DEVICE_ERROR;
         }
         if ((status & DL_I2C_CONTROLLER_STATUS_BUSY) == 0U) {
@@ -64,7 +141,8 @@ static Device_Status_e IICBlockingTransmitEx(
 {
     if ((iic == NULL) || (iic->handle == NULL) ||
         (iic->handle->Instance == NULL) ||
-        (data == NULL) || (size == 0U)) {
+        (data == NULL) || (size == 0U) ||
+        (size > IIC_MAX_TRANSFER_SIZE)) {
         return DEVICE_ERROR;
     }
 
@@ -73,6 +151,7 @@ static Device_Status_e IICBlockingTransmitEx(
         Device_Status_e idle_status = IICWaitIdle(i2c);
         if (idle_status != DEVICE_OK) {
             IICRecordStatus(iic);
+            DL_I2C_resetControllerTransfer(i2c);
             return idle_status;
         }
     }
@@ -81,7 +160,7 @@ static Device_Status_e IICBlockingTransmitEx(
         (size < IIC_FIFO_SIZE) ? size : IIC_FIFO_SIZE;
     DL_I2C_fillControllerTXFIFO(i2c, data, initial_size);
 
-    DL_I2C_startControllerTransferAdvanced(i2c, IICAddress7(iic->dev_address),
+    DL_I2C_startControllerTransferAdvanced(i2c, iic->dev_address,
         DL_I2C_CONTROLLER_DIRECTION_TX, size, DL_I2C_CONTROLLER_START_ENABLE,
         stop_enable ? DL_I2C_CONTROLLER_STOP_ENABLE
                      : DL_I2C_CONTROLLER_STOP_DISABLE,
@@ -92,7 +171,7 @@ static Device_Status_e IICBlockingTransmitEx(
         uint32_t poll = 0U;
         while (DL_I2C_isControllerTXFIFOFull(i2c)) {
             if ((DL_I2C_getControllerStatus(i2c) &
-                    DL_I2C_CONTROLLER_STATUS_ERROR) != 0U ||
+                    IIC_CONTROLLER_FAILURE_MASK) != 0U ||
                 ++poll >= IIC_POLL_LIMIT) {
                 IICRecordStatus(iic);
                 DL_I2C_resetControllerTransfer(i2c);
@@ -114,11 +193,13 @@ static Device_Status_e IICBlockingTransmitEx(
 }
 
 static Device_Status_e IICBlockingReceiveEx(
-    IICInstance *iic, uint8_t *data, uint16_t size, bool wait_idle)
+    IICInstance *iic, uint8_t *data, uint16_t size, bool stop_enable,
+    bool wait_idle)
 {
     if ((iic == NULL) || (iic->handle == NULL) ||
         (iic->handle->Instance == NULL) ||
-        (data == NULL) || (size == 0U)) {
+        (data == NULL) || (size == 0U) ||
+        (size > IIC_MAX_TRANSFER_SIZE)) {
         return DEVICE_ERROR;
     }
 
@@ -127,20 +208,23 @@ static Device_Status_e IICBlockingReceiveEx(
         Device_Status_e idle_status = IICWaitIdle(i2c);
         if (idle_status != DEVICE_OK) {
             IICRecordStatus(iic);
+            DL_I2C_resetControllerTransfer(i2c);
             return idle_status;
         }
     }
 
-    DL_I2C_startControllerTransferAdvanced(i2c, IICAddress7(iic->dev_address),
+    DL_I2C_startControllerTransferAdvanced(i2c, iic->dev_address,
         DL_I2C_CONTROLLER_DIRECTION_RX, size, DL_I2C_CONTROLLER_START_ENABLE,
-        DL_I2C_CONTROLLER_STOP_ENABLE, DL_I2C_CONTROLLER_ACK_DISABLE);
+        stop_enable ? DL_I2C_CONTROLLER_STOP_ENABLE
+                    : DL_I2C_CONTROLLER_STOP_DISABLE,
+        DL_I2C_CONTROLLER_ACK_DISABLE);
     delay_cycles(IIC_START_DELAY_CYCLES);
 
     for (uint16_t i = 0U; i < size; ++i) {
         uint32_t poll = 0U;
         while (DL_I2C_isControllerRXFIFOEmpty(i2c)) {
             if ((DL_I2C_getControllerStatus(i2c) &
-                    DL_I2C_CONTROLLER_STATUS_ERROR) != 0U ||
+                    IIC_CONTROLLER_FAILURE_MASK) != 0U ||
                 ++poll >= IIC_POLL_LIMIT) {
                 IICRecordStatus(iic);
                 DL_I2C_resetControllerTransfer(i2c);
@@ -165,6 +249,8 @@ IICInstance *IICRegister(IIC_Init_Config_s *conf)
 {
     if ((conf == NULL) || (conf->handle == NULL) ||
         (conf->handle->Instance == NULL) ||
+        (conf->dev_address > 0x7FU) ||
+        (conf->work_mode > IIC_DMA_MODE) ||
         (idx >= MX_IIC_SLAVE_CNT)) {
         return NULL;
     }
@@ -176,14 +262,18 @@ IICInstance *IICRegister(IIC_Init_Config_s *conf)
     }
     memset(instance, 0, sizeof(IICInstance));
 
-    /* DriverLib consumes a 7-bit address. Values above 0x7F are legacy. */
-    instance->dev_address =
-        (conf->dev_address > 0x7FU) ? (conf->dev_address >> 1U)
-                                    : conf->dev_address;
+    int32_t bus_index = IICReserveBus(conf->handle->Instance);
+    if (bus_index < 0) {
+        BSPFree(instance);
+        return NULL;
+    }
+
+    instance->dev_address = conf->dev_address;
     instance->callback = conf->callback;
     instance->work_mode = conf->work_mode;
     instance->handle = conf->handle;
     instance->id = conf->id;
+    instance->bus_index = (uint8_t) bus_index;
 
     iic_instance[idx++] = instance;
     return instance;
@@ -191,7 +281,7 @@ IICInstance *IICRegister(IIC_Init_Config_s *conf)
 
 void IICSetMode(IICInstance *iic, IIC_Work_Mode_e mode)
 {
-    if (iic != NULL) {
+    if ((iic != NULL) && (mode <= IIC_DMA_MODE)) {
         iic->work_mode = mode;
     }
 }
@@ -208,8 +298,13 @@ Device_Status_e IICTransmitEx(
         return DEVICE_ERROR;
     }
 
-    return IICBlockingTransmitEx(iic, data, size,
+    Device_Status_e status = IICAcquireBus(iic);
+    if (status != DEVICE_OK) {
+        return status;
+    }
+    status = IICBlockingTransmitEx(iic, data, size,
         seq_mode == IIC_SEQ_RELEASE, true);
+    return IICFinishOperation(iic, status, seq_mode == IIC_SEQ_HOLDON);
 }
 
 void IICTransmit(
@@ -221,29 +316,60 @@ void IICTransmit(
 void IICReceive(
     IICInstance *iic, uint8_t *data, uint16_t size, IIC_Seq_Mode_e seq_mode)
 {
+    (void) IICReceiveEx(iic, data, size, seq_mode);
+}
+
+Device_Status_e IICReceiveEx(
+    IICInstance *iic, uint8_t *data, uint16_t size, IIC_Seq_Mode_e seq_mode)
+{
     if (seq_mode != IIC_SEQ_RELEASE && seq_mode != IIC_SEQ_HOLDON) {
-        while (1) {
-        }
+        return DEVICE_ERROR;
     }
 
     if (iic == NULL) {
-        return;
+        return DEVICE_ERROR;
     }
 
     iic->rx_buffer = data;
     iic->rx_len = size;
 
-    if (IICBlockingReceiveEx(iic, data, size, true) == DEVICE_OK &&
-        iic->callback != NULL) {
+    Device_Status_e status = IICAcquireBus(iic);
+    if (status != DEVICE_OK) {
+        return status;
+    }
+    status = IICBlockingReceiveEx(iic, data, size,
+        seq_mode == IIC_SEQ_RELEASE, true);
+    status = IICFinishOperation(iic, status, seq_mode == IIC_SEQ_HOLDON);
+    if ((status == DEVICE_OK) && (iic->callback != NULL)) {
         iic->callback(iic);
     }
+    return status;
 }
 
 void IICAccessMem(IICInstance *iic, uint16_t mem_addr, uint8_t *data,
     uint16_t size, IIC_Mem_Mode_e mem_mode, uint8_t mem8bit_flag)
 {
+    (void) IICAccessMemEx(
+        iic, mem_addr, data, size, mem_mode, mem8bit_flag);
+}
+
+Device_Status_e IICAccessMemEx(IICInstance *iic, uint16_t mem_addr,
+    uint8_t *data, uint16_t size, IIC_Mem_Mode_e mem_mode,
+    uint8_t mem8bit_flag)
+{
     uint8_t addr_buf[2];
     uint8_t addr_len = mem8bit_flag ? 1U : 2U;
+
+    if ((iic == NULL) || (data == NULL) || (size == 0U) ||
+        (size > IIC_MAX_TRANSFER_SIZE) ||
+        ((mem_mode != IIC_WRITE_MEM) && (mem_mode != IIC_READ_MEM))) {
+        return DEVICE_ERROR;
+    }
+
+    Device_Status_e acquire_status = IICAcquireBus(iic);
+    if (acquire_status != DEVICE_OK) {
+        return acquire_status;
+    }
 
     if (mem8bit_flag) {
         addr_buf[0] = (uint8_t) mem_addr;
@@ -253,28 +379,46 @@ void IICAccessMem(IICInstance *iic, uint16_t mem_addr, uint8_t *data,
     }
 
     if (mem_mode == IIC_WRITE_MEM) {
-        if ((iic == NULL) || (data == NULL) ||
-            (size > (uint16_t) (UINT16_MAX - addr_len))) {
-            return;
+        if (size > (uint16_t) (IIC_MAX_TRANSFER_SIZE - addr_len)) {
+            IICReleaseBus(iic);
+            return DEVICE_ERROR;
         }
 
         uint16_t tx_len = (uint16_t) (addr_len + size);
         uint8_t *tx_buf = (uint8_t *) BSPMalloc(tx_len);
-        if (tx_buf != NULL) {
-            memcpy(tx_buf, addr_buf, addr_len);
-            memcpy(&tx_buf[addr_len], data, size);
-            (void) IICBlockingTransmitEx(iic, tx_buf, tx_len, true, true);
-            BSPFree(tx_buf);
+        if (tx_buf == NULL) {
+            IICReleaseBus(iic);
+            return DEVICE_ERROR;
         }
-    } else if (mem_mode == IIC_READ_MEM) {
-        if (IICBlockingTransmitEx(iic, addr_buf, addr_len, false, true) ==
-                DEVICE_OK &&
-            IICBlockingReceiveEx(iic, data, size, false) == DEVICE_OK &&
-            (iic != NULL) && (iic->callback != NULL)) {
-            iic->callback(iic);
-        }
-    } else {
-        while (1) {
-        }
+        memcpy(tx_buf, addr_buf, addr_len);
+        memcpy(&tx_buf[addr_len], data, size);
+        Device_Status_e status =
+            IICBlockingTransmitEx(iic, tx_buf, tx_len, true, true);
+        BSPFree(tx_buf);
+        return IICFinishOperation(iic, status, false);
     }
+
+    iic->rx_buffer = data;
+    iic->rx_len = size;
+    Device_Status_e status =
+        IICBlockingTransmitEx(iic, addr_buf, addr_len, false, true);
+    if (status == DEVICE_OK) {
+        status = IICBlockingReceiveEx(iic, data, size, true, false);
+    }
+    status = IICFinishOperation(iic, status, false);
+    if ((status == DEVICE_OK) && (iic->callback != NULL)) {
+        iic->callback(iic);
+    }
+    return status;
+}
+
+void IICAbortSequence(IICInstance *iic)
+{
+    if ((iic == NULL) || (iic->handle == NULL) ||
+        (iic->handle->Instance == NULL)) {
+        return;
+    }
+    IICRecordStatus(iic);
+    DL_I2C_resetControllerTransfer(iic->handle->Instance);
+    IICReleaseBus(iic);
 }
