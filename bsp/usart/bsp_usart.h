@@ -45,6 +45,8 @@ USARTInstance *USARTGetInstance(UART_HandleTypeDef *usart_handle);
 void USARTServiceInit(USARTInstance *_instance);
 Device_Status_e USARTSendEx(USARTInstance *_instance, uint8_t *send_buf,
     uint16_t send_size, USART_TRANSFER_MODE mode);
+Device_Status_e USARTReceiveAvailable(USARTInstance *_instance,
+    uint8_t *data, uint16_t capacity, uint16_t *received_size);
 void USARTSend(USARTInstance *_instance, uint8_t *send_buf,
     uint16_t send_size, USART_TRANSFER_MODE mode);
 uint8_t USARTIsReady(USARTInstance *_instance);

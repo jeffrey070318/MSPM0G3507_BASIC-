@@ -2,16 +2,28 @@
 
 #include <string.h>
 
-static Device_Status_e VOFABuildAndSend(const float *data, uint8_t num,
-    UART_HandleTypeDef *huart, USART_TRANSFER_MODE mode)
-{
-    if ((data == NULL) || (huart == NULL) || (num == 0U) ||
-        (num > VOFA_JUSTFLOAT_MAX_NUM)) {
-        return DEVICE_ERROR;
-    }
+#include "bsp_usart.h"
 
-    USARTInstance *instance = USARTGetInstance(huart);
-    if (instance == NULL) {
+static USARTInstance *vofa_usart;
+
+Device_Status_e VOFA_Init(void)
+{
+    if (vofa_usart != NULL) return DEVICE_OK;
+
+    USART_Init_Config_s config = {
+        .recv_buff_size = 16U,
+        .usart_handle = &huart1,
+        .module_callback = NULL,
+    };
+    vofa_usart = USARTRegister(&config);
+    return (vofa_usart != NULL) ? DEVICE_OK : DEVICE_ERROR;
+}
+
+static Device_Status_e VOFABuildAndSend(
+    const float *data, uint8_t num, USART_TRANSFER_MODE mode)
+{
+    if ((data == NULL) || (vofa_usart == NULL) || (num == 0U) ||
+        (num > VOFA_JUSTFLOAT_MAX_NUM)) {
         return DEVICE_ERROR;
     }
 
@@ -23,19 +35,16 @@ static Device_Status_e VOFABuildAndSend(const float *data, uint8_t num,
     send_data[payload_size + 2U] = 0x80U;
     send_data[payload_size + 3U] = 0x7FU;
 
-    return USARTSendEx(instance, send_data,
+    return USARTSendEx(vofa_usart, send_data,
         (uint16_t) (payload_size + 4U), mode);
 }
 
-void vofa_justfloat_output(
-    float *data, uint8_t num, UART_HandleTypeDef *huart)
+Device_Status_e VOFA_JustFloatOutput(const float *data, uint8_t num)
 {
-    (void) VOFABuildAndSend(
-        data, num, huart, USART_TRANSFER_BLOCKING);
+    return VOFABuildAndSend(data, num, USART_TRANSFER_BLOCKING);
 }
 
-Device_Status_e vofa_justfloat_output_dma(
-    const float *data, uint8_t num, UART_HandleTypeDef *huart)
+Device_Status_e VOFA_JustFloatOutputDMA(const float *data, uint8_t num)
 {
-    return VOFABuildAndSend(data, num, huart, USART_TRANSFER_DMA);
+    return VOFABuildAndSend(data, num, USART_TRANSFER_DMA);
 }

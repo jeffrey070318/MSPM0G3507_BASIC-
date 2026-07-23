@@ -1,5 +1,9 @@
 #include "imu.h"
 
+#include "bsp_iic.h"
+
+static IICInstance *imu_iic;
+
 static int16_t IMU_CombineI16(uint8_t lo, uint8_t hi)
 {
     return (int16_t)(((uint16_t)hi << 8U) | (uint16_t)lo);
@@ -33,112 +37,120 @@ static void IMU_ParseMag(const uint8_t buf[6], float *mx, float *my, float *mz)
     if (mz) *mz = (float)IMU_CombineI16(buf[4], buf[5]);
 }
 
-Device_Status_e IMU_Init(IMU_Handle_t *imu, IIC_Init_Config_s *conf)
+Device_Status_e IMU_Init(void)
 {
-    if ((imu == NULL) || (conf == NULL)) return DEVICE_ERROR;
-    imu->iic = IICRegister(conf);
-    return (imu->iic != NULL) ? DEVICE_OK : DEVICE_ERROR;
+    if (imu_iic != NULL) return DEVICE_OK;
+
+    IIC_Init_Config_s config = {
+        .handle = &hi2c2,
+        .dev_address = JY901S_I2C_ADDR,
+        .work_mode = IIC_BLOCK_MODE,
+        .callback = NULL,
+        .id = NULL,
+    };
+    imu_iic = IICRegister(&config);
+    return (imu_iic != NULL) ? DEVICE_OK : DEVICE_ERROR;
 }
 
-Device_Status_e IMU_ReadRegister(IMU_Handle_t *imu, uint8_t reg, uint8_t *data, uint8_t len)
+Device_Status_e IMU_ReadRegister(uint8_t reg, uint8_t *data, uint8_t len)
 {
-    if ((imu == NULL) || (imu->iic == NULL) || (data == NULL) || (len == 0U))
+    if ((imu_iic == NULL) || (data == NULL) || (len == 0U))
         return DEVICE_ERROR;
 
-    IICAccessMem(imu->iic, (uint16_t)reg, data, (uint16_t)len, IIC_READ_MEM, 1U);
+    IICAccessMem(imu_iic, (uint16_t)reg, data, (uint16_t)len, IIC_READ_MEM, 1U);
 
-    uint32_t status = IICGetLastControllerStatus(imu->iic);
+    uint32_t status = IICGetLastControllerStatus(imu_iic);
     return ((status & DL_I2C_CONTROLLER_STATUS_ERROR) != 0U) ? DEVICE_ERROR : DEVICE_OK;
 }
 
-Device_Status_e IMU_ReadAccel(IMU_Handle_t *imu, float *ax, float *ay, float *az)
+Device_Status_e IMU_ReadAccel(float *ax, float *ay, float *az)
 {
     uint8_t buf[JY901S_ACC_LEN];
-    Device_Status_e ret = IMU_ReadRegister(imu, JY901S_REG_ACC, buf, JY901S_ACC_LEN);
+    Device_Status_e ret = IMU_ReadRegister(JY901S_REG_ACC, buf, JY901S_ACC_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseAccel(buf, ax, ay, az);
     return DEVICE_OK;
 }
 
-Device_Status_e IMU_ReadGyro(IMU_Handle_t *imu, float *gx, float *gy, float *gz)
+Device_Status_e IMU_ReadGyro(float *gx, float *gy, float *gz)
 {
     uint8_t buf[JY901S_GYRO_LEN];
-    Device_Status_e ret = IMU_ReadRegister(imu, JY901S_REG_GYRO, buf, JY901S_GYRO_LEN);
+    Device_Status_e ret = IMU_ReadRegister(JY901S_REG_GYRO, buf, JY901S_GYRO_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseGyro(buf, gx, gy, gz);
     return DEVICE_OK;
 }
 
-Device_Status_e IMU_ReadAngle(IMU_Handle_t *imu, float *roll, float *pitch, float *yaw)
+Device_Status_e IMU_ReadAngle(float *roll, float *pitch, float *yaw)
 {
     uint8_t buf[JY901S_ANGLE_LEN];
-    Device_Status_e ret = IMU_ReadRegister(imu, JY901S_REG_ANGLE, buf, JY901S_ANGLE_LEN);
+    Device_Status_e ret = IMU_ReadRegister(JY901S_REG_ANGLE, buf, JY901S_ANGLE_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseAngle(buf, roll, pitch, yaw);
     return DEVICE_OK;
 }
 
-Device_Status_e IMU_ReadMag(IMU_Handle_t *imu, float *mx, float *my, float *mz)
+Device_Status_e IMU_ReadMag(float *mx, float *my, float *mz)
 {
     uint8_t buf[JY901S_MAG_LEN];
-    Device_Status_e ret = IMU_ReadRegister(imu, JY901S_REG_MAG, buf, JY901S_MAG_LEN);
+    Device_Status_e ret = IMU_ReadRegister(JY901S_REG_MAG, buf, JY901S_MAG_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseMag(buf, mx, my, mz);
     return DEVICE_OK;
 }
 
-Device_Status_e IMU_ReadAll(IMU_Handle_t *imu, IMU_Data_t *data)
+Device_Status_e IMU_ReadAll(IMU_Data_t *data)
 {
-    if ((imu == NULL) || (data == NULL)) return DEVICE_ERROR;
+    if (data == NULL) return DEVICE_ERROR;
 
     Device_Status_e ret;
     uint8_t buf[6];
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_ACC, buf, JY901S_ACC_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_ACC, buf, JY901S_ACC_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseAccel(buf, &data->ax, &data->ay, &data->az);
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_GYRO, buf, JY901S_GYRO_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_GYRO, buf, JY901S_GYRO_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseGyro(buf, &data->gx, &data->gy, &data->gz);
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_ANGLE, buf, JY901S_ANGLE_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_ANGLE, buf, JY901S_ANGLE_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseAngle(buf, &data->roll, &data->pitch, &data->yaw);
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_MAG, buf, JY901S_MAG_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_MAG, buf, JY901S_MAG_LEN);
     if (ret != DEVICE_OK) return ret;
     IMU_ParseMag(buf, &data->mx, &data->my, &data->mz);
 
     return DEVICE_OK;
 }
 
-Device_Status_e IMU_ReadRaw(IMU_Handle_t *imu, IMU_RawData_t *raw)
+Device_Status_e IMU_ReadRaw(IMU_RawData_t *raw)
 {
-    if ((imu == NULL) || (raw == NULL)) return DEVICE_ERROR;
+    if (raw == NULL) return DEVICE_ERROR;
 
     Device_Status_e ret;
     uint8_t buf[6];
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_ACC, buf, JY901S_ACC_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_ACC, buf, JY901S_ACC_LEN);
     if (ret != DEVICE_OK) return ret;
     raw->ax = IMU_CombineI16(buf[0], buf[1]);
     raw->ay = IMU_CombineI16(buf[2], buf[3]);
     raw->az = IMU_CombineI16(buf[4], buf[5]);
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_GYRO, buf, JY901S_GYRO_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_GYRO, buf, JY901S_GYRO_LEN);
     if (ret != DEVICE_OK) return ret;
     raw->gx = IMU_CombineI16(buf[0], buf[1]);
     raw->gy = IMU_CombineI16(buf[2], buf[3]);
     raw->gz = IMU_CombineI16(buf[4], buf[5]);
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_ANGLE, buf, JY901S_ANGLE_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_ANGLE, buf, JY901S_ANGLE_LEN);
     if (ret != DEVICE_OK) return ret;
     raw->roll  = IMU_CombineI16(buf[0], buf[1]);
     raw->pitch = IMU_CombineI16(buf[2], buf[3]);
     raw->yaw   = IMU_CombineI16(buf[4], buf[5]);
 
-    ret = IMU_ReadRegister(imu, JY901S_REG_MAG, buf, JY901S_MAG_LEN);
+    ret = IMU_ReadRegister(JY901S_REG_MAG, buf, JY901S_MAG_LEN);
     if (ret != DEVICE_OK) return ret;
     raw->mx = IMU_CombineI16(buf[0], buf[1]);
     raw->my = IMU_CombineI16(buf[2], buf[3]);

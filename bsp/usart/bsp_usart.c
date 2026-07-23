@@ -361,6 +361,25 @@ Device_Status_e USARTSendEx(USARTInstance *_instance, uint8_t *send_buf,
     }
 }
 
+Device_Status_e USARTReceiveAvailable(USARTInstance *_instance,
+    uint8_t *data, uint16_t capacity, uint16_t *received_size)
+{
+    if ((_instance == NULL) || (_instance->usart_handle == NULL) ||
+        (_instance->usart_handle->Instance == NULL) || (data == NULL) ||
+        (capacity == 0U) || (received_size == NULL)) {
+        return DEVICE_ERROR;
+    }
+
+    *received_size = 0U;
+    while ((*received_size < capacity) &&
+           !DL_UART_Main_isRXFIFOEmpty(_instance->usart_handle->Instance)) {
+        data[*received_size] =
+            DL_UART_Main_receiveData(_instance->usart_handle->Instance);
+        (*received_size)++;
+    }
+    return DEVICE_OK;
+}
+
 void USARTSend(USARTInstance *_instance, uint8_t *send_buf,
     uint16_t send_size, USART_TRANSFER_MODE mode)
 {

@@ -19,14 +19,8 @@
 #include "robot_cmd.h"
 #endif
 
-#include "bsp_usart.h"
 #include "imu.h"
 #include "vofa.h"
-
-#include "ti_msp_dl_config.h"
-
-static IMU_Handle_t imu_handle;
-static USARTInstance *vofa_usart;
 
 void RobotInit()
 {  
@@ -34,25 +28,8 @@ void RobotInit()
     
     BSPInit();
 
-    {
-        USART_Init_Config_s uart_config = {
-            .recv_buff_size = 16U,
-            .usart_handle = &huart1,
-            .module_callback = NULL,
-        };
-        vofa_usart = USARTRegister(&uart_config);
-    }
-
-    {
-        IIC_Init_Config_s iic_config = {
-            .handle = &hi2c2,
-            .dev_address = JY901S_I2C_ADDR,
-            .work_mode = IIC_BLOCK_MODE,
-            .callback = NULL,
-            .id = NULL,
-        };
-        IMU_Init(&imu_handle, &iic_config);
-    }
+    (void) VOFA_Init();
+    (void) IMU_Init();
 
 #if defined(ROBOT_ENABLE_CMD_APP)
     RobotCMDInit();
@@ -79,7 +56,7 @@ void RobotTask()
 {
     {
         IMU_Data_t imu_data;
-        if (IMU_ReadAll(&imu_handle, &imu_data) == DEVICE_OK) {
+        if (IMU_ReadAll(&imu_data) == DEVICE_OK) {
             float vofa_buf[9];
             vofa_buf[0] = imu_data.ax;
             vofa_buf[1] = imu_data.ay;
@@ -90,7 +67,7 @@ void RobotTask()
             vofa_buf[6] = imu_data.roll;
             vofa_buf[7] = imu_data.pitch;
             vofa_buf[8] = imu_data.yaw;
-            vofa_justfloat_output_dma(vofa_buf, 9U, &huart1);
+            (void) VOFA_JustFloatOutputDMA(vofa_buf, 9U);
         }
     }
 

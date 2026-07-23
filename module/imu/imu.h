@@ -2,7 +2,6 @@
 #define BSP_IMU_H
 
 #include "bsp_def.h"
-#include "bsp_iic.h"
 
 #define JY901S_I2C_ADDR      0x50U
 
@@ -39,17 +38,13 @@ typedef struct {
     float mx, my, mz;
 } IMU_Data_t;
 
-typedef struct {
-    IICInstance *iic;
-} IMU_Handle_t;
-
-Device_Status_e IMU_Init(IMU_Handle_t *imu, IIC_Init_Config_s *conf);
-Device_Status_e IMU_ReadRegister(IMU_Handle_t *imu, uint8_t reg, uint8_t *data, uint8_t len);
-Device_Status_e IMU_ReadAccel(IMU_Handle_t *imu, float *ax, float *ay, float *az);
-Device_Status_e IMU_ReadGyro(IMU_Handle_t *imu, float *gx, float *gy, float *gz);
-Device_Status_e IMU_ReadAngle(IMU_Handle_t *imu, float *roll, float *pitch, float *yaw);
-Device_Status_e IMU_ReadMag(IMU_Handle_t *imu, float *mx, float *my, float *mz);
-Device_Status_e IMU_ReadAll(IMU_Handle_t *imu, IMU_Data_t *data);
-Device_Status_e IMU_ReadRaw(IMU_Handle_t *imu, IMU_RawData_t *raw);
+Device_Status_e IMU_Init(void);
+Device_Status_e IMU_ReadRegister(uint8_t reg, uint8_t *data, uint8_t len);
+Device_Status_e IMU_ReadAccel(float *ax, float *ay, float *az);
+Device_Status_e IMU_ReadGyro(float *gx, float *gy, float *gz);
+Device_Status_e IMU_ReadAngle(float *roll, float *pitch, float *yaw);
+Device_Status_e IMU_ReadMag(float *mx, float *my, float *mz);
+Device_Status_e IMU_ReadAll(IMU_Data_t *data);
+Device_Status_e IMU_ReadRaw(IMU_RawData_t *raw);
 
 #endif

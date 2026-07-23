@@ -14,12 +14,16 @@ USART_Init_Config_s config = {
 USARTInstance *uart = USARTRegister(&config);
 ```
 
-Blocking transmission is available on all three handles. Only `huart1` has
-SysConfig RX/TX DMA and UART interrupts, so interrupt/DMA transmission and the
-automatic receive callback are limited to `huart1`. `UART0_IRQHandler` is
-maintained in `mspm0_irq.c`, outside generated SysConfig files.
+Blocking transmission is available on all three handles. SysConfig now assigns
+RX/TX DMA channels and UART interrupts to all three UARTs, but the maintained
+BSP async implementation still dispatches only `huart1` through
+`UART0_IRQHandler`. UART2/3 DMA and receive callbacks require a follow-up BSP
+adaptation before modules can use them.
 
-UART1 RX uses DMA plus the SysConfig RX timeout interrupt, so a frame is
-dispatched either when the configured buffer fills or when a shorter frame goes
-idle. DMA/interrupt TX completion waits for both data loading and EOT and is not
-dependent on interrupt priority order. Blocking TX has a bounded polling timeout.
+`USARTReceiveAvailable()` is available on all three handles and drains only the
+bytes currently in the hardware RX FIFO. It is suitable for simple polling
+transparent links but does not preserve bytes if the application polls too
+slowly. UART1 asynchronous RX uses DMA; the shorter-frame timeout path only
+runs when the SysConfig RX timeout interrupt is enabled. DMA/interrupt TX
+completion waits for both data loading and EOT and is not dependent on interrupt
+priority order. Blocking TX has a bounded polling timeout.

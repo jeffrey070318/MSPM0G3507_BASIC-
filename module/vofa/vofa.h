@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "bsp_usart.h"
+#include "bsp_def.h"
 
 typedef union {
     float float_t;
@@ -12,9 +12,8 @@ typedef union {
 
 #define VOFA_JUSTFLOAT_MAX_NUM 17U
 
-void vofa_justfloat_output(
-    float *data, uint8_t num, UART_HandleTypeDef *huart);
-Device_Status_e vofa_justfloat_output_dma(
-    const float *data, uint8_t num, UART_HandleTypeDef *huart);
+Device_Status_e VOFA_Init(void);
+Device_Status_e VOFA_JustFloatOutput(const float *data, uint8_t num);
+Device_Status_e VOFA_JustFloatOutputDMA(const float *data, uint8_t num);
 
 #endif
