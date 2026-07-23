@@ -1,6 +1,7 @@
 #include "bsp_usart.h"
 #include "bsp_memory.h"
 #include "bsp_tools.h"
+#include "bsp_usart_state.h"
 
 #include <string.h>
 
@@ -12,11 +13,24 @@
 static uint8_t idx;
 static USARTInstance *usart_instance[DEVICE_USART_CNT] = {NULL};
 
-static USARTInstance *active_tx_instance;
+static USARTInstance * volatile active_tx_instance;
 static uint8_t tx_buffer[USART_TXBUFF_LIMIT];
-static uint16_t tx_size;
+static volatile uint16_t tx_size;
 static volatile uint16_t tx_index;
-static volatile uint8_t tx_wait_eot;
+static USART_Tx_Completion_State_s tx_completion;
+
+#define USART_POLL_LIMIT (1000000U)
+
+static bool USARTIsConfiguredInstance(UART_Regs *uart)
+{
+    return (uart == UART1_INST) || (uart == UART2_INST) ||
+           (uart == UART3_INST);
+}
+
+static bool USARTSupportsAsync(UART_Regs *uart)
+{
+    return uart == UART1_INST;
+}
 
 static uint32_t USARTEnterCritical(void)
 {
@@ -45,7 +59,7 @@ static void USARTExitCritical(uint32_t state)
 static void USARTStartReceive(USARTInstance *instance)
 {
     if ((instance == NULL) || (instance->usart_handle == NULL) ||
-        (instance->usart_handle->Instance != UART_0_INST) ||
+        !USARTSupportsAsync(instance->usart_handle->Instance) ||
         (instance->recv_buff_size == 0U) ||
         (instance->recv_buff_size > USART_RXBUFF_LIMIT)) {
         return;
@@ -53,6 +67,9 @@ static void USARTStartReceive(USARTInstance *instance)
 
     instance->recv_count = 0U;
     DL_DMA_disableChannel(DMA, DMA_CH0_CHAN_ID);
+    DL_UART_Main_clearInterruptStatus(instance->usart_handle->Instance,
+        DL_UART_MAIN_INTERRUPT_DMA_DONE_RX |
+            DL_UART_MAIN_INTERRUPT_RX_TIMEOUT_ERROR);
     DL_DMA_setSrcAddr(DMA, DMA_CH0_CHAN_ID,
         (uint32_t) &instance->usart_handle->Instance->RXDATA);
     DL_DMA_setDestAddr(DMA, DMA_CH0_CHAN_ID,
@@ -61,12 +78,28 @@ static void USARTStartReceive(USARTInstance *instance)
         DMA, DMA_CH0_CHAN_ID, instance->recv_buff_size);
     DL_DMA_enableChannel(DMA, DMA_CH0_CHAN_ID);
 
-    NVIC_ClearPendingIRQ(UART_0_INST_INT_IRQN);
+    NVIC_ClearPendingIRQ(UART1_INST_INT_IRQN);
 #ifdef USE_FREERTOS
-    NVIC_SetPriority(UART_0_INST_INT_IRQN,
+    NVIC_SetPriority(UART1_INST_INT_IRQN,
         configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY);
 #endif
-    NVIC_EnableIRQ(UART_0_INST_INT_IRQN);
+    NVIC_EnableIRQ(UART1_INST_INT_IRQN);
+}
+
+static void USARTFinishAsyncTransmit(void)
+{
+    DL_UART_Main_disableInterrupt(UART1_INST,
+        DL_UART_MAIN_INTERRUPT_TX |
+            DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
+            DL_UART_MAIN_INTERRUPT_EOT_DONE);
+    USARTInstance *instance = active_tx_instance;
+    if (instance != NULL) {
+        instance->tx_busy = 0U;
+    }
+    active_tx_instance = NULL;
+    tx_size = 0U;
+    tx_index = 0U;
+    USARTTxCompletionReset(&tx_completion);
 }
 
 #ifdef USE_FREERTOS
@@ -145,24 +178,36 @@ static Device_Status_e USARTSendBlocking(
     }
 
     uint32_t critical_state = USARTEnterCritical();
-    if (active_tx_instance != NULL) {
+    if (instance->tx_busy != 0U) {
         USARTExitCritical(critical_state);
         return DEVICE_BUSY;
     }
-    active_tx_instance = instance;
     instance->tx_busy = 1U;
-    tx_wait_eot = 0U;
     USARTExitCritical(critical_state);
 
     for (uint16_t i = 0U; i < size; ++i) {
-        DL_UART_Main_transmitDataBlocking(
-            instance->usart_handle->Instance, data[i]);
+        uint32_t poll = 0U;
+        while (DL_UART_Main_isTXFIFOFull(instance->usart_handle->Instance)) {
+            if (++poll >= USART_POLL_LIMIT) {
+                critical_state = USARTEnterCritical();
+                instance->tx_busy = 0U;
+                USARTExitCritical(critical_state);
+                return DEVICE_TIMEOUT;
+            }
+        }
+        DL_UART_Main_transmitData(instance->usart_handle->Instance, data[i]);
     }
+    uint32_t poll = 0U;
     while (DL_UART_Main_isBusy(instance->usart_handle->Instance)) {
+        if (++poll >= USART_POLL_LIMIT) {
+            critical_state = USARTEnterCritical();
+            instance->tx_busy = 0U;
+            USARTExitCritical(critical_state);
+            return DEVICE_TIMEOUT;
+        }
     }
     critical_state = USARTEnterCritical();
     instance->tx_busy = 0U;
-    active_tx_instance = NULL;
     USARTExitCritical(critical_state);
     return DEVICE_OK;
 }
@@ -171,42 +216,56 @@ static Device_Status_e USARTSendAsync(USARTInstance *instance,
     uint8_t *data, uint16_t size, bool use_dma)
 {
     if ((instance == NULL) || (instance->usart_handle == NULL) ||
-        (instance->usart_handle->Instance != UART_0_INST) ||
+        !USARTSupportsAsync(instance->usart_handle->Instance) ||
         (data == NULL) || (size == 0U) ||
         (size > USART_TXBUFF_LIMIT)) {
         return DEVICE_ERROR;
     }
     uint32_t critical_state = USARTEnterCritical();
-    if (active_tx_instance != NULL) {
+    if ((active_tx_instance != NULL) || (instance->tx_busy != 0U)) {
         USARTExitCritical(critical_state);
         return DEVICE_BUSY;
     }
 
+    DL_UART_Main_disableInterrupt(UART1_INST,
+        DL_UART_MAIN_INTERRUPT_TX |
+            DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
+            DL_UART_MAIN_INTERRUPT_EOT_DONE);
+    DL_UART_Main_clearInterruptStatus(UART1_INST,
+        DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
+            DL_UART_MAIN_INTERRUPT_EOT_DONE);
+    NVIC_ClearPendingIRQ(UART1_INST_INT_IRQN);
     active_tx_instance = instance;
     instance->tx_busy = 1U;
-    tx_wait_eot = 0U;
+    USARTTxCompletionBegin(&tx_completion);
     USARTExitCritical(critical_state);
 
     memcpy(tx_buffer, data, size);
     tx_size = size;
     tx_index = 0U;
 
-    NVIC_ClearPendingIRQ(UART_0_INST_INT_IRQN);
-    NVIC_EnableIRQ(UART_0_INST_INT_IRQN);
+    NVIC_EnableIRQ(UART1_INST_INT_IRQN);
 
     if (use_dma) {
-        DL_UART_Main_disableInterrupt(
-            UART_0_INST, DL_UART_MAIN_INTERRUPT_TX);
         DL_DMA_disableChannel(DMA, DMA_CH1_CHAN_ID);
         DL_DMA_setSrcAddr(
             DMA, DMA_CH1_CHAN_ID, (uint32_t) tx_buffer);
         DL_DMA_setDestAddr(DMA, DMA_CH1_CHAN_ID,
-            (uint32_t) &UART_0_INST->TXDATA);
+            (uint32_t) &UART1_INST->TXDATA);
         DL_DMA_setTransferSize(DMA, DMA_CH1_CHAN_ID, size);
+        DL_UART_Main_clearInterruptStatus(UART1_INST,
+            DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
+                DL_UART_MAIN_INTERRUPT_EOT_DONE);
+        DL_UART_Main_enableInterrupt(UART1_INST,
+            DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
+                DL_UART_MAIN_INTERRUPT_EOT_DONE);
         DL_DMA_enableChannel(DMA, DMA_CH1_CHAN_ID);
     } else {
-        DL_UART_Main_enableInterrupt(
-            UART_0_INST, DL_UART_MAIN_INTERRUPT_TX);
+        DL_UART_Main_clearInterruptStatus(
+            UART1_INST, DL_UART_MAIN_INTERRUPT_EOT_DONE);
+        DL_UART_Main_enableInterrupt(UART1_INST,
+            DL_UART_MAIN_INTERRUPT_TX |
+                DL_UART_MAIN_INTERRUPT_EOT_DONE);
     }
 
     return DEVICE_OK;
@@ -221,7 +280,9 @@ USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
 {
     if ((init_config == NULL) ||
         (init_config->usart_handle == NULL) ||
-        (init_config->usart_handle->Instance != UART_0_INST) ||
+        !USARTIsConfiguredInstance(init_config->usart_handle->Instance) ||
+        ((init_config->usart_handle->Instance != UART1_INST) &&
+            (init_config->module_callback != NULL)) ||
         (init_config->recv_buff_size == 0U) ||
         (init_config->recv_buff_size > USART_RXBUFF_LIMIT) ||
         (idx >= DEVICE_USART_CNT)) {
@@ -245,6 +306,15 @@ USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
     instance->usart_handle = init_config->usart_handle;
     instance->recv_buff_size = init_config->recv_buff_size;
     instance->module_callback = init_config->module_callback;
+    if (USARTSupportsAsync(instance->usart_handle->Instance)) {
+        DL_UART_Main_disableInterrupt(UART1_INST,
+            DL_UART_MAIN_INTERRUPT_TX |
+                DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
+                DL_UART_MAIN_INTERRUPT_EOT_DONE);
+        DL_UART_Main_clearInterruptStatus(UART1_INST,
+            DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
+                DL_UART_MAIN_INTERRUPT_EOT_DONE);
+    }
 #ifdef USE_FREERTOS
     if (instance->module_callback != NULL) {
         instance->callback_signal = CreateCallbackTask("uart_rx",
@@ -299,13 +369,19 @@ void USARTSend(USARTInstance *_instance, uint8_t *send_buf,
 
 uint8_t USARTIsReady(USARTInstance *_instance)
 {
-    return ((_instance != NULL) && (_instance->tx_busy == 0U)) ? 1U : 0U;
+    if (_instance == NULL) {
+        return 0U;
+    }
+    uint32_t critical_state = USARTEnterCritical();
+    uint8_t ready = (_instance->tx_busy == 0U) ? 1U : 0U;
+    USARTExitCritical(critical_state);
+    return ready;
 }
 
 void USARTIRQHandler(void)
 {
-    DL_UART_IIDX pending = DL_UART_Main_getPendingInterrupt(UART_0_INST);
-    USARTInstance *rx_instance = (idx > 0U) ? usart_instance[0] : NULL;
+    DL_UART_IIDX pending = DL_UART_Main_getPendingInterrupt(UART1_INST);
+    USARTInstance *rx_instance = USARTGetInstance(&huart1);
 
     if (pending == DL_UART_IIDX_DMA_DONE_RX) {
         if (rx_instance != NULL) {
@@ -334,32 +410,44 @@ void USARTIRQHandler(void)
 
     if (pending == DL_UART_IIDX_DMA_DONE_TX) {
         DL_DMA_disableChannel(DMA, DMA_CH1_CHAN_ID);
-        tx_wait_eot = 1U;
+        if (!tx_completion.active) {
+            DL_UART_Main_disableInterrupt(
+                UART1_INST, DL_UART_MAIN_INTERRUPT_DMA_DONE_TX);
+            return;
+        }
+        if (USARTTxCompletionOnDataLoaded(&tx_completion) &&
+            !DL_UART_Main_isBusy(UART1_INST)) {
+            USARTFinishAsyncTransmit();
+        }
         return;
     }
 
     if (pending == DL_UART_IIDX_TX) {
         while ((tx_index < tx_size) &&
-               !DL_UART_Main_isTXFIFOFull(UART_0_INST)) {
+               !DL_UART_Main_isTXFIFOFull(UART1_INST)) {
             DL_UART_Main_transmitData(
-                UART_0_INST, tx_buffer[tx_index++]);
+                UART1_INST, tx_buffer[tx_index++]);
         }
         if (tx_index >= tx_size) {
             DL_UART_Main_disableInterrupt(
-                UART_0_INST, DL_UART_MAIN_INTERRUPT_TX);
-            tx_wait_eot = 1U;
+                UART1_INST, DL_UART_MAIN_INTERRUPT_TX);
+            if (USARTTxCompletionOnDataLoaded(&tx_completion) &&
+                !DL_UART_Main_isBusy(UART1_INST)) {
+                USARTFinishAsyncTransmit();
+            }
         }
         return;
     }
 
-    if ((pending == DL_UART_IIDX_EOT_DONE) && (tx_wait_eot != 0U)) {
-        if (active_tx_instance != NULL) {
-            active_tx_instance->tx_busy = 0U;
+    if (pending == DL_UART_IIDX_EOT_DONE) {
+        if (!tx_completion.active) {
+            DL_UART_Main_disableInterrupt(
+                UART1_INST, DL_UART_MAIN_INTERRUPT_EOT_DONE);
+            return;
         }
-        active_tx_instance = NULL;
-        tx_size = 0U;
-        tx_index = 0U;
-        tx_wait_eot = 0U;
+        if (USARTTxCompletionOnEOT(&tx_completion)) {
+            USARTFinishAsyncTransmit();
+        }
         return;
     }
 

@@ -55,7 +55,7 @@ void DWT_Init(uint32_t CPU_Freq_mHz);
 float DWT_GetDeltaT(uint32_t *cnt_last);
 
 /**
- * @brief 获取两次调用之间的时间间隔,单位为秒/s,高精度
+ * @brief 获取两次调用之间的时间间隔,单位为秒/s
  *
  * @param cnt_last 上一次调用的时间戳
  * @return double 时间间隔,单位为秒/s
@@ -70,14 +70,14 @@ double DWT_GetDeltaT64(uint32_t *cnt_last);
 float DWT_GetTimeline_s(void);
 
 /**
- * @brief 获取当前时间,单位为毫秒/ms,即初始化后的时间
+ * @brief 获取当前时间,单位为毫秒/ms；当前精度等于FreeRTOS tick
  *
  * @return float
  */
 float DWT_GetTimeline_ms(void);
 
 /**
- * @brief 获取当前时间,单位为微秒/us,即初始化后的时间
+ * @brief 获取当前时间的微秒表示；当前仍为FreeRTOS tick精度
  *
  * @return uint64_t
  */
@@ -93,8 +93,7 @@ uint64_t DWT_GetTimeline_us(void);
 void DWT_Delay(float Delay);
 
 /**
- * @brief DWT更新时间轴函数,会被三个timeline函数调用
- * @attention 如果长时间不调用timeline函数,则需要手动调用该函数更新时间轴,否则CYCCNT溢出后定时和时间轴不准确
+ * @brief 兼容旧接口；Cortex-M0+实现中无需手动更新时间轴
  */
 void DWT_SysTimeUpdate(void);
 
