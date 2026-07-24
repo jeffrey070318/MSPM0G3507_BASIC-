@@ -11,8 +11,7 @@
             "cppStandard": "gnu++17",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
-                "${default}",
-                "${workspaceFolder}/bsp/log"
+                "${default}"
             ]
         }
     ],

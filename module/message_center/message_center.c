@@ -2,7 +2,6 @@
 #include "bsp_memory.h"
 #include "bsp_def.h"
 #include "string.h"
-#include "bsp_log.h"
 
 #ifdef USE_FREERTOS
 #include "FreeRTOS.h"
@@ -43,7 +42,6 @@ static uint8_t CheckName(const char *name)
 {
     if ((name == NULL) ||
         (strnlen(name, MAX_TOPIC_NAME_LEN + 1U) >= MAX_TOPIC_NAME_LEN)) {
-        LOGERROR("EVENT NAME INVALID");
         return 0U;
     }
     return 1U;
@@ -52,7 +50,6 @@ static uint8_t CheckName(const char *name)
 static uint8_t CheckLen(uint8_t len1, uint8_t len2)
 {
     if (len1 != len2) {
-        LOGERROR("EVENT LEN NOT SAME:%d,%d", len1, len2);
         return 0U;
     }
     return 1U;

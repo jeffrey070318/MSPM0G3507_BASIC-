@@ -4,8 +4,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "bsp_dwt.h"
-#include "bsp_log.h"
 #include "framework_runtime.h"
 #include "robot.h"
 
@@ -74,7 +72,6 @@ static void RobotCreateTask(TaskFunction_t task_code, const char *task_name,
         task_code, task_name, stack_depth, NULL, priority, task_handle);
 
     if (status != pdPASS) {
-        LOGERROR("[freeRTOS] Failed to create task: %s", task_name);
         configASSERT(status == pdPASS);
     }
 }
@@ -136,23 +133,14 @@ __attribute__((noreturn)) void StartINSTASK(void *argument)
 {
     (void) argument;
 
-    if (!INS_Init()) {
-        LOGERROR("[freeRTOS] INS initialization failed");
-    }
-    LOGINFO("[freeRTOS] INS Task Start");
+    (void) INS_Init();
     TickType_t last_wake_time = xTaskGetTickCount();
     const TickType_t period_ticks = pdMS_TO_TICKS(1U);
     for (;;) {
-        TickType_t start_tick = xTaskGetTickCount();
         INS_Task(0.001f);
 #if ROBOT_HAS_MASTER_PROCESS
         VisionSend();
 #endif
-        TickType_t elapsed_ticks = xTaskGetTickCount() - start_tick;
-        if (elapsed_ticks > period_ticks) {
-            LOGERROR("[freeRTOS] INS Task delayed: %u ticks",
-                (unsigned int) elapsed_ticks);
-        }
         vTaskDelayUntil(&last_wake_time, period_ticks);
     }
 }
@@ -163,17 +151,10 @@ __attribute__((noreturn)) void StartMOTORTASK(void *argument)
 {
     (void) argument;
 
-    LOGINFO("[freeRTOS] MOTOR Task Start");
     TickType_t last_wake_time = xTaskGetTickCount();
     const TickType_t period_ticks = pdMS_TO_TICKS(1U);
     for (;;) {
-        TickType_t start_tick = xTaskGetTickCount();
         MotorControlTask();
-        TickType_t elapsed_ticks = xTaskGetTickCount() - start_tick;
-        if (elapsed_ticks > period_ticks) {
-            LOGERROR("[freeRTOS] MOTOR Task delayed: %u ticks",
-                (unsigned int) elapsed_ticks);
-        }
         vTaskDelayUntil(&last_wake_time, period_ticks);
     }
 }
@@ -184,19 +165,12 @@ __attribute__((noreturn)) void StartDAEMONTASK(void *argument)
 {
     (void) argument;
 
-    LOGINFO("[freeRTOS] Daemon Task Start");
     TickType_t last_wake_time = xTaskGetTickCount();
     const TickType_t period_ticks = pdMS_TO_TICKS(10U);
     for (;;) {
-        TickType_t start_tick = xTaskGetTickCount();
 #if ROBOT_HAS_DAEMON_TASK
         DaemonTask();
 #endif
-        TickType_t elapsed_ticks = xTaskGetTickCount() - start_tick;
-        if (elapsed_ticks > period_ticks) {
-            LOGERROR("[freeRTOS] Daemon Task delayed: %u ticks",
-                (unsigned int) elapsed_ticks);
-        }
         vTaskDelayUntil(&last_wake_time, period_ticks);
     }
 }
@@ -207,18 +181,11 @@ __attribute__((noreturn)) void StartROBOTTASK(void *argument)
     (void) argument;
 
     framework_boot_stage = FRAMEWORK_BOOT_SCHEDULER_RUNNING;
-    LOGINFO("[freeRTOS] ROBOT core Task Start");
     TickType_t last_wake_time = xTaskGetTickCount();
     const TickType_t period_ticks = pdMS_TO_TICKS(5U);
     for (;;) {
         framework_robot_heartbeat++;
-        TickType_t start_tick = xTaskGetTickCount();
         RobotTask();
-        TickType_t elapsed_ticks = xTaskGetTickCount() - start_tick;
-        if (elapsed_ticks > period_ticks) {
-            LOGERROR("[freeRTOS] ROBOT core Task delayed: %u ticks",
-                (unsigned int) elapsed_ticks);
-        }
         vTaskDelayUntil(&last_wake_time, period_ticks);
     }
 }
@@ -228,9 +195,7 @@ __attribute__((noreturn)) void StartUITASK(void *argument)
 {
     (void) argument;
 
-    LOGINFO("[freeRTOS] UI Task Start");
     MyUIInit();
-    LOGINFO("[freeRTOS] UI Init Done, communication with ref has established");
     TickType_t last_wake_time = xTaskGetTickCount();
     const TickType_t period_ticks = pdMS_TO_TICKS(1U);
     for (;;) {

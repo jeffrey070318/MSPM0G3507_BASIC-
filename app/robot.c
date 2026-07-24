@@ -23,7 +23,6 @@
 #include "vofa.h"
 
 #if defined(ROBOT_ENABLE_INS_APP)
-#include "bsp_log.h"
 #include "ins.h"
 #include "message_center.h"
 
@@ -41,9 +40,6 @@ void RobotInit()
 
 #if defined(ROBOT_ENABLE_INS_APP)
     g_imu_publisher = PubRegister(INS_IMU_TOPIC, sizeof(IMU_Data_t));
-    if (g_imu_publisher == NULL) {
-        LOGERROR("[Robot] Failed to register INS IMU publisher");
-    }
 #endif
 
 #if defined(ROBOT_ENABLE_CMD_APP)

@@ -116,10 +116,6 @@ try {
         "-Itests/stubs", "-Ibsp", "-Ibsp/iic",
         "tests/bsp_iic_test.c", "bsp/iic/bsp_iic.c"
     )
-    Invoke-HostTest "bsp_log_test" @(
-        "-Itests/stubs", "-Ibsp/log",
-        "tests/bsp_log_test.c", "bsp/log/bsp_log.c"
-    )
 }
 finally {
     Pop-Location

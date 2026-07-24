@@ -16,7 +16,6 @@
 
 #include "stdint.h"
 #include "ti_msp_dl_config.h"
-#include "bsp_log.h"
 
 typedef struct
 {
@@ -28,15 +27,14 @@ typedef struct
 /**
  * @brief 该宏用于计算代码段执行时间,单位为秒/s,返回值为float类型
  *        首先需要创建一个float类型的变量,用于存储时间间隔
- *        计算得到的时间间隔同时还会通过RTT打印到日志终端,你也可以将你的dt变量添加到查看
+ *        计算得到的时间间隔会写入dt变量，也可以直接加入调试器监视窗口查看
  */
-#define TIME_ELAPSE(dt, code)                    \
-    do                                           \
-    {                                            \
-        float tstart = DWT_GetTimeline_s();      \
-        code;                                    \
-        dt = DWT_GetTimeline_s() - tstart;       \
-        LOGINFO("[DWT] " #dt " = %f s\r\n", dt); \
+#define TIME_ELAPSE(dt, code)                   \
+    do                                          \
+    {                                           \
+        float tstart = DWT_GetTimeline_s();     \
+        code;                                   \
+        (dt) = DWT_GetTimeline_s() - tstart;    \
     } while (0)
 
 /**

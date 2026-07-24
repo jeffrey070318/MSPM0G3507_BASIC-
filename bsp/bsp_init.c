@@ -2,7 +2,6 @@
 
 #include "bsp_dwt.h"
 #include "bsp_encoder.h"
-#include "bsp_log.h"
 
 #ifdef USE_FREERTOS
 #include "FreeRTOS.h"
@@ -11,7 +10,6 @@
 void BSPInit(void)
 {
     DWT_Init(CPUCLK_FREQ / 1000000U);
-    BSPLogInit();
     Encoder_BSP_Init();
 
     NVIC_ClearPendingIRQ(ENCODER_GPIO_GPIOA_INT_IRQN);

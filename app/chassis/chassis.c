@@ -5,7 +5,6 @@
 #include "motor.h"
 
 #if defined(ROBOT_ENABLE_INS_APP)
-#include "bsp_log.h"
 #include "ins.h"
 #include "message_center.h"
 #endif
@@ -113,10 +112,6 @@ void ChassisInit(void)
         INS_ENCODER_TOPIC, sizeof(Encoder_Pub_Data_t));
     g_command_subscriber = SubRegister(
         INS_CMD_TOPIC, sizeof(INS_ChassisCommand_t));
-    if ((g_encoder_publisher == NULL) ||
-        (g_command_subscriber == NULL)) {
-        LOGERROR("[Chassis] INS message registration failed");
-    }
 #endif
 
     g_chassis_initialized = true;

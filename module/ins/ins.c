@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "bsp_log.h"
 #include "imu.h"
 #include "message_center.h"
 #include "pid.h"
@@ -166,7 +165,6 @@ bool INS_Init(void)
     if ((g_imu_subscriber == NULL) ||
         (g_encoder_subscriber == NULL) ||
         (g_command_publisher == NULL)) {
-        LOGERROR("[INS] Message registration failed");
         return false;
     }
 
@@ -190,7 +188,6 @@ bool INS_Init(void)
     };
     if (!PID_ControllerInit(&g_distance_pid, &distance_config) ||
         !PID_ControllerInit(&g_angle_pid, &angle_config)) {
-        LOGERROR("[INS] PID initialization failed");
         return false;
     }
 
