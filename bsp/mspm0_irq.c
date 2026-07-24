@@ -3,11 +3,23 @@
 #include "bsp_gpio.h"
 
 void UART1_INST_IRQHandler(void);
+void UART2_INST_IRQHandler(void);
+void UART3_INST_IRQHandler(void);
 void GROUP1_IRQHandler(void);
 
 void UART1_INST_IRQHandler(void)
 {
-    USARTIRQHandler();
+    USARTIRQHandlerFor(UART1_INST);
+}
+
+void UART2_INST_IRQHandler(void)
+{
+    USARTIRQHandlerFor(UART2_INST);
+}
+
+void UART3_INST_IRQHandler(void)
+{
+    USARTIRQHandlerFor(UART3_INST);
 }
 
 static void GPIOAInterruptHandler(void)

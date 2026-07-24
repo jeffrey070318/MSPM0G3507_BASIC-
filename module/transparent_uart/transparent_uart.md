@@ -17,6 +17,7 @@ TransparentUART_Send(&link, command, sizeof(command));
 TransparentUART_Read(&link, response, sizeof(response), &received);
 ```
 
-Sending is blocking. Reading drains only bytes currently present in the UART
-receive FIFO and may return zero bytes with `DEVICE_OK`. The module does not
-parse frames or assign camera and wireless roles to specific ports.
+Sending is blocking. Reading is non-blocking: it takes bytes already captured in
+the BSP software ring buffer and may return zero bytes with `DEVICE_OK`. It does
+not wait for, or identify, a complete frame. The module does not parse frames or
+assign camera and wireless roles to specific ports.

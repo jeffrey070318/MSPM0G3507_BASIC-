@@ -2,6 +2,7 @@
 #define BSP_USART_H
 
 #include "bsp_device.h"
+#include "bsp_usart_state.h"
 
 #define DEVICE_USART_CNT   3U
 #define USART_RXBUFF_LIMIT 256U
@@ -31,6 +32,9 @@ typedef struct {
     volatile uint8_t rx_queue_tail;
     volatile uint8_t rx_queue_count;
     volatile uint32_t rx_drop_count;
+    volatile uint32_t rx_error_count;
+    volatile uint32_t rx_overrun_count;
+    USART_Rx_Ring_State_s rx_ring;
     uint32_t callback_signal;
 } USARTInstance;
 
@@ -51,7 +55,10 @@ void USARTSend(USARTInstance *_instance, uint8_t *send_buf,
     uint16_t send_size, USART_TRANSFER_MODE mode);
 uint8_t USARTIsReady(USARTInstance *_instance);
 
-/* Handles UART1, the only SysConfig UART with DMA and IRQ enabled. */
+/* Legacy UART1 entry kept for existing callers. */
 void USARTIRQHandler(void);
+
+/* Shared dispatcher used by each generated UART IRQ entry. */
+void USARTIRQHandlerFor(UART_Regs *uart);
 
 #endif

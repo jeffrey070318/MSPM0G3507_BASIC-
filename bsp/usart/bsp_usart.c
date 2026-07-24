@@ -20,16 +20,57 @@ static volatile uint16_t tx_index;
 static USART_Tx_Completion_State_s tx_completion;
 
 #define USART_POLL_LIMIT (1000000U)
+#define USART_FIFO_DRAIN_LIMIT (16U)
+#define USART_RX_ERROR_INTERRUPTS ( \
+    DL_UART_MAIN_INTERRUPT_OVERRUN_ERROR | \
+    DL_UART_MAIN_INTERRUPT_BREAK_ERROR | \
+    DL_UART_MAIN_INTERRUPT_PARITY_ERROR | \
+    DL_UART_MAIN_INTERRUPT_FRAMING_ERROR | \
+    DL_UART_MAIN_INTERRUPT_NOISE_ERROR)
+
+#define USART_RX_REARM_INTERRUPTS ( \
+    DL_UART_MAIN_INTERRUPT_DMA_DONE_RX | \
+    DL_UART_MAIN_INTERRUPT_RX_TIMEOUT_ERROR | \
+    DL_UART_MAIN_INTERRUPT_RX | \
+    USART_RX_ERROR_INTERRUPTS)
+
+typedef struct {
+    UART_Regs *uart;
+    UART_HandleTypeDef *handle;
+    uint8_t rx_dma_channel;
+    uint8_t tx_dma_channel;
+    IRQn_Type irqn;
+    bool tx_async_supported;
+} USART_HardwareContext_s;
+
+static const USART_HardwareContext_s usart_hardware[DEVICE_USART_CNT] = {
+    {UART1_INST, &huart1, DMA_CH0_CHAN_ID, DMA_CH1_CHAN_ID,
+        UART1_INST_INT_IRQN, true},
+    {UART2_INST, &huart2, DMA_CH2_CHAN_ID, DMA_CH3_CHAN_ID,
+        UART2_INST_INT_IRQN, false},
+    {UART3_INST, &huart3, DMA_CH4_CHAN_ID, DMA_CH5_CHAN_ID,
+        UART3_INST_INT_IRQN, false},
+};
+
+static const USART_HardwareContext_s *USARTGetHardware(UART_Regs *uart)
+{
+    for (uint8_t i = 0U; i < DEVICE_USART_CNT; ++i) {
+        if (usart_hardware[i].uart == uart) {
+            return &usart_hardware[i];
+        }
+    }
+    return NULL;
+}
 
 static bool USARTIsConfiguredInstance(UART_Regs *uart)
 {
-    return (uart == UART1_INST) || (uart == UART2_INST) ||
-           (uart == UART3_INST);
+    return USARTGetHardware(uart) != NULL;
 }
 
-static bool USARTSupportsAsync(UART_Regs *uart)
+static bool USARTSupportsAsyncTransmit(UART_Regs *uart)
 {
-    return uart == UART1_INST;
+    const USART_HardwareContext_s *hardware = USARTGetHardware(uart);
+    return (hardware != NULL) && hardware->tx_async_supported;
 }
 
 static uint32_t USARTEnterCritical(void)
@@ -59,40 +100,51 @@ static void USARTExitCritical(uint32_t state)
 static void USARTStartReceive(USARTInstance *instance)
 {
     if ((instance == NULL) || (instance->usart_handle == NULL) ||
-        !USARTSupportsAsync(instance->usart_handle->Instance) ||
         (instance->recv_buff_size == 0U) ||
         (instance->recv_buff_size > USART_RXBUFF_LIMIT)) {
         return;
     }
 
-    instance->recv_count = 0U;
-    DL_DMA_disableChannel(DMA, DMA_CH0_CHAN_ID);
-    DL_UART_Main_clearInterruptStatus(instance->usart_handle->Instance,
-        DL_UART_MAIN_INTERRUPT_DMA_DONE_RX |
-            DL_UART_MAIN_INTERRUPT_RX_TIMEOUT_ERROR);
-    DL_DMA_setSrcAddr(DMA, DMA_CH0_CHAN_ID,
-        (uint32_t) &instance->usart_handle->Instance->RXDATA);
-    DL_DMA_setDestAddr(DMA, DMA_CH0_CHAN_ID,
-        (uint32_t) instance->rx_dma_buff);
-    DL_DMA_setTransferSize(
-        DMA, DMA_CH0_CHAN_ID, instance->recv_buff_size);
-    DL_DMA_enableChannel(DMA, DMA_CH0_CHAN_ID);
+    const USART_HardwareContext_s *hardware =
+        USARTGetHardware(instance->usart_handle->Instance);
+    if (hardware == NULL) {
+        return;
+    }
 
-    NVIC_ClearPendingIRQ(UART1_INST_INT_IRQN);
+    DL_UART_Main_disableDMAReceiveEvent(
+        hardware->uart, DL_UART_DMA_INTERRUPT_RX);
+    DL_DMA_disableChannel(DMA, hardware->rx_dma_channel);
+    DL_UART_Main_clearInterruptStatus(
+        hardware->uart, USART_RX_REARM_INTERRUPTS);
+    DL_DMA_setSrcAddr(DMA, hardware->rx_dma_channel,
+        (uint32_t) &hardware->uart->RXDATA);
+    DL_DMA_setDestAddr(DMA, hardware->rx_dma_channel,
+        (uint32_t) instance->rx_dma_buff);
+    DL_DMA_setTransferSize(DMA, hardware->rx_dma_channel,
+        instance->recv_buff_size);
+    DL_DMA_enableChannel(DMA, hardware->rx_dma_channel);
+    DL_UART_Main_enableDMAReceiveEvent(
+        hardware->uart, DL_UART_DMA_INTERRUPT_RX);
+
+    NVIC_ClearPendingIRQ(hardware->irqn);
 #ifdef USE_FREERTOS
-    NVIC_SetPriority(UART1_INST_INT_IRQN,
+    NVIC_SetPriority(hardware->irqn,
         configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY);
 #endif
-    NVIC_EnableIRQ(UART1_INST_INT_IRQN);
+    NVIC_EnableIRQ(hardware->irqn);
 }
 
 static void USARTFinishAsyncTransmit(void)
 {
-    DL_UART_Main_disableInterrupt(UART1_INST,
+    USARTInstance *instance = active_tx_instance;
+    UART_Regs *uart = (instance != NULL) &&
+            (instance->usart_handle != NULL)
+        ? instance->usart_handle->Instance
+        : UART1_INST;
+    DL_UART_Main_disableInterrupt(uart,
         DL_UART_MAIN_INTERRUPT_TX |
             DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
             DL_UART_MAIN_INTERRUPT_EOT_DONE);
-    USARTInstance *instance = active_tx_instance;
     if (instance != NULL) {
         instance->tx_busy = 0U;
     }
@@ -134,37 +186,83 @@ static void USARTRunReceiveCallback(void const *argument)
 }
 #endif
 
-static void USARTDispatchReceive(USARTInstance *instance, uint16_t size)
+static void USARTCommitReceive(
+    USARTInstance *instance, const uint8_t *data, uint16_t size)
 {
-    if ((instance == NULL) || (size == 0U) ||
-        (size > instance->recv_buff_size)) {
+    if ((instance == NULL) || (data == NULL) || (size == 0U)) {
         return;
     }
 
-#ifdef USE_FREERTOS
     if (instance->module_callback == NULL) {
-        memcpy(instance->recv_buff, instance->rx_dma_buff, size);
-        instance->recv_count = size;
-    } else if (instance->rx_queue_count < USART_RXQUEUE_DEPTH) {
-        uint8_t head = instance->rx_queue_head;
-        memcpy(instance->rx_queue[head], instance->rx_dma_buff, size);
-        instance->rx_queue_size[head] = size;
-        instance->rx_queue_head =
-            (uint8_t) ((head + 1U) % USART_RXQUEUE_DEPTH);
-        instance->rx_queue_count++;
-        (void) NotifyCallbackTaskFromISR(instance->callback_signal);
-    } else {
-        instance->rx_drop_count++;
+        (void) USARTRxRingWrite(&instance->rx_ring, data, size);
+        instance->recv_count = USARTRxRingCount(&instance->rx_ring);
+        instance->rx_drop_count = instance->rx_ring.drop_count;
+        return;
     }
-#else
-    memcpy(instance->recv_buff, instance->rx_dma_buff, size);
-    instance->recv_count = size;
-    if (instance->module_callback != NULL) {
-        instance->module_callback();
-    }
-#endif
 
-    memset(instance->rx_dma_buff, 0, size);
+    uint16_t offset = 0U;
+    while (offset < size) {
+        uint16_t chunk = (uint16_t) (size - offset);
+        if (chunk > instance->recv_buff_size) {
+            chunk = instance->recv_buff_size;
+        }
+
+#ifdef USE_FREERTOS
+        if (instance->rx_queue_count < USART_RXQUEUE_DEPTH) {
+            uint8_t head = instance->rx_queue_head;
+            memcpy(instance->rx_queue[head], &data[offset], chunk);
+            instance->rx_queue_size[head] = chunk;
+            instance->rx_queue_head =
+                (uint8_t) ((head + 1U) % USART_RXQUEUE_DEPTH);
+            instance->rx_queue_count++;
+            (void) NotifyCallbackTaskFromISR(instance->callback_signal);
+        } else {
+            instance->rx_drop_count += chunk;
+        }
+#else
+        memcpy(instance->recv_buff, &data[offset], chunk);
+        instance->recv_count = chunk;
+        instance->module_callback();
+#endif
+        offset = (uint16_t) (offset + chunk);
+    }
+}
+
+static void USARTCollectReceive(USARTInstance *instance)
+{
+    if ((instance == NULL) || (instance->usart_handle == NULL)) {
+        return;
+    }
+
+    const USART_HardwareContext_s *hardware =
+        USARTGetHardware(instance->usart_handle->Instance);
+    if (hardware == NULL) {
+        return;
+    }
+
+    DL_UART_Main_disableDMAReceiveEvent(
+        hardware->uart, DL_UART_DMA_INTERRUPT_RX);
+    DL_DMA_disableChannel(DMA, hardware->rx_dma_channel);
+
+    uint16_t remaining =
+        DL_DMA_getTransferSize(DMA, hardware->rx_dma_channel);
+    uint16_t received = (remaining <= instance->recv_buff_size)
+        ? (uint16_t) (instance->recv_buff_size - remaining)
+        : 0U;
+    USARTCommitReceive(instance, instance->rx_dma_buff, received);
+
+    uint8_t fifo_data[USART_FIFO_DRAIN_LIMIT];
+    uint16_t fifo_count = 0U;
+    while (!DL_UART_Main_isRXFIFOEmpty(hardware->uart)) {
+        fifo_data[fifo_count++] =
+            (uint8_t) DL_UART_Main_receiveData(hardware->uart);
+        if (fifo_count == USART_FIFO_DRAIN_LIMIT) {
+            USARTCommitReceive(instance, fifo_data, fifo_count);
+            fifo_count = 0U;
+        }
+    }
+    USARTCommitReceive(instance, fifo_data, fifo_count);
+
     USARTStartReceive(instance);
 }
 
@@ -216,25 +314,32 @@ static Device_Status_e USARTSendAsync(USARTInstance *instance,
     uint8_t *data, uint16_t size, bool use_dma)
 {
     if ((instance == NULL) || (instance->usart_handle == NULL) ||
-        !USARTSupportsAsync(instance->usart_handle->Instance) ||
+        !USARTSupportsAsyncTransmit(instance->usart_handle->Instance) ||
         (data == NULL) || (size == 0U) ||
         (size > USART_TXBUFF_LIMIT)) {
         return DEVICE_ERROR;
     }
+
+    const USART_HardwareContext_s *hardware =
+        USARTGetHardware(instance->usart_handle->Instance);
+    if (hardware == NULL) {
+        return DEVICE_ERROR;
+    }
+
     uint32_t critical_state = USARTEnterCritical();
     if ((active_tx_instance != NULL) || (instance->tx_busy != 0U)) {
         USARTExitCritical(critical_state);
         return DEVICE_BUSY;
     }
 
-    DL_UART_Main_disableInterrupt(UART1_INST,
+    DL_UART_Main_disableInterrupt(hardware->uart,
         DL_UART_MAIN_INTERRUPT_TX |
             DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
             DL_UART_MAIN_INTERRUPT_EOT_DONE);
-    DL_UART_Main_clearInterruptStatus(UART1_INST,
+    DL_UART_Main_clearInterruptStatus(hardware->uart,
         DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
             DL_UART_MAIN_INTERRUPT_EOT_DONE);
-    NVIC_ClearPendingIRQ(UART1_INST_INT_IRQN);
+    NVIC_ClearPendingIRQ(hardware->irqn);
     active_tx_instance = instance;
     instance->tx_busy = 1U;
     USARTTxCompletionBegin(&tx_completion);
@@ -244,26 +349,27 @@ static Device_Status_e USARTSendAsync(USARTInstance *instance,
     tx_size = size;
     tx_index = 0U;
 
-    NVIC_EnableIRQ(UART1_INST_INT_IRQN);
+    NVIC_EnableIRQ(hardware->irqn);
 
     if (use_dma) {
-        DL_DMA_disableChannel(DMA, DMA_CH1_CHAN_ID);
+        DL_DMA_disableChannel(DMA, hardware->tx_dma_channel);
         DL_DMA_setSrcAddr(
-            DMA, DMA_CH1_CHAN_ID, (uint32_t) tx_buffer);
-        DL_DMA_setDestAddr(DMA, DMA_CH1_CHAN_ID,
-            (uint32_t) &UART1_INST->TXDATA);
-        DL_DMA_setTransferSize(DMA, DMA_CH1_CHAN_ID, size);
-        DL_UART_Main_clearInterruptStatus(UART1_INST,
+            DMA, hardware->tx_dma_channel, (uint32_t) tx_buffer);
+        DL_DMA_setDestAddr(DMA, hardware->tx_dma_channel,
+            (uint32_t) &hardware->uart->TXDATA);
+        DL_DMA_setTransferSize(
+            DMA, hardware->tx_dma_channel, size);
+        DL_UART_Main_clearInterruptStatus(hardware->uart,
             DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
                 DL_UART_MAIN_INTERRUPT_EOT_DONE);
-        DL_UART_Main_enableInterrupt(UART1_INST,
+        DL_UART_Main_enableInterrupt(hardware->uart,
             DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
                 DL_UART_MAIN_INTERRUPT_EOT_DONE);
-        DL_DMA_enableChannel(DMA, DMA_CH1_CHAN_ID);
+        DL_DMA_enableChannel(DMA, hardware->tx_dma_channel);
     } else {
         DL_UART_Main_clearInterruptStatus(
-            UART1_INST, DL_UART_MAIN_INTERRUPT_EOT_DONE);
-        DL_UART_Main_enableInterrupt(UART1_INST,
+            hardware->uart, DL_UART_MAIN_INTERRUPT_EOT_DONE);
+        DL_UART_Main_enableInterrupt(hardware->uart,
             DL_UART_MAIN_INTERRUPT_TX |
                 DL_UART_MAIN_INTERRUPT_EOT_DONE);
     }
@@ -281,8 +387,6 @@ USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
     if ((init_config == NULL) ||
         (init_config->usart_handle == NULL) ||
         !USARTIsConfiguredInstance(init_config->usart_handle->Instance) ||
-        ((init_config->usart_handle->Instance != UART1_INST) &&
-            (init_config->module_callback != NULL)) ||
         (init_config->recv_buff_size == 0U) ||
         (init_config->recv_buff_size > USART_RXBUFF_LIMIT) ||
         (idx >= DEVICE_USART_CNT)) {
@@ -306,12 +410,14 @@ USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
     instance->usart_handle = init_config->usart_handle;
     instance->recv_buff_size = init_config->recv_buff_size;
     instance->module_callback = init_config->module_callback;
-    if (USARTSupportsAsync(instance->usart_handle->Instance)) {
-        DL_UART_Main_disableInterrupt(UART1_INST,
+    USARTRxRingInit(
+        &instance->rx_ring, instance->recv_buff, USART_RXBUFF_LIMIT);
+    if (USARTSupportsAsyncTransmit(instance->usart_handle->Instance)) {
+        DL_UART_Main_disableInterrupt(instance->usart_handle->Instance,
             DL_UART_MAIN_INTERRUPT_TX |
                 DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
                 DL_UART_MAIN_INTERRUPT_EOT_DONE);
-        DL_UART_Main_clearInterruptStatus(UART1_INST,
+        DL_UART_Main_clearInterruptStatus(instance->usart_handle->Instance,
             DL_UART_MAIN_INTERRUPT_DMA_DONE_TX |
                 DL_UART_MAIN_INTERRUPT_EOT_DONE);
     }
@@ -339,7 +445,9 @@ USARTInstance *USARTGetInstance(UART_HandleTypeDef *usart_handle)
 
     for (uint8_t i = 0U; i < idx; ++i) {
         if ((usart_instance[i] != NULL) &&
-            (usart_instance[i]->usart_handle == usart_handle)) {
+            (usart_instance[i]->usart_handle != NULL) &&
+            (usart_instance[i]->usart_handle->Instance ==
+                usart_handle->Instance)) {
             return usart_instance[i];
         }
     }
@@ -370,13 +478,12 @@ Device_Status_e USARTReceiveAvailable(USARTInstance *_instance,
         return DEVICE_ERROR;
     }
 
-    *received_size = 0U;
-    while ((*received_size < capacity) &&
-           !DL_UART_Main_isRXFIFOEmpty(_instance->usart_handle->Instance)) {
-        data[*received_size] =
-            DL_UART_Main_receiveData(_instance->usart_handle->Instance);
-        (*received_size)++;
-    }
+    uint32_t critical_state = USARTEnterCritical();
+    *received_size =
+        USARTRxRingRead(&_instance->rx_ring, data, capacity);
+    _instance->recv_count = USARTRxRingCount(&_instance->rx_ring);
+    _instance->rx_drop_count = _instance->rx_ring.drop_count;
+    USARTExitCritical(critical_state);
     return DEVICE_OK;
 }
 
@@ -397,86 +504,107 @@ uint8_t USARTIsReady(USARTInstance *_instance)
     return ready;
 }
 
-void USARTIRQHandler(void)
+void USARTIRQHandlerFor(UART_Regs *uart)
 {
-    DL_UART_IIDX pending = DL_UART_Main_getPendingInterrupt(UART1_INST);
-    USARTInstance *rx_instance = USARTGetInstance(&huart1);
-
-    if (pending == DL_UART_IIDX_DMA_DONE_RX) {
-        if (rx_instance != NULL) {
-            USARTDispatchReceive(rx_instance, rx_instance->recv_buff_size);
-        }
+    const USART_HardwareContext_s *hardware = USARTGetHardware(uart);
+    if (hardware == NULL) {
         return;
     }
 
-    if (pending == DL_UART_IIDX_RX_TIMEOUT_ERROR) {
-        if (rx_instance != NULL) {
-            DL_DMA_disableChannel(DMA, DMA_CH0_CHAN_ID);
-            uint16_t remaining =
-                DL_DMA_getTransferSize(DMA, DMA_CH0_CHAN_ID);
-            uint16_t received =
-                (remaining <= rx_instance->recv_buff_size)
-                    ? (uint16_t) (rx_instance->recv_buff_size - remaining)
-                    : 0U;
-            if (received != 0U) {
-                USARTDispatchReceive(rx_instance, received);
-            } else {
-                USARTStartReceive(rx_instance);
-            }
-        }
+    USARTInstance *instance = USARTGetInstance(hardware->handle);
+    if (instance == NULL) {
+        /* A stale/premature IRQ must not livelock the CPU before registration. */
+        DL_UART_Main_disableInterrupt(uart, USART_RX_REARM_INTERRUPTS);
+        DL_UART_Main_clearInterruptStatus(uart, USART_RX_REARM_INTERRUPTS);
         return;
     }
 
-    if (pending == DL_UART_IIDX_DMA_DONE_TX) {
-        DL_DMA_disableChannel(DMA, DMA_CH1_CHAN_ID);
-        if (!tx_completion.active) {
-            DL_UART_Main_disableInterrupt(
-                UART1_INST, DL_UART_MAIN_INTERRUPT_DMA_DONE_TX);
+    for (;;) {
+        DL_UART_IIDX pending = DL_UART_Main_getPendingInterrupt(uart);
+        if (pending == DL_UART_IIDX_NO_INTERRUPT) {
             return;
         }
-        if (USARTTxCompletionOnDataLoaded(&tx_completion) &&
-            !DL_UART_Main_isBusy(UART1_INST)) {
-            USARTFinishAsyncTransmit();
-        }
-        return;
-    }
 
-    if (pending == DL_UART_IIDX_TX) {
-        while ((tx_index < tx_size) &&
-               !DL_UART_Main_isTXFIFOFull(UART1_INST)) {
-            DL_UART_Main_transmitData(
-                UART1_INST, tx_buffer[tx_index++]);
-        }
-        if (tx_index >= tx_size) {
-            DL_UART_Main_disableInterrupt(
-                UART1_INST, DL_UART_MAIN_INTERRUPT_TX);
+        switch (pending) {
+        case DL_UART_IIDX_DMA_DONE_RX:
+        case DL_UART_IIDX_RX_TIMEOUT_ERROR:
+        case DL_UART_IIDX_RX:
+            USARTCollectReceive(instance);
+            break;
+
+        case DL_UART_IIDX_DMA_DONE_TX:
+            if (!hardware->tx_async_supported) {
+                DL_UART_Main_disableInterrupt(
+                    uart, DL_UART_MAIN_INTERRUPT_DMA_DONE_TX);
+                break;
+            }
+            DL_DMA_disableChannel(DMA, hardware->tx_dma_channel);
+            if (!tx_completion.active) {
+                DL_UART_Main_disableInterrupt(
+                    uart, DL_UART_MAIN_INTERRUPT_DMA_DONE_TX);
+                break;
+            }
             if (USARTTxCompletionOnDataLoaded(&tx_completion) &&
-                !DL_UART_Main_isBusy(UART1_INST)) {
+                !DL_UART_Main_isBusy(uart)) {
                 USARTFinishAsyncTransmit();
             }
-        }
-        return;
-    }
+            break;
 
-    if (pending == DL_UART_IIDX_EOT_DONE) {
-        if (!tx_completion.active) {
-            DL_UART_Main_disableInterrupt(
-                UART1_INST, DL_UART_MAIN_INTERRUPT_EOT_DONE);
+        case DL_UART_IIDX_TX:
+            if (!hardware->tx_async_supported) {
+                DL_UART_Main_disableInterrupt(
+                    uart, DL_UART_MAIN_INTERRUPT_TX);
+                break;
+            }
+            while ((tx_index < tx_size) &&
+                   !DL_UART_Main_isTXFIFOFull(uart)) {
+                DL_UART_Main_transmitData(uart, tx_buffer[tx_index++]);
+            }
+            if (tx_index >= tx_size) {
+                DL_UART_Main_disableInterrupt(
+                    uart, DL_UART_MAIN_INTERRUPT_TX);
+                if (USARTTxCompletionOnDataLoaded(&tx_completion) &&
+                    !DL_UART_Main_isBusy(uart)) {
+                    USARTFinishAsyncTransmit();
+                }
+            }
+            break;
+
+        case DL_UART_IIDX_EOT_DONE:
+            if (!hardware->tx_async_supported) {
+                DL_UART_Main_disableInterrupt(
+                    uart, DL_UART_MAIN_INTERRUPT_EOT_DONE);
+                break;
+            }
+            if (!tx_completion.active) {
+                DL_UART_Main_disableInterrupt(
+                    uart, DL_UART_MAIN_INTERRUPT_EOT_DONE);
+                break;
+            }
+            if (USARTTxCompletionOnEOT(&tx_completion)) {
+                USARTFinishAsyncTransmit();
+            }
+            break;
+
+        case DL_UART_IIDX_OVERRUN_ERROR:
+        case DL_UART_IIDX_BREAK_ERROR:
+        case DL_UART_IIDX_PARITY_ERROR:
+        case DL_UART_IIDX_FRAMING_ERROR:
+        case DL_UART_IIDX_NOISE_ERROR:
+            instance->rx_error_count++;
+            if (pending == DL_UART_IIDX_OVERRUN_ERROR) {
+                instance->rx_overrun_count++;
+            }
+            USARTCollectReceive(instance);
+            break;
+
+        default:
             return;
         }
-        if (USARTTxCompletionOnEOT(&tx_completion)) {
-            USARTFinishAsyncTransmit();
-        }
-        return;
     }
+}
 
-    if ((pending == DL_UART_IIDX_OVERRUN_ERROR) ||
-        (pending == DL_UART_IIDX_BREAK_ERROR) ||
-        (pending == DL_UART_IIDX_PARITY_ERROR) ||
-        (pending == DL_UART_IIDX_FRAMING_ERROR) ||
-        (pending == DL_UART_IIDX_NOISE_ERROR)) {
-        if (rx_instance != NULL) {
-            USARTStartReceive(rx_instance);
-        }
-    }
+void USARTIRQHandler(void)
+{
+    USARTIRQHandlerFor(UART1_INST);
 }
