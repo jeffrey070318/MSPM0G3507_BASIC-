@@ -11,6 +11,7 @@ typedef struct pwm_ins_temp {
     uint32_t tclk;
     float period;
     float dutyratio;
+    bool running;
     void (*callback)(struct pwm_ins_temp *);
     void *id;
 } PWMInstance;

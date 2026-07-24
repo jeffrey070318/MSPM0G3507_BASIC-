@@ -3,7 +3,7 @@
 
 #include "bsp_device.h"
 
-#define DEVICE_USART_CNT   1U
+#define DEVICE_USART_CNT   3U
 #define USART_RXBUFF_LIMIT 256U
 #define USART_TXBUFF_LIMIT 256U
 #define USART_RXQUEUE_DEPTH 2U
@@ -19,7 +19,7 @@ typedef enum {
 
 typedef struct {
     uint8_t recv_buff[USART_RXBUFF_LIMIT];
-    uint8_t recv_buff_size;
+    uint16_t recv_buff_size;
     UART_HandleTypeDef *usart_handle;
     usart_module_callback module_callback;
     volatile uint16_t recv_count;
@@ -35,7 +35,7 @@ typedef struct {
 } USARTInstance;
 
 typedef struct {
-    uint8_t recv_buff_size;
+    uint16_t recv_buff_size;
     UART_HandleTypeDef *usart_handle;
     usart_module_callback module_callback;
 } USART_Init_Config_s;
@@ -45,11 +45,13 @@ USARTInstance *USARTGetInstance(UART_HandleTypeDef *usart_handle);
 void USARTServiceInit(USARTInstance *_instance);
 Device_Status_e USARTSendEx(USARTInstance *_instance, uint8_t *send_buf,
     uint16_t send_size, USART_TRANSFER_MODE mode);
+Device_Status_e USARTReceiveAvailable(USARTInstance *_instance,
+    uint8_t *data, uint16_t capacity, uint16_t *received_size);
 void USARTSend(USARTInstance *_instance, uint8_t *send_buf,
     uint16_t send_size, USART_TRANSFER_MODE mode);
 uint8_t USARTIsReady(USARTInstance *_instance);
 
-/* Called by the maintained UART vector entry in mspm0_irq.c. */
+/* Handles UART1, the only SysConfig UART with DMA and IRQ enabled. */
 void USARTIRQHandler(void);
 
 #endif

@@ -1,19 +1,65 @@
 #include "bsp_encoder.h"
 
-#include <stddef.h>
+#include <limits.h>
 
-#include "ti_msp_dl_config.h"
+#include "bsp_encoder_decode.h"
 
-/* ====================== Static state ====================== */
-static Encoder_Device_t *g_encoders[ENCODER_MAX_DEVICES];
-static uint8_t           g_encoder_count;
+Encoder_Device_t hencoder_left = {
+    .phase_a_port = ENCODER_GPIO_ENC_L_A_PORT,
+    .phase_a_pin = ENCODER_GPIO_ENC_L_A_PIN,
+    .phase_b_port = ENCODER_GPIO_ENC_L_B_PORT,
+    .phase_b_pin = ENCODER_GPIO_ENC_L_B_PIN,
+    .reverse = false,
+};
 
-/* ====================== Public API ====================== */
+Encoder_Device_t hencoder_right = {
+    .phase_a_port = ENCODER_GPIO_ENC_R_A_PORT,
+    .phase_a_pin = ENCODER_GPIO_ENC_R_A_PIN,
+    .phase_b_port = ENCODER_GPIO_ENC_R_B_PORT,
+    .phase_b_pin = ENCODER_GPIO_ENC_R_B_PIN,
+    .reverse = false,
+};
 
-void Encoder_Init(Encoder_Device_t *dev)
+static uint8_t EncoderReadState(const Encoder_Device_t *dev)
 {
-    if ((dev == NULL) || (dev->port_a == NULL) || (dev->port_b == NULL) ||
-        (g_encoder_count >= ENCODER_MAX_DEVICES)) {
+    uint8_t phase_a =
+        (DL_GPIO_readPins(dev->phase_a_port, dev->phase_a_pin) != 0U) ? 1U : 0U;
+    uint8_t phase_b =
+        (DL_GPIO_readPins(dev->phase_b_port, dev->phase_b_pin) != 0U) ? 1U : 0U;
+    return (uint8_t) ((phase_a << 1U) | phase_b);
+}
+
+static int16_t EncoderClampSpeed(int64_t delta)
+{
+    if (delta > INT16_MAX) {
+        return INT16_MAX;
+    }
+    if (delta < INT16_MIN) {
+        return INT16_MIN;
+    }
+    return (int16_t) delta;
+}
+
+static void EncoderAccumulate(Encoder_Device_t *dev, int8_t delta)
+{
+    if ((delta > 0) && (dev->total_cnt < INT32_MAX)) {
+        dev->total_cnt++;
+    } else if ((delta < 0) && (dev->total_cnt > INT32_MIN)) {
+        dev->total_cnt--;
+    }
+}
+
+void Encoder_BSP_Init(void)
+{
+    Encoder_Start(&hencoder_left);
+    Encoder_Start(&hencoder_right);
+}
+
+void Encoder_Start(Encoder_Device_t *dev)
+{
+    if ((dev == NULL) || (dev->phase_a_port == NULL) ||
+        (dev->phase_b_port == NULL) || (dev->phase_a_pin == 0U) ||
+        (dev->phase_b_pin == 0U)) {
         return;
     }
 
@@ -67,76 +113,34 @@ void Encoder_Init(Encoder_Device_t *dev)
 
 void Encoder_Update(Encoder_Device_t *dev)
 {
-    if (dev == NULL) {
+    if ((dev == NULL) || !dev->started) {
         return;
     }
 
-    int32_t total;
-    total = dev->total_cnt;
-
-    dev->speed      = (int16_t)(total - dev->last_total);
-    dev->last_total = total;
+    int32_t current = dev->total_cnt;
+    int64_t delta = (int64_t) current - (int64_t) dev->last_sample_cnt;
+    dev->speed = EncoderClampSpeed(delta);
+    dev->last_sample_cnt = current;
 }
 
-int32_t Encoder_Get_Total(Encoder_Device_t *dev)
+void Encoder_SetReverse(Encoder_Device_t *dev, bool reverse)
 {
-    return (dev != NULL) ? (int32_t)dev->total_cnt : 0;
+    if (dev != NULL) {
+        dev->reverse = reverse;
+    }
 }
 
-int16_t Encoder_Get_Speed(Encoder_Device_t *dev)
+int32_t Encoder_Get_Total(const Encoder_Device_t *dev)
+{
+    return (dev != NULL) ? dev->total_cnt : 0;
+}
+
+int16_t Encoder_Get_Speed(const Encoder_Device_t *dev)
 {
     return (dev != NULL) ? dev->speed : 0;
 }
 
-/* ====================== ISR helpers ====================== */
-
-void Encoder_ISR_ByPortPin(GPIO_TypeDef *port, uint32_t pin)
+uint32_t Encoder_Get_InvalidTransitions(const Encoder_Device_t *dev)
 {
-    uint32_t status = DL_GPIO_getEnabledInterruptStatus(port, pin);
-    if (status == 0U) {
-        return;
-    }
-
-    DL_GPIO_clearInterruptStatus(port, pin);
-
-    /* Find the encoder that owns this port+pin (A or B channel). */
-    Encoder_Device_t *dev = NULL;
-    bool is_pin_a = false;
-    for (uint8_t i = 0U; i < g_encoder_count; i++) {
-        Encoder_Device_t *d = g_encoders[i];
-        if (d == NULL) {
-            continue;
-        }
-        if ((d->port_a == port) && (d->pin_a == pin)) {
-            dev = d;
-            is_pin_a = true;
-            break;
-        }
-        if ((d->port_b == port) && (d->pin_b == pin)) {
-            dev = d;
-            is_pin_a = false;
-            break;
-        }
-    }
-
-    if (dev == NULL) {
-        return;
-    }
-
-    /* Read current levels of A and B. */
-    uint32_t a_level =
-        DL_GPIO_readPins(dev->port_a, dev->pin_a) ? 1U : 0U;
-    uint32_t b_level =
-        DL_GPIO_readPins(dev->port_b, dev->pin_b) ? 1U : 0U;
-
-    /*
-     * 4x quadrature decode (both channels, both edges):
-     *   Interrupt on A:  A^B=1 -> +1,  A^B=0 -> -1
-     *   Interrupt on B:  A^B=1 -> -1,  A^B=0 -> +1
-     */
-    if (a_level ^ b_level) {
-        dev->total_cnt += is_pin_a ? 1 : -1;
-    } else {
-        dev->total_cnt += is_pin_a ? -1 : 1;
-    }
+    return (dev != NULL) ? dev->invalid_transition_count : 0U;
 }

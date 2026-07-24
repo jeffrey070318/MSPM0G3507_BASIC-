@@ -91,10 +91,6 @@ GraySensorInstance *GraySensorRegister(
         (sensor->address_pin[1] == NULL) ||
         (sensor->address_pin[2] == NULL) ||
         (sensor->output_pin == NULL)) {
-        GPIOUnregister(sensor->address_pin[0]);
-        GPIOUnregister(sensor->address_pin[1]);
-        GPIOUnregister(sensor->address_pin[2]);
-        GPIOUnregister(sensor->output_pin);
         BSPFree(sensor);
         return NULL;
     }

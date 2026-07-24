@@ -1,0 +1,36 @@
+#include "hardware_test_task.h"
+
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_ENCODER
+
+#include "bsp_encoder.h"
+
+volatile int32_t hardware_test_encoder_left_total;
+volatile int32_t hardware_test_encoder_right_total;
+volatile int16_t hardware_test_encoder_left_speed;
+volatile int16_t hardware_test_encoder_right_speed;
+volatile uint32_t hardware_test_encoder_left_invalid;
+volatile uint32_t hardware_test_encoder_right_invalid;
+
+Device_Status_e HardwareTestInit(void)
+{
+    Encoder_Start(&hencoder_left);
+    Encoder_Start(&hencoder_right);
+    return DEVICE_OK;
+}
+
+void HardwareTestRun(void)
+{
+    Encoder_Update(&hencoder_left);
+    Encoder_Update(&hencoder_right);
+
+    hardware_test_encoder_left_total = Encoder_Get_Total(&hencoder_left);
+    hardware_test_encoder_right_total = Encoder_Get_Total(&hencoder_right);
+    hardware_test_encoder_left_speed = Encoder_Get_Speed(&hencoder_left);
+    hardware_test_encoder_right_speed = Encoder_Get_Speed(&hencoder_right);
+    hardware_test_encoder_left_invalid =
+        Encoder_Get_InvalidTransitions(&hencoder_left);
+    hardware_test_encoder_right_invalid =
+        Encoder_Get_InvalidTransitions(&hencoder_right);
+}
+
+#endif

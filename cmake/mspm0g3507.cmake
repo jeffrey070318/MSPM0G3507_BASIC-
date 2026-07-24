@@ -1,6 +1,6 @@
 set(MSPM0_SDK_DIR "D:/tools/ti/mspm0_sdk_2_10_00_04" CACHE PATH
     "Path to the MSPM0 SDK root")
-set(SYSCONFIG_CLI "D:/tools/ti/ccs/utils/sysconfig_1.27.1/sysconfig_cli.bat"
+set(SYSCONFIG_CLI "D:/tools/ti/sysconfig/sysconfig_cli.bat"
     CACHE FILEPATH "Path to sysconfig_cli.bat")
 set(OPENOCD_EXE "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe"
     CACHE FILEPATH "Path to OpenOCD executable")

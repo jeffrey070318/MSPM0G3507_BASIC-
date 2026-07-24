@@ -11,8 +11,8 @@ static GPIOInstance *hardware_test_gpio;
 Device_Status_e HardwareTestInit(void)
 {
     GPIO_Init_Config_s gpio_config = {
-        .GPIOx = GPIO_GRP_0_PORT,
-        .GPIO_Pin = GPIO_GRP_0_PIN_0_PIN,
+        .GPIOx = LED_GPIO_PORT,
+        .GPIO_Pin = LED_GPIO_LED3_PIN,
         .pin_state = GPIO_PIN_RESET,
         .exti_mode = GPIO_EXTI_MODE_NONE,
         .gpio_model_callback = NULL,

@@ -1,4 +1,5 @@
 #include "robot_cmd.h"
+#include "robot_state_machine.h"
 
 /**
  * @brief 机器人核心控制任务初始化模板
@@ -7,6 +8,7 @@
  */
 void RobotCMDInit(void)
 {
+    RobotStateMachineInit();
 }
 
 /**
@@ -16,4 +18,5 @@ void RobotCMDInit(void)
  */
 void RobotCMDTask(void)
 {
+    RobotStateMachineTask();
 }

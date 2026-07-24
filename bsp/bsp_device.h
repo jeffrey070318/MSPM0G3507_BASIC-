@@ -62,6 +62,7 @@ typedef struct {
     uint32_t Channel;
     uint32_t tclk_hz;
     uint32_t period_ticks;
+    bool count_up;
 } TIM_HandleTypeDef;
 
 #define TIM_CHANNEL_1 DL_TIMER_CC_0_INDEX
@@ -71,7 +72,10 @@ typedef struct {
 
 /* Current SysConfig-owned hardware descriptors. */
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
 extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
 extern SPI_HandleTypeDef hspi1;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;

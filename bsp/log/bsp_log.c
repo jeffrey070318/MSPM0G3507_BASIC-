@@ -2,12 +2,13 @@
 
 #include "SEGGER_RTT.h"
 #include "SEGGER_RTT_Conf.h"
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 
-void BSPLogInit()
+void BSPLogInit(void)
 {
     SEGGER_RTT_Init();
 }
@@ -23,13 +24,30 @@ int PrintLog(const char *fmt, ...)
 
 void Float2Str(char *str, float va)
 {
-    int flag = va < 0;
-    int head = (int)va;
-    int point = (int)((va - head) * 1000);
-    head = abs(head);
-    point = abs(point);
-    if (flag)
-        sprintf(str, "-%d.%d", head, point);
-    else
-        sprintf(str, "%d.%d", head, point);
+    (void) Float2StrEx(str, FLOAT2STR_BUFFER_SIZE, va);
+}
+
+int Float2StrEx(char *str, size_t str_size, float va)
+{
+    if ((str == NULL) || (str_size == 0U)) {
+        return -1;
+    }
+
+    bool negative = va < 0.0f;
+    float magnitude = negative ? -va : va;
+    if (!(magnitude >= 0.0f) || (magnitude > 4294967.0f)) {
+        str[0] = '\0';
+        return -1;
+    }
+
+    uint32_t scaled = (uint32_t) (magnitude * 1000.0f + 0.5f);
+    uint32_t head = scaled / 1000U;
+    uint32_t point = scaled % 1000U;
+    int written = snprintf(str, str_size, "%s%lu.%03lu",
+        negative ? "-" : "", (unsigned long) head, (unsigned long) point);
+    if ((written < 0) || ((size_t) written >= str_size)) {
+        str[0] = '\0';
+        return -1;
+    }
+    return written;
 }

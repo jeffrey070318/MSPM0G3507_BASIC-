@@ -19,7 +19,6 @@
 #include "robot_cmd.h"
 #endif
 
-#include "bsp_usart.h"
 #include "imu.h"
 #include "vofa.h"
 #include "message_center.h"
@@ -134,7 +133,7 @@ void RobotTask()
 {
     {
         IMU_Data_t imu_data;
-        if (IMU_ReadAll(&imu_handle, &imu_data) == DEVICE_OK) {
+        if (IMU_ReadAll(&imu_data) == DEVICE_OK) {
             float vofa_buf[9];
             vofa_buf[0] = imu_data.ax;
             vofa_buf[1] = imu_data.ay;
@@ -171,3 +170,4 @@ void RobotTask()
 #endif
 
 }
+

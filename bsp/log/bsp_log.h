@@ -3,15 +3,17 @@
 
 #include "SEGGER_RTT.h"
 #include "SEGGER_RTT_Conf.h"
+#include <stddef.h>
 #include <stdio.h>
 
 #define BUFFER_INDEX 0
+#define FLOAT2STR_BUFFER_SIZE 16U
 
 /**
  * @brief 日志系统初始化
  *
  */
-void BSPLogInit();
+void BSPLogInit(void);
 
 /**
  * @brief 日志功能原型,供下面的LOGI,LOGW,LOGE等使用
@@ -61,12 +63,14 @@ void BSPLogInit();
 int PrintLog(const char *fmt, ...);
 
 /**
- * @brief 利用sprintf(),将float转换为字符串进行打印
+ * @brief 将float转换为固定三位小数字符串
  * @attention 浮点数需要转换为字符串后才能通过RTT打印
+ * @note 兼容接口要求str至少为FLOAT2STR_BUFFER_SIZE字节；新代码优先使用Float2StrEx
  *
  * @param str 转换后的字符串
  * @param va 待转换的float
  */
 void Float2Str(char *str, float va);
+int Float2StrEx(char *str, size_t str_size, float va);
 
 #endif

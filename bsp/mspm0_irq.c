@@ -1,37 +1,73 @@
-#include "bsp_encoder.h"
 #include "bsp_usart.h"
-#include "ti_msp_dl_config.h"
+#include "bsp_encoder.h"
+#include "bsp_gpio.h"
 
-void UART0_IRQHandler(void)
+void UART1_INST_IRQHandler(void);
+void GROUP1_IRQHandler(void);
+
+void UART1_INST_IRQHandler(void)
 {
     USARTIRQHandler();
 }
 
-/*
- * GROUP1_IRQHandler handles BOTH GPIOA and GPIOB interrupts.
- * GPIOA_INT_IRQn == GPIOB_INT_IRQn == IRQ#1 on MSPM0G3507.
- * GPIOA pins: PA12(L_ENCA), PA13(L_ENCB)
- * GPIOB pins: PB22(R_ENCA), PB23(R_ENCB)
- */
+static void GPIOAInterruptHandler(void)
+{
+    for (;;) {
+        uint32_t pending = (uint32_t) DL_GPIO_getPendingInterrupt(GPIOA);
+        switch (pending) {
+        case ENCODER_GPIO_ENC_L_A_IIDX:
+            Encoder_OnEdge(&hencoder_left);
+            break;
+        case ENCODER_GPIO_ENC_L_B_IIDX:
+            Encoder_OnEdge(&hencoder_left);
+            break;
+        default: {
+            uint32_t pin = GPIOPinFromInterruptIndex(pending);
+            if (pin == 0U) {
+                return;
+            }
+            GPIOInterruptCallbackForPort(GPIOA, pin);
+            break;
+        }
+        }
+    }
+}
+
+static void GPIOBInterruptHandler(void)
+{
+    for (;;) {
+        uint32_t pending = (uint32_t) DL_GPIO_getPendingInterrupt(GPIOB);
+        switch (pending) {
+        case ENCODER_GPIO_ENC_R_A_IIDX:
+            Encoder_OnEdge(&hencoder_right);
+            break;
+        case ENCODER_GPIO_ENC_R_B_IIDX:
+            Encoder_OnEdge(&hencoder_right);
+            break;
+        default: {
+            uint32_t pin = GPIOPinFromInterruptIndex(pending);
+            if (pin == 0U) {
+                return;
+            }
+            GPIOInterruptCallbackForPort(GPIOB, pin);
+            break;
+        }
+        }
+    }
+}
+
 void GROUP1_IRQHandler(void)
 {
-    /* GPIOA: encoder 0 pins */
-    uint32_t status_a = DL_GPIO_getEnabledInterruptStatus(
-        GPIOA, DL_GPIO_PIN_12 | DL_GPIO_PIN_13);
-    if (status_a & DL_GPIO_PIN_12) {
-        Encoder_ISR_ByPortPin(GPIOA, DL_GPIO_PIN_12);
-    }
-    if (status_a & DL_GPIO_PIN_13) {
-        Encoder_ISR_ByPortPin(GPIOA, DL_GPIO_PIN_13);
-    }
-
-    /* GPIOB: encoder 1 pins */
-    uint32_t status_b = DL_GPIO_getEnabledInterruptStatus(
-        GPIOB, DL_GPIO_PIN_22 | DL_GPIO_PIN_23);
-    if (status_b & DL_GPIO_PIN_22) {
-        Encoder_ISR_ByPortPin(GPIOB, DL_GPIO_PIN_22);
-    }
-    if (status_b & DL_GPIO_PIN_23) {
-        Encoder_ISR_ByPortPin(GPIOB, DL_GPIO_PIN_23);
+    for (;;) {
+        switch (DL_Interrupt_getPendingGroup(DL_INTERRUPT_GROUP_1)) {
+        case ENCODER_GPIO_GPIOA_INT_IIDX:
+            GPIOAInterruptHandler();
+            break;
+        case ENCODER_GPIO_GPIOB_INT_IIDX:
+            GPIOBInterruptHandler();
+            break;
+        default:
+            return;
+        }
     }
 }

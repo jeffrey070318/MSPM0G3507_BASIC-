@@ -16,5 +16,14 @@ GPIOSet(gpio);
 GPIOReset(gpio);
 ```
 
-When a GPIO interrupt is configured, the maintained IRQ entry passes the
-pending pin mask to `GPIOInterruptCallback`.
+Registration accepts exactly one pin bit and rejects duplicate port/pin pairs.
+Registered pins remain owned until the MCU resets. GPIO registration is
+protected against the maintained GPIO ISR.
+`exti_mode` records module intent only; the real interrupt edge remains owned by
+SysConfig.
+
+The four high-rate encoder inputs are handled directly by the encoder BSP in
+the maintained Group 1 IRQ entry. For future GPIO interrupts, the port-aware
+`GPIOInterruptCallbackForPort` and legacy pin-only `GPIOInterruptCallback`
+dispatchers remain available. The Group 1 IRQ routes non-encoder GPIO events to
+the port-aware dispatcher.
