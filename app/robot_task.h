@@ -15,8 +15,8 @@
 #include "hardware_test_task.h"
 #endif
 
-#if __has_include("ins_task.h")
-#include "ins_task.h"
+#if __has_include("ins.h")
+#include "ins.h"
 #define ROBOT_HAS_INS_TASK 1
 #else
 #define ROBOT_HAS_INS_TASK 0

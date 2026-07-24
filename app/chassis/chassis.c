@@ -6,6 +6,9 @@
 #include "bsp_pwm.h"
 #include "motor.h"
 #include "pid.h"
+#include "bsp_log.h"
+#include "message_center.h"
+#include "ins.h"
 
 #include "ti_msp_dl_config.h"
 
@@ -54,6 +57,10 @@ typedef struct {
 static ChassisMotor_t      g_motors[CHASSIS_MOTOR_COUNT];
 static Chassis_Ctrl_Cmd_s  g_cmd;
 static bool                g_chassis_initialized;
+
+/* Message center handles */
+static Publisher_t   *g_enc_pub;
+static Subscriber_t  *g_cmd_sub;
 
 static void ChassisReceiveCommand(void);
 static void ChassisUpdateMode(void);
@@ -225,6 +232,18 @@ void ChassisInit(void)
     g_cmd.wz = 0.0f;
     g_cmd.chassis_mode = CHASSIS_ZERO_FORCE;
 
+    /* Register encoder data publisher for INS */
+    g_enc_pub = PubRegister(INS_ENCODER_TOPIC, sizeof(Encoder_Pub_Data_t));
+    if (g_enc_pub == NULL) {
+        LOGERROR("[Chassis] Failed to register encoder_data publisher");
+    }
+
+    /* Subscribe to chassis commands from INS */
+    g_cmd_sub = SubRegister(INS_CMD_TOPIC, sizeof(Chassis_Cmd_Pub_t));
+    if (g_cmd_sub == NULL) {
+        LOGERROR("[Chassis] Failed to subscribe to chassis_cmd");
+    }
+
     g_chassis_initialized = true;
 }
 
@@ -261,10 +280,23 @@ void ChassisTask(void)
 
 static void ChassisReceiveCommand(void)
 {
-    g_cmd.vx = 0.3f;
-    g_cmd.vy = 0.0f;
-    g_cmd.wz = 0.0f;
-    g_cmd.chassis_mode = CHASSIS_ROTATE;
+    /* Try to read chassis command from INS via message center */
+    Chassis_Cmd_Pub_t ins_cmd;
+    if ((g_cmd_sub != NULL) && SubGetMessage(g_cmd_sub, &ins_cmd)) {
+        g_cmd.vx = ins_cmd.vx;
+        g_cmd.vy = ins_cmd.vy;
+        g_cmd.wz = ins_cmd.wz;
+        g_cmd.offset_angle = ins_cmd.offset_angle;
+        g_cmd.chassis_mode  = (ins_cmd.chassis_mode != 0U)
+                              ? CHASSIS_ROTATE : CHASSIS_ZERO_FORCE;
+        g_cmd.chassis_speed_buff = ins_cmd.speed_buff;
+    } else {
+        /* Fallback: hard-coded test command when no INS command */
+        g_cmd.vx = 0.3f;
+        g_cmd.vy = 0.0f;
+        g_cmd.wz = 0.0f;
+        g_cmd.chassis_mode = CHASSIS_ROTATE;
+    }
 }
 
 static void ChassisUpdateMode(void)
@@ -291,4 +323,11 @@ static void ChassisUpdateMode(void)
 
 static void ChassisPublishFeedback(void)
 {
+    /* Publish encoder totals to message center for INS dead reckoning */
+    if (g_enc_pub != NULL) {
+        Encoder_Pub_Data_t enc_data;
+        enc_data.left_total  = Encoder_Get_Total(&g_motors[0].encoder);
+        enc_data.right_total = Encoder_Get_Total(&g_motors[1].encoder);
+        PubPushMessage(g_enc_pub, &enc_data);
+    }
 }

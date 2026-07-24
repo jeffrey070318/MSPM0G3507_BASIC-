@@ -58,12 +58,9 @@ void Encoder_Init(Encoder_Device_t *dev)
     DL_GPIO_enableInterrupt(dev->port_a, dev->pin_a);
     DL_GPIO_enableInterrupt(dev->port_b, dev->pin_b);
 
-    /* Enable NVIC for the GPIO group. */
-    if (dev->port_a == GPIOA) {
-        NVIC_EnableIRQ(GPIOA_INT_IRQn);
-    } else {
-        NVIC_EnableIRQ(GPIOB_INT_IRQn);
-    }
+    /* GPIOA_INT_IRQn == GPIOB_INT_IRQn == GROUP1 on MSPM0G3507.
+     * Enabling either is equivalent; both ports share GROUP1_IRQHandler. */
+    NVIC_EnableIRQ(GPIOA_INT_IRQn);
 
     g_encoders[g_encoder_count++] = dev;
 }

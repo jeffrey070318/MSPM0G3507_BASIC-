@@ -22,11 +22,13 @@
 #include "bsp_usart.h"
 #include "imu.h"
 #include "vofa.h"
+#include "message_center.h"
 
 #include "ti_msp_dl_config.h"
 
-static IMU_Handle_t imu_handle;
+static IMU_Handle_t  imu_handle;
 static USARTInstance *vofa_usart;
+static Publisher_t   *imu_pub;
 
 /* ====================== I2C1 JY901S pinmux override ====================== */
 /*
@@ -101,6 +103,12 @@ void RobotInit()
         IMU_Init(&imu_handle, &iic_config);
     }
 
+    /* Register IMU data publisher for INS message center */
+    imu_pub = PubRegister("imu_data", sizeof(IMU_Data_t));
+    if (imu_pub == NULL) {
+        LOGERROR("[Robot] Failed to register imu_data publisher");
+    }
+
 #if defined(ROBOT_ENABLE_CMD_APP)
     RobotCMDInit();
 #endif
@@ -138,6 +146,11 @@ void RobotTask()
             vofa_buf[7] = imu_data.pitch;
             vofa_buf[8] = imu_data.yaw;
             vofa_justfloat_output_dma(vofa_buf, 9U, &huart1);
+
+            /* Publish to message center for INS task */
+            if (imu_pub != NULL) {
+                PubPushMessage(imu_pub, &imu_data);
+            }
         }
     }
 
