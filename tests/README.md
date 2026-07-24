@@ -6,7 +6,7 @@ Run the hardware-independent BSP regression tests from PowerShell:
 powershell -ExecutionPolicy Bypass -File .\tests\run_host_tests.ps1
 ```
 
-The tests compile the real IMU, VOFA, transparent UART, vision communication,
+The tests compile the real IMU, INS return logic, VOFA, transparent UART, vision communication,
 LED, active-buzzer, key, electromagnet, photoelectric switch, servo, PID, motor backends,
 closed-loop motor, encoder decoder, PWM, UART completion state, GPIO, I2C, and
 log formatting sources against small host-side DriverLib stubs. They do not

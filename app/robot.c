@@ -22,6 +22,14 @@
 #include "imu.h"
 #include "vofa.h"
 
+#if defined(ROBOT_ENABLE_INS_APP)
+#include "bsp_log.h"
+#include "ins.h"
+#include "message_center.h"
+
+static Publisher_t *g_imu_publisher;
+#endif
+
 void RobotInit()
 {  
     __disable_irq();
@@ -30,6 +38,13 @@ void RobotInit()
 
     (void) VOFA_Init();
     (void) IMU_Init();
+
+#if defined(ROBOT_ENABLE_INS_APP)
+    g_imu_publisher = PubRegister(INS_IMU_TOPIC, sizeof(IMU_Data_t));
+    if (g_imu_publisher == NULL) {
+        LOGERROR("[Robot] Failed to register INS IMU publisher");
+    }
+#endif
 
 #if defined(ROBOT_ENABLE_CMD_APP)
     RobotCMDInit();
@@ -68,6 +83,12 @@ void RobotTask()
             vofa_buf[7] = imu_data.pitch;
             vofa_buf[8] = imu_data.yaw;
             (void) VOFA_JustFloatOutputDMA(vofa_buf, 9U);
+
+#if defined(ROBOT_ENABLE_INS_APP)
+            if (g_imu_publisher != NULL) {
+                (void) PubPushMessage(g_imu_publisher, &imu_data);
+            }
+#endif
         }
     }
 

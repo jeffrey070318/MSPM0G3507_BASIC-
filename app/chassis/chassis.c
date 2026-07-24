@@ -4,6 +4,12 @@
 #include "bsp_dwt.h"
 #include "motor.h"
 
+#if defined(ROBOT_ENABLE_INS_APP)
+#include "bsp_log.h"
+#include "ins.h"
+#include "message_center.h"
+#endif
+
 #include "ti_msp_dl_config.h"
 
 /* ====================== Chassis Configuration ====================== */
@@ -38,6 +44,11 @@ static Chassis_Ctrl_Cmd_s  g_cmd;
 static bool                g_chassis_initialized;
 static bool                g_control_time_initialized;
 static uint32_t            g_control_timestamp_us;
+
+#if defined(ROBOT_ENABLE_INS_APP)
+static Publisher_t         *g_encoder_publisher;
+static Subscriber_t        *g_command_subscriber;
+#endif
 
 static void ChassisReceiveCommand(void);
 static void ChassisUpdateMode(void);
@@ -97,6 +108,17 @@ void ChassisInit(void)
     g_cmd.wz = 0.0f;
     g_cmd.chassis_mode = CHASSIS_ZERO_FORCE;
 
+#if defined(ROBOT_ENABLE_INS_APP)
+    g_encoder_publisher = PubRegister(
+        INS_ENCODER_TOPIC, sizeof(Encoder_Pub_Data_t));
+    g_command_subscriber = SubRegister(
+        INS_CMD_TOPIC, sizeof(INS_ChassisCommand_t));
+    if ((g_encoder_publisher == NULL) ||
+        (g_command_subscriber == NULL)) {
+        LOGERROR("[Chassis] INS message registration failed");
+    }
+#endif
+
     g_chassis_initialized = true;
 }
 
@@ -135,10 +157,27 @@ void ChassisTask(void)
 
 static void ChassisReceiveCommand(void)
 {
+#if defined(ROBOT_ENABLE_INS_APP)
+    INS_ChassisCommand_t command;
+    if ((g_command_subscriber != NULL) &&
+        (SubGetMessage(g_command_subscriber, &command) != 0U) &&
+        command.motion_enabled) {
+        g_cmd.vx = command.vx;
+        g_cmd.vy = command.vy;
+        g_cmd.wz = command.wz;
+        g_cmd.chassis_mode = CHASSIS_ROTATE;
+    } else {
+        g_cmd.vx = 0.0f;
+        g_cmd.vy = 0.0f;
+        g_cmd.wz = 0.0f;
+        g_cmd.chassis_mode = CHASSIS_ZERO_FORCE;
+    }
+#else
     g_cmd.vx = 0.3f;
     g_cmd.vy = 0.0f;
     g_cmd.wz = 0.0f;
     g_cmd.chassis_mode = CHASSIS_ROTATE;
+#endif
 }
 
 static void ChassisUpdateMode(void)
@@ -162,4 +201,13 @@ static void ChassisUpdateMode(void)
 
 static void ChassisPublishFeedback(void)
 {
+#if defined(ROBOT_ENABLE_INS_APP)
+    if (g_encoder_publisher != NULL) {
+        Encoder_Pub_Data_t encoder_data = {
+            .left_total = Encoder_Get_Total(g_motors[0].encoder),
+            .right_total = Encoder_Get_Total(g_motors[1].encoder),
+        };
+        (void) PubPushMessage(g_encoder_publisher, &encoder_data);
+    }
+#endif
 }

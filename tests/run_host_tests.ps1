@@ -43,6 +43,11 @@ try {
         "-Itests/module_io_stubs", "-Imodule/transparent_uart",
         "-Imodule/vision", "tests/vision_test.c", "module/vision/vision.c"
     )
+    Invoke-HostTest "ins_test" @(
+        "-Itests/ins_stubs", "-Itests/module_io_stubs",
+        "-Imodule/imu", "-Imodule/algorithm", "-Imodule/ins",
+        "tests/ins_test.c", "module/ins/ins.c", "module/algorithm/pid.c"
+    )
     Invoke-HostTest "servo_test" @(
         "-Itests/motor_stubs", "-Itests/stubs", "-Imodule/servo",
         "tests/servo_test.c", "module/servo/servo.c"

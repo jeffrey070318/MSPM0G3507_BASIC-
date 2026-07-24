@@ -15,8 +15,8 @@
 #include "hardware_test_task.h"
 #endif
 
-#if __has_include("ins_task.h")
-#include "ins_task.h"
+#if defined(ROBOT_ENABLE_INS_APP) && __has_include("ins.h")
+#include "ins.h"
 #define ROBOT_HAS_INS_TASK 1
 #else
 #define ROBOT_HAS_INS_TASK 0
@@ -136,13 +136,15 @@ __attribute__((noreturn)) void StartINSTASK(void *argument)
 {
     (void) argument;
 
-    INS_Init();
+    if (!INS_Init()) {
+        LOGERROR("[freeRTOS] INS initialization failed");
+    }
     LOGINFO("[freeRTOS] INS Task Start");
     TickType_t last_wake_time = xTaskGetTickCount();
     const TickType_t period_ticks = pdMS_TO_TICKS(1U);
     for (;;) {
         TickType_t start_tick = xTaskGetTickCount();
-        INS_Task();
+        INS_Task(0.001f);
 #if ROBOT_HAS_MASTER_PROCESS
         VisionSend();
 #endif
