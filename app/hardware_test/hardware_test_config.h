@@ -11,7 +11,7 @@
 #define HARDWARE_TEST_MOTOR 7
 
 /* Select one hardware test here, then rebuild the project. */
-#define HARDWARE_TEST_MODE HARDWARE_TEST_MOTOR
+#define HARDWARE_TEST_MODE HARDWARE_TEST_NONE
 
 #if (HARDWARE_TEST_MODE < HARDWARE_TEST_NONE) || \
     (HARDWARE_TEST_MODE > HARDWARE_TEST_MOTOR)

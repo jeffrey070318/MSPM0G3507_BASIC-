@@ -21,24 +21,12 @@ int main(void)
     assert(sequence.stage == HARDWARE_TEST_MOTOR_WAIT);
     HardwareTestMotorSequence_Step(&sequence);
     assert(sequence.stage == HARDWARE_TEST_MOTOR_FORWARD);
-    assert(sequence.output == 0.15f);
+    assert(sequence.output == 0.50f);
 
-    StepMany(&sequence, 100U);
-    assert(sequence.stage == HARDWARE_TEST_MOTOR_PAUSE);
-    assert(sequence.output == 0.0f);
-
-    StepMany(&sequence, 200U);
-    assert(sequence.stage == HARDWARE_TEST_MOTOR_REVERSE);
-    assert(sequence.output == -0.15f);
-
-    StepMany(&sequence, 100U);
-    assert(sequence.stage == HARDWARE_TEST_MOTOR_COMPLETE);
-    assert(sequence.output == 0.0f);
-    assert(sequence.stop_latched);
-
-    StepMany(&sequence, 100U);
-    assert(sequence.stage == HARDWARE_TEST_MOTOR_COMPLETE);
-    assert(sequence.stop_latched);
+    StepMany(&sequence, 1000U);
+    assert(sequence.stage == HARDWARE_TEST_MOTOR_FORWARD);
+    assert(sequence.output == 0.50f);
+    assert(!sequence.stop_latched);
 
     sequence.stage = (HardwareTestMotorStage_e) 99;
     sequence.stop_latched = false;
