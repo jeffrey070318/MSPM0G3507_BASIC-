@@ -30,6 +30,11 @@ DRV8701E 使用 `EN/PWM + PH/DIR`：
 | 左 | PA0 / `htim1` | PA17 / AIN1 | PA16 / AIN2 |
 | 右 | PA1 / `htim2` | PB4 / BIN1 | PB1 / BIN2 |
 
+接线资料：
+
+- [新电机线序](./新电机线序.png)
+- [老车旧电机接口线序](./老车老电机接口线序.png)
+
 ## TB6612
 
 TB6612 使用 `PWM + IN1 + IN2`。初始化配置可以选择 `MOTOR_STOP_COAST` 或 `MOTOR_STOP_BRAKE`，其余速度闭环逻辑与 DRV8701E 共用。

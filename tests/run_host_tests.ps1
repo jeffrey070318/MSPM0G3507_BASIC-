@@ -26,6 +26,11 @@ function Invoke-HostTest {
 
 Push-Location $projectRoot
 try {
+    Invoke-HostTest "hardware_test_motor_sequence_test" @(
+        "-Iapp/hardware_test",
+        "tests/hardware_test_motor_sequence_test.c",
+        "app/hardware_test/hardware_test_motor_sequence.c"
+    )
     Invoke-HostTest "imu_module_test" @(
         "-Itests/module_io_stubs", "-Imodule/imu",
         "tests/imu_module_test.c", "module/imu/imu.c"
