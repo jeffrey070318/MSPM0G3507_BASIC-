@@ -95,6 +95,7 @@ void StartUITASK(void *argument);
  */
 void OSTaskInit()
 {
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
 #if ROBOT_HAS_INS_TASK
     RobotCreateTask(StartINSTASK, "instask", 1024U,
         tskIDLE_PRIORITY + 3U, &insTaskHandle);
@@ -113,11 +114,6 @@ void OSTaskInit()
     RobotCreateTask(StartROBOTTASK, "robottask", 1024U,
         tskIDLE_PRIORITY + 2U, &robotTaskHandle);
 
-#if HARDWARE_TEST_MODE != HARDWARE_TEST_NONE
-    RobotCreateTask(StartHARDWARETESTTASK, "hardwaretest", 256U,
-        tskIDLE_PRIORITY + 1U, &hardwareTestTaskHandle);
-#endif
-
 #if ROBOT_HAS_REFEREE_TASK
     RobotCreateTask(StartUITASK, "uitask", 512U,
         tskIDLE_PRIORITY + 2U, &uiTaskHandle);
@@ -125,6 +121,10 @@ void OSTaskInit()
 
 #if ROBOT_HAS_HT04
     HTMotorControlInit();
+#endif
+#else
+    RobotCreateTask(StartHARDWARETESTTASK, "hardwaretest", 256U,
+        tskIDLE_PRIORITY + 1U, &hardwareTestTaskHandle);
 #endif
 }
 

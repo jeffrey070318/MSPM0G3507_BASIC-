@@ -35,6 +35,7 @@ void RobotInit()
     
     BSPInit();
 
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
     (void) VOFA_Init();
     (void) IMU_Init();
 
@@ -56,6 +57,7 @@ void RobotInit()
 
 #if defined(ROBOT_ENABLE_CHASSIS_APP)
     ChassisInit();
+#endif
 #endif
 
     OSTaskInit();
