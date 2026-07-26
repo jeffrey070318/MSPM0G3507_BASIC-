@@ -82,6 +82,7 @@ GPIO2.associatedPins[2].pin.$assign = "PB22";
 
 GPIO3.$name                         = "BUZZER_GPIO";
 GPIO3.associatedPins[0].$name       = "BUZZER";
+GPIO3.associatedPins[0].initialValue = "SET";
 GPIO3.associatedPins[0].pin.$assign = "PB13";
 
 GPIO4.$name                         = "TRIG_GPIO";

@@ -15,6 +15,7 @@
 #define MOTOR_TEST_KI                       0.0005f
 #define MOTOR_TEST_KD                       0.0f
 #define MOTOR_TEST_OUTPUT_LIMIT             0.5f
+#define MOTOR_TEST_REVERSE                  false
 
 volatile HardwareTestMotorStage_e hardware_test_motor_stage;
 volatile float hardware_test_motor_output;
@@ -94,7 +95,7 @@ Device_Status_e HardwareTestInit(void)
                 .pwm_period = 0.00005f,
                 .phase_port = MOTOR_GPIO_AIN1_PORT,
                 .phase_pin = MOTOR_GPIO_AIN1_PIN,
-                .reverse = false,
+                .reverse = MOTOR_TEST_REVERSE,
             },
         },
         .encoder = &hencoder_left,
@@ -107,7 +108,7 @@ Device_Status_e HardwareTestInit(void)
             .deadband = 0.0f,
             .derivative_on_measurement = true,
         },
-        .encoder_reverse = false,
+        .encoder_reverse = MOTOR_TEST_REVERSE,
     };
 
     HardwareTestMotorSequence_Init(&hardware_test_motor_sequence);

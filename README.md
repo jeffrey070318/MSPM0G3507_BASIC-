@@ -1,48 +1,42 @@
-#  MSPM0G3507_BASIC  
+# MSPM0G3507_BASIC
 
-@author  zhengjiafeng /  Jeffrey070318
+面向 MSPM0G3507 的控制类项目基础工程，采用 `app/module/bsp` 三层结构，使用 SysConfig、CMake、Arm GNU Toolchain 和 FreeRTOS。工程也保留 NoRTOS 构建，用于底层移植和最小验证。
 
-专门针对于MSPM0G3507的芯片设计所做的RM嵌入式通用方案的适配工程，目前移植了跃鹿框架的app-module-bsp三层架构，在底层做好适配，以及RM通用的扩展，debug等方案，主要面向电赛控制类的快速适应
+## 快速入口
 
+- [框架使用说明](./框架使用说明.md)：环境、构建、烧录、硬件测试和当前适配状态。
+- [引脚使用说明](./引脚使用说明.md)：SysConfig 引脚映射及外部电气要求。
+- [APP 层指引](./app/APP层应用编写指引.md)：任务和应用代码的组织方式。
+- [Module 层](./module/module.md)：可复用设备与算法模块索引。
+- [宿主测试](./tests/README.md)：不连接硬件即可运行的逻辑测试。
 
-## Example Summary
+## 构建
 
-Empty project using DriverLib.
-This example shows a basic empty project using DriverLib with just main file
-and SysConfig initialization.
+```powershell
+cmake -S . -B build -G Ninja -DUSE_FREERTOS=ON
+cmake --build build --parallel
 
-## Peripherals & Pin Assignments
+cmake -S . -B build-nortos -G Ninja -DUSE_FREERTOS=OFF
+cmake --build build-nortos --parallel
+```
 
-| Peripheral | Pin | Function |
-| --- | --- | --- |
-| SYSCTL |  |  |
-| DEBUGSS | PA20 | Debug Clock |
-| DEBUGSS | PA19 | Debug Data In Out |
+引脚、时钟和外设实例只修改根目录的 `MSPM0G3507_BASIC.syscfg`。`build/syscfg` 下的文件由 SysConfig 自动生成，不应手工编辑。
 
-## BoosterPacks, Board Resources & Jumper Settings
+## 烧录
 
-Visit [LP_MSPM0G3507](https://www.ti.com/tool/LP-MSPM0G3507) for LaunchPad information, including user guide and hardware files.
+工程提供 CMSIS-DAP/DAPLink 和 XDS110 两套 OpenOCD 入口：
 
-| Pin | Peripheral | Function | LaunchPad Pin | LaunchPad Settings |
-| --- | --- | --- | --- | --- |
-| PA20 | DEBUGSS | SWCLK | N/A | <ul><li>PA20 is used by SWD during debugging<br><ul><li>`J101 15:16 ON` Connect to XDS-110 SWCLK while debugging<br><li>`J101 15:16 OFF` Disconnect from XDS-110 SWCLK if using pin in application</ul></ul> |
-| PA19 | DEBUGSS | SWDIO | N/A | <ul><li>PA19 is used by SWD during debugging<br><ul><li>`J101 13:14 ON` Connect to XDS-110 SWDIO while debugging<br><li>`J101 13:14 OFF` Disconnect from XDS-110 SWDIO if using pin in application</ul></ul> |
+```powershell
+cmake --build build --target flash
+cmake --build build --target flash-xds110
+```
 
-### Device Migration Recommendations
-This project was developed for a superset device included in the LP_MSPM0G3507 LaunchPad. Please
-visit the [CCS User's Guide](https://software-dl.ti.com/msp430/esd/MSPM0-SDK/latest/docs/english/tools/ccs_ide_guide/doc_guide/doc_guide-srcs/ccs_ide_guide.html#sysconfig-project-migration)
-for information about migrating to other MSPM0 devices.
+XDS110 已完成实机烧录验证。当前仍存在部分烧录操作约 51 秒后才完成的问题，功能可用，但延迟原因尚未定位。
 
-### Low-Power Recommendations
-TI recommends to terminate unused pins by setting the corresponding functions to
-GPIO and configure the pins to output low or input with internal
-pullup/pulldown resistor.
+## 当前硬件状态
 
-SysConfig allows developers to easily configure unused pins by selecting **Board**→**Configure Unused Pins**.
-
-For more information about jumper configuration to achieve low-power using the
-MSPM0 LaunchPad, please visit the [LP-MSPM0G3507 User's Guide](https://www.ti.com/lit/slau873).
-
-## Example Usage
-
-Compile, load and run the example.
+- OLED I2C 显示已验证。
+- 电机 1、左编码器和 DRV8701E 速度闭环已验证。
+- XDS110 烧录已验证。
+- UART2/3 DMA、超时接收和环形缓冲已完成代码与构建验证，仍需连续数据流硬件压力测试。
+- 右电机方向、右编码器方向、整车运动学、灰度模块电平及 Flash 参数区仍需实测。

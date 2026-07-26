@@ -27,6 +27,8 @@
 #define CHASSIS_SPEED_MAX_OUT   (1.0f)
 #define CHASSIS_SPEED_MAX_IOUT  (0.5f)
 #define CHASSIS_MOTOR_PWM_PERIOD_SEC (0.00005f)
+#define CHASSIS_MOTORA_REVERSE       false
+#define CHASSIS_MOTORB_REVERSE       false
 
 /* ====================== Motor Pin Definitions ====================== */
 #define MOTORA_PWM_HTIM  (&htim1)
@@ -55,7 +57,7 @@ static void ChassisPublishFeedback(void);
 
 static bool ChassisInitMotor(Motor_Device_t *motor,
     TIM_HandleTypeDef *pwm_handle, GPIO_TypeDef *phase_port,
-    uint32_t phase_pin, Encoder_Device_t *encoder)
+    uint32_t phase_pin, Encoder_Device_t *encoder, bool reverse)
 {
     Motor_Init_Config_t config = {
         .driver = {
@@ -66,7 +68,7 @@ static bool ChassisInitMotor(Motor_Device_t *motor,
                 .pwm_period = CHASSIS_MOTOR_PWM_PERIOD_SEC,
                 .phase_port = phase_port,
                 .phase_pin = phase_pin,
-                .reverse = false,
+                .reverse = reverse,
             },
         },
         .encoder = encoder,
@@ -79,7 +81,7 @@ static bool ChassisInitMotor(Motor_Device_t *motor,
             .deadband = 0.0f,
             .derivative_on_measurement = true,
         },
-        .encoder_reverse = false,
+        .encoder_reverse = reverse,
     };
     return Motor_Init(motor, &config);
 }
@@ -93,12 +95,14 @@ void ChassisInit(void)
     }
 
     if (!ChassisInitMotor(&g_motors[0], MOTORA_PWM_HTIM,
-        MOTORA_PHASE_PORT, MOTORA_PHASE_PIN, &hencoder_left)) {
+        MOTORA_PHASE_PORT, MOTORA_PHASE_PIN, &hencoder_left,
+        CHASSIS_MOTORA_REVERSE)) {
         return;
     }
 
     if (!ChassisInitMotor(&g_motors[1], MOTORB_PWM_HTIM,
-        MOTORB_PHASE_PORT, MOTORB_PHASE_PIN, &hencoder_right)) {
+        MOTORB_PHASE_PORT, MOTORB_PHASE_PIN, &hencoder_right,
+        CHASSIS_MOTORB_REVERSE)) {
         return;
     }
 

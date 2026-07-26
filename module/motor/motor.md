@@ -13,6 +13,12 @@ Motor 将功率级、编码器和速度 PID 组合为一个由调用者持有的
 
 `Motor_SetTargetSpeed()` 和 `measured_speed` 均使用 `encoder counts/s`。`Motor_Update()` 读取本周期编码器增量，并使用调用者传入的真实 `dt_seconds` 换算速度。
 
+## 方向约定
+
+速度闭环中，正输出必须产生正的编码器速度，否则 PID 会把负反馈变成正反馈并持续加大输出。底盘层使用每路电机唯一的 `REVERSE` 配置，并同时赋给驱动的 `reverse` 和 Motor 的 `encoder_reverse`。不要只修改其中一个。
+
+首次接线需要用较小输出架空测试，确认正目标、正转向和正反馈三者一致。驱动线序与编码器 A/B 相的基础符号若不匹配，应先修正接线或编码器相序；基础闭环正确后，整体翻转两个反向配置只用于改变该轮在车体坐标系中的正方向。
+
 ## DRV8701E
 
 DRV8701E 使用 `EN/PWM + PH/DIR`：
@@ -53,9 +59,11 @@ Motor_Init_Config_t config = {
             .pwm_period = 0.00005f,
             .phase_port = GPIOA,
             .phase_pin = GPIO_PIN_17,
+            .reverse = false,
         },
     },
     .encoder = &hencoder_left,
+    .encoder_reverse = false,
     .speed_pid = {
         .kp = 0.000025f,
         .ki = 0.0002f,
@@ -72,3 +80,5 @@ Motor_Update(&left_motor, dt_seconds);
 ```
 
 硬件测试可调用 `Motor_SetOpenLoop()` 直接设置 `-1.0f` 到 `1.0f` 的归一化输出。调用 `Motor_SetTargetSpeed()` 会重新切回速度闭环模式。
+
+电机 1、左编码器和 DRV8701E 已完成 `1500 counts/s` 单轮速度闭环实测。右轮方向和双轮底盘仍需实测。
