@@ -37,7 +37,7 @@ typedef enum {
 /* --------------------------应用启用开关模板-------------------------- */
 /* 按迁移进度打开对应 app。打开前请确认源文件和依赖模块已经完成适配。 */
 // #define ROBOT_ENABLE_CMD_APP
-// #define ROBOT_ENABLE_CHASSIS_APP
+#define ROBOT_ENABLE_CHASSIS_APP
 // #define ROBOT_ENABLE_INS_APP
 // #define ROBOT_ENABLE_GIMBAL_APP
 // #define ROBOT_ENABLE_SHOOT_APP
@@ -54,25 +54,66 @@ typedef enum {
 #error Conflict vision definition! Choose VCP or UART.
 #endif
 
-/* --------------------------机器人参数模板-------------------------- */
-/* 以下宏名保留给旧框架代码引用，默认值不代表实际机器人参数。 */
+/* ==========================实车调参区域========================== */
+
+/* --------------------------底盘机械参数-------------------------- */
+/* 车轮有效半径，单位 m；应以车辆实际行驶距离反算校准。 */
+#define CHASSIS_WHEEL_RADIUS_M (0.076f)
+/* 左右驱动轮接地点中心距，单位 m；影响差速转向角速度。 */
+#define CHASSIS_TRACK_WIDTH_M  (0.40f)
+
+/* ------------------------编码器与传动参数------------------------ */
+/* 单个编码器通道的电机轴每圈脉冲数，不包含 AB 相倍频。 */
+#define CHASSIS_ENCODER_PPR        (11.0f)
+/* 当前四状态正交解码为 4 倍频。 */
+#define CHASSIS_ENCODER_QUADRATURE (4.0f)
+/* 电机轴转数 / 车轮轴转数。 */
+#define CHASSIS_MOTOR_GEAR_RATIO   (19.0f)
+
+/* --------------------------速度环参数---------------------------- */
+/* 目标与反馈单位均为 encoder counts/s，输出范围为 -1.0 ~ 1.0。 */
+#define CHASSIS_SPEED_KP       (0.000025f)
+#define CHASSIS_SPEED_KI       (0.0002f)
+#define CHASSIS_SPEED_KD       (0.0f)
+#define CHASSIS_SPEED_MAX_OUT  (1.0f)
+#define CHASSIS_SPEED_MAX_IOUT (0.5f)
+
+/* --------------------------电机方向参数-------------------------- */
+/* 只能填 0 或 1；同一个值会同时反转驱动方向和编码器反馈方向。 */
+#define CHASSIS_LEFT_MOTOR_REVERSE  (0)
+#define CHASSIS_RIGHT_MOTOR_REVERSE (0)
+
+#if ((CHASSIS_LEFT_MOTOR_REVERSE != 0) && \
+        (CHASSIS_LEFT_MOTOR_REVERSE != 1)) || \
+    ((CHASSIS_RIGHT_MOTOR_REVERSE != 0) && \
+        (CHASSIS_RIGHT_MOTOR_REVERSE != 1))
+#error Chassis motor reverse parameters must be 0 or 1.
+#endif
+
+/* ========================旧框架兼容参数======================== */
+/* 以下宏名保留给尚未完成适配的旧框架代码引用。 */
+
+/* 云台零位与限位占位参数。 */
 #define YAW_CHASSIS_ALIGN_ECD (0U)
 #define YAW_ECD_GREATER_THAN_4096 (0)
 #define PITCH_HORIZON_ECD (0U)
 #define PITCH_MAX_ANGLE (0.0f)
 #define PITCH_MIN_ANGLE (0.0f)
 
+/* 发射机构占位参数。 */
 #define ONE_BULLET_DELTA_ANGLE (0.0f)
 #define REDUCTION_RATIO_LOADER (1.0f)
 #define NUM_PER_CIRCLE (1U)
 
+/* 旧底盘宏别名；轮距、轮径和减速比复用当前实车参数。 */
 #define WHEEL_BASE (0.0f)
-#define TRACK_WIDTH (0.0f)
+#define TRACK_WIDTH CHASSIS_TRACK_WIDTH_M
 #define CENTER_GIMBAL_OFFSET_X (0.0f)
 #define CENTER_GIMBAL_OFFSET_Y (0.0f)
-#define RADIUS_WHEEL (0.0f)
-#define REDUCTION_RATIO_WHEEL (1.0f)
+#define RADIUS_WHEEL CHASSIS_WHEEL_RADIUS_M
+#define REDUCTION_RATIO_WHEEL CHASSIS_MOTOR_GEAR_RATIO
 
+/* IMU 坐标系到云台坐标系的方向占位参数。 */
 #define GYRO2GIMBAL_DIR_YAW (1)
 #define GYRO2GIMBAL_DIR_PITCH (1)
 #define GYRO2GIMBAL_DIR_ROLL (1)

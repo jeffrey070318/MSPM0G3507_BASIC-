@@ -16,7 +16,7 @@ bool Buzzer_Init(void)
     GPIO_Init_Config_s config = {
         .GPIOx = BUZZER_GPIO_PORT,
         .GPIO_Pin = BUZZER_GPIO_BUZZER_PIN,
-        .pin_state = GPIO_PIN_RESET,
+        .pin_state = GPIO_PIN_SET,
         .exti_mode = GPIO_EXTI_MODE_NONE,
         .gpio_model_callback = NULL,
         .id = NULL,
@@ -33,14 +33,14 @@ bool Buzzer_Init(void)
 void Buzzer_On(void)
 {
     if (buzzer_instance != NULL) {
-        GPIOSet(buzzer_instance);
+        GPIOReset(buzzer_instance);
     }
 }
 
 void Buzzer_Off(void)
 {
     if (buzzer_instance != NULL) {
-        GPIOReset(buzzer_instance);
+        GPIOSet(buzzer_instance);
     }
 }
 

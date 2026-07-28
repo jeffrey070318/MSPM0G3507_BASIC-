@@ -26,6 +26,29 @@ function Invoke-HostTest {
 
 Push-Location $projectRoot
 try {
+    Invoke-HostTest "robot_oled_test" @(
+        "-DHARDWARE_TEST_MODE=0", "-Itests/hardware_test_task_stubs",
+        "-Itests/chassis_stubs", "-Iapp/hardware_test", "-Iapp/chassis",
+        "-Iapp", "-Imodule/oled", "tests/robot_oled_test.c", "app/robot.c"
+    )
+    Invoke-HostTest "chassis_registration_test" @(
+        "-Itests/chassis_stubs", "-Iapp/chassis", "-Iapp",
+        "tests/chassis_registration_test.c", "app/chassis/chassis.c"
+    )
+    Invoke-HostTest "hardware_test_motor_sequence_test" @(
+        "-Iapp/hardware_test",
+        "tests/hardware_test_motor_sequence_test.c",
+        "app/hardware_test/hardware_test_motor_sequence.c"
+    )
+    Invoke-HostTest "hardware_test_task_isolation_test" @(
+        "-Itests/hardware_test_task_stubs", "-Iapp/hardware_test", "-Iapp",
+        "tests/hardware_test_task_isolation_test.c"
+    )
+    Invoke-HostTest "robot_hardware_test_isolation_test" @(
+        "-Itests/hardware_test_task_stubs", "-Iapp/hardware_test",
+        "-Iapp/chassis", "-Iapp",
+        "tests/robot_hardware_test_isolation_test.c", "app/robot.c"
+    )
     Invoke-HostTest "imu_module_test" @(
         "-Itests/module_io_stubs", "-Imodule/imu",
         "tests/imu_module_test.c", "module/imu/imu.c"
@@ -44,7 +67,7 @@ try {
         "-Imodule/vision", "tests/vision_test.c", "module/vision/vision.c"
     )
     Invoke-HostTest "ins_test" @(
-        "-Itests/ins_stubs", "-Itests/module_io_stubs",
+        "-Itests/ins_stubs", "-Itests/module_io_stubs", "-Iapp",
         "-Imodule/imu", "-Imodule/algorithm", "-Imodule/ins",
         "tests/ins_test.c", "module/ins/ins.c", "module/algorithm/pid.c"
     )

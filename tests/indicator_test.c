@@ -11,6 +11,7 @@ GPIO_TypeDef indicator_gpio_b;
 
 static GPIOInstance gpio_instances[4];
 static uint32_t gpio_instance_count;
+static GPIO_PinState buzzer_registered_state;
 
 GPIOInstance *GPIORegister(GPIO_Init_Config_s *config)
 {
@@ -21,6 +22,9 @@ GPIOInstance *GPIORegister(GPIO_Init_Config_s *config)
     instance->GPIOx = config->GPIOx;
     instance->GPIO_Pin = config->GPIO_Pin;
     instance->pin_state = config->pin_state;
+    if (config->GPIO_Pin == BUZZER_GPIO_BUZZER_PIN) {
+        buzzer_registered_state = config->pin_state;
+    }
     return instance;
 }
 
@@ -75,13 +79,14 @@ int main(void)
     assert(!LED_Init(&unused_led, LED_GPIO_PORT, 0U));
 
     assert(Buzzer_Init());
-    assert((indicator_gpio_b.output & BUZZER_GPIO_BUZZER_PIN) == 0U);
-    Buzzer_On();
+    assert(buzzer_registered_state == GPIO_PIN_SET);
     assert((indicator_gpio_b.output & BUZZER_GPIO_BUZZER_PIN) != 0U);
-    Buzzer_Toggle();
+    Buzzer_On();
     assert((indicator_gpio_b.output & BUZZER_GPIO_BUZZER_PIN) == 0U);
+    Buzzer_Toggle();
+    assert((indicator_gpio_b.output & BUZZER_GPIO_BUZZER_PIN) != 0U);
     Buzzer_On();
     Buzzer_Off();
-    assert((indicator_gpio_b.output & BUZZER_GPIO_BUZZER_PIN) == 0U);
+    assert((indicator_gpio_b.output & BUZZER_GPIO_BUZZER_PIN) != 0U);
     return 0;
 }

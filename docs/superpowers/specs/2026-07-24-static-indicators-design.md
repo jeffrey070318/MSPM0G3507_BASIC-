@@ -19,7 +19,7 @@ LED4, the board LED, or another output.
 
 ## Buzzer
 
-`module/buzzer` owns the active-high `BUZZER` GPIO output. It provides one-time
+`module/buzzer` owns the active-low `BUZZER` GPIO output. It provides one-time
 initialization plus on, off, and toggle operations. It has no PWM, melody
 sequencer, FreeRTOS task, or periodic update function.
 

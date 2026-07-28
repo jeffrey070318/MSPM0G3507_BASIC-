@@ -60,6 +60,9 @@ TaskHandle_t robotTaskHandle;
 TaskHandle_t motorTaskHandle;
 TaskHandle_t daemonTaskHandle;
 TaskHandle_t uiTaskHandle;
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+TaskHandle_t oledTaskHandle;
+#endif
 #if HARDWARE_TEST_MODE != HARDWARE_TEST_NONE
 TaskHandle_t hardwareTestTaskHandle;
 #endif
@@ -86,6 +89,9 @@ void StartMOTORTASK(void *argument);
 void StartDAEMONTASK(void *argument);
 #endif
 void StartROBOTTASK(void *argument);
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+void StartOLEDTASK(void *argument);
+#endif
 #if ROBOT_HAS_REFEREE_TASK
 void StartUITASK(void *argument);
 #endif
@@ -95,6 +101,7 @@ void StartUITASK(void *argument);
  */
 void OSTaskInit()
 {
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
 #if ROBOT_HAS_INS_TASK
     RobotCreateTask(StartINSTASK, "instask", 1024U,
         tskIDLE_PRIORITY + 3U, &insTaskHandle);
@@ -113,10 +120,8 @@ void OSTaskInit()
     RobotCreateTask(StartROBOTTASK, "robottask", 1024U,
         tskIDLE_PRIORITY + 2U, &robotTaskHandle);
 
-#if HARDWARE_TEST_MODE != HARDWARE_TEST_NONE
-    RobotCreateTask(StartHARDWARETESTTASK, "hardwaretest", 256U,
-        tskIDLE_PRIORITY + 1U, &hardwareTestTaskHandle);
-#endif
+    RobotCreateTask(StartOLEDTASK, "oledtask", 256U,
+        tskIDLE_PRIORITY + 1U, &oledTaskHandle);
 
 #if ROBOT_HAS_REFEREE_TASK
     RobotCreateTask(StartUITASK, "uitask", 512U,
@@ -125,6 +130,10 @@ void OSTaskInit()
 
 #if ROBOT_HAS_HT04
     HTMotorControlInit();
+#endif
+#else
+    RobotCreateTask(StartHARDWARETESTTASK, "hardwaretest", 256U,
+        tskIDLE_PRIORITY + 1U, &hardwareTestTaskHandle);
 #endif
 }
 
@@ -189,6 +198,20 @@ __attribute__((noreturn)) void StartROBOTTASK(void *argument)
         vTaskDelayUntil(&last_wake_time, period_ticks);
     }
 }
+
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+__attribute__((noreturn)) void StartOLEDTASK(void *argument)
+{
+    (void) argument;
+
+    TickType_t last_wake_time = xTaskGetTickCount();
+    const TickType_t period_ticks = pdMS_TO_TICKS(200U);
+    for (;;) {
+        RobotOLEDTask();
+        vTaskDelayUntil(&last_wake_time, period_ticks);
+    }
+}
+#endif
 
 #if ROBOT_HAS_REFEREE_TASK
 __attribute__((noreturn)) void StartUITASK(void *argument)

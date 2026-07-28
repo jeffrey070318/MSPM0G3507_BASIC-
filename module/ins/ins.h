@@ -4,26 +4,20 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "robot_def.h"
+
 #define INS_IMU_TOPIC     "imu_data"
 #define INS_ENCODER_TOPIC "encoder_data"
 #define INS_CMD_TOPIC     "chassis_cmd"
 
-#ifndef INS_WHEEL_RADIUS_M
-#define INS_WHEEL_RADIUS_M (0.076f)
-#endif
-#ifndef INS_ENCODER_PPR
-#define INS_ENCODER_PPR (11.0f)
-#endif
-#ifndef INS_GEAR_RATIO
-#define INS_GEAR_RATIO (19.0f)
-#endif
 #ifndef INS_TARGET_DISTANCE_M
 #define INS_TARGET_DISTANCE_M (0.05f)
 #endif
 
 #define INS_METERS_PER_COUNT \
-    (6.283185307f * INS_WHEEL_RADIUS_M / \
-        (INS_ENCODER_PPR * 4.0f * INS_GEAR_RATIO))
+    (6.283185307f * CHASSIS_WHEEL_RADIUS_M / \
+        (CHASSIS_ENCODER_PPR * CHASSIS_ENCODER_QUADRATURE * \
+            CHASSIS_MOTOR_GEAR_RATIO))
 
 typedef struct {
     float x;
