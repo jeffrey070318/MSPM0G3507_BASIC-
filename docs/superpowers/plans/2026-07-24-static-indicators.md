@@ -17,7 +17,7 @@
 - Create: `tests/indicator_stubs/ti_msp_dl_config.h`
 - Modify: `tests/run_host_tests.ps1`
 
-- [ ] Add tests for LED and buzzer initialization, active-high on/off/toggle, null or unbound LED objects, and failed registration.
+- [ ] Add tests for LED initialization, active-low buzzer on/off/toggle, null or unbound LED objects, and failed registration.
 - [ ] Run `tests/run_host_tests.ps1` and confirm the indicator test fails because the module headers or sources do not exist.
 
 ### Task 2: Add Minimal LED And Buzzer Modules
