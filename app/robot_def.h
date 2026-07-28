@@ -37,7 +37,7 @@ typedef enum {
 /* --------------------------应用启用开关模板-------------------------- */
 /* 按迁移进度打开对应 app。打开前请确认源文件和依赖模块已经完成适配。 */
 // #define ROBOT_ENABLE_CMD_APP
-// #define ROBOT_ENABLE_CHASSIS_APP
+#define ROBOT_ENABLE_CHASSIS_APP
 // #define ROBOT_ENABLE_INS_APP
 // #define ROBOT_ENABLE_GIMBAL_APP
 // #define ROBOT_ENABLE_SHOOT_APP

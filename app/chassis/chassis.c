@@ -32,19 +32,23 @@
 
 /* ====================== Motor Pin Definitions ====================== */
 #define MOTORA_PWM_HTIM  (&htim1)
-#define MOTORA_PHASE_PORT GPIOA
-#define MOTORA_PHASE_PIN  GPIO_PIN_17
+#define MOTORA_PHASE_PORT MOTOR_GPIO_AIN1_PORT
+#define MOTORA_PHASE_PIN  MOTOR_GPIO_AIN1_PIN
 
 #define MOTORB_PWM_HTIM  (&htim2)
-#define MOTORB_PHASE_PORT GPIOB
-#define MOTORB_PHASE_PIN  GPIO_PIN_4
+#define MOTORB_PHASE_PORT MOTOR_GPIO_BIN1_PORT
+#define MOTORB_PHASE_PIN  MOTOR_GPIO_BIN1_PIN
 
 /* ====================== Data Structures ====================== */
-static Motor_Device_t      g_motors[CHASSIS_MOTOR_COUNT];
+Motor_Device_t             chassis_motors[CHASSIS_MOTOR_COUNT];
 static Chassis_Ctrl_Cmd_s  g_cmd;
 static bool                g_chassis_initialized;
 static bool                g_control_time_initialized;
 static uint32_t            g_control_timestamp_us;
+
+volatile bool chassis_manual_enabled;
+volatile float chassis_manual_vx_mps;
+volatile float chassis_manual_wz_radps;
 
 #if defined(ROBOT_ENABLE_INS_APP)
 static Publisher_t         *g_encoder_publisher;
@@ -94,13 +98,13 @@ void ChassisInit(void)
         return;
     }
 
-    if (!ChassisInitMotor(&g_motors[0], MOTORA_PWM_HTIM,
+    if (!ChassisInitMotor(&chassis_motors[0], MOTORA_PWM_HTIM,
         MOTORA_PHASE_PORT, MOTORA_PHASE_PIN, &hencoder_left,
         CHASSIS_MOTORA_REVERSE)) {
         return;
     }
 
-    if (!ChassisInitMotor(&g_motors[1], MOTORB_PWM_HTIM,
+    if (!ChassisInitMotor(&chassis_motors[1], MOTORB_PWM_HTIM,
         MOTORB_PHASE_PORT, MOTORB_PHASE_PIN, &hencoder_right,
         CHASSIS_MOTORB_REVERSE)) {
         return;
@@ -137,21 +141,36 @@ void ChassisTask(void)
 
     if (g_cmd.chassis_mode == CHASSIS_ZERO_FORCE) {
         for (uint8_t i = 0U; i < CHASSIS_MOTOR_COUNT; i++) {
-            Motor_Stop(&g_motors[i]);
+            Motor_Stop(&chassis_motors[i]);
         }
     } else {
         for (uint8_t i = 0U; i < CHASSIS_MOTOR_COUNT; i++) {
-            if (!g_motors[i].enabled) {
-                Motor_Enable(&g_motors[i]);
+            if (!chassis_motors[i].enabled) {
+                Motor_Enable(&chassis_motors[i]);
             }
         }
         ChassisUpdateMode();
         for (uint8_t i = 0U; i < CHASSIS_MOTOR_COUNT; i++) {
-            (void) Motor_Update(&g_motors[i], dt_seconds);
+            (void) Motor_Update(&chassis_motors[i], dt_seconds);
         }
     }
 
     ChassisPublishFeedback();
+}
+
+void ChassisSetManualCommand(float vx_mps, float wz_radps)
+{
+    chassis_manual_enabled = false;
+    chassis_manual_vx_mps = vx_mps;
+    chassis_manual_wz_radps = wz_radps;
+    chassis_manual_enabled = true;
+}
+
+void ChassisDisableManualCommand(void)
+{
+    chassis_manual_enabled = false;
+    chassis_manual_vx_mps = 0.0f;
+    chassis_manual_wz_radps = 0.0f;
 }
 
 static void ChassisReceiveCommand(void)
@@ -172,10 +191,12 @@ static void ChassisReceiveCommand(void)
         g_cmd.chassis_mode = CHASSIS_ZERO_FORCE;
     }
 #else
-    g_cmd.vx = 0.3f;
+    g_cmd.vx = chassis_manual_vx_mps;
     g_cmd.vy = 0.0f;
-    g_cmd.wz = 0.0f;
-    g_cmd.chassis_mode = CHASSIS_ROTATE;
+    g_cmd.wz = chassis_manual_wz_radps;
+    g_cmd.chassis_mode = chassis_manual_enabled
+        ? CHASSIS_ROTATE
+        : CHASSIS_ZERO_FORCE;
 #endif
 }
 
@@ -194,8 +215,8 @@ static void ChassisUpdateMode(void)
     const float two_pi_r = 2.0f * 3.14159265f * CHASSIS_WHEEL_RADIUS_M;
     const float conv     = (ppr * 4.0f * gear) / two_pi_r;
 
-    Motor_SetTargetSpeed(&g_motors[0], v_left * conv);
-    Motor_SetTargetSpeed(&g_motors[1], v_right * conv);
+    Motor_SetTargetSpeed(&chassis_motors[0], v_left * conv);
+    Motor_SetTargetSpeed(&chassis_motors[1], v_right * conv);
 }
 
 static void ChassisPublishFeedback(void)
@@ -203,8 +224,8 @@ static void ChassisPublishFeedback(void)
 #if defined(ROBOT_ENABLE_INS_APP)
     if (g_encoder_publisher != NULL) {
         Encoder_Pub_Data_t encoder_data = {
-            .left_total = Encoder_Get_Total(g_motors[0].encoder),
-            .right_total = Encoder_Get_Total(g_motors[1].encoder),
+            .left_total = Encoder_Get_Total(chassis_motors[0].encoder),
+            .right_total = Encoder_Get_Total(chassis_motors[1].encoder),
         };
         (void) PubPushMessage(g_encoder_publisher, &encoder_data);
     }

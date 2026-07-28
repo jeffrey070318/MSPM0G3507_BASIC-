@@ -18,8 +18,23 @@
 4. 更新左右编码器速度 PID 并输出到 DRV8701E。
 5. 启用 INS 时，通过消息中心发布左右累计编码器值。
 
+## 正式联调入口
+
+当前已启用 `ROBOT_ENABLE_CHASSIS_APP`，`ChassisInit()` 会直接注册两路 DRV8701E：左轮使用 `htim1 + MOTOR_GPIO_AIN1 + hencoder_left`，右轮使用 `htim2 + MOTOR_GPIO_BIN1 + hencoder_right`。上电默认保持 `CHASSIS_ZERO_FORCE`，不会自动前进。
+
+未启用 INS 时，可调用：
+
+```c
+ChassisSetManualCommand(0.05f, 0.0f);
+ChassisDisableManualCommand();
+```
+
+也可以在 Live Watch/Global Variables 中先设置 `chassis_manual_vx_mps` 和 `chassis_manual_wz_radps`，最后将 `chassis_manual_enabled` 改为 `true`。停止时先将 `chassis_manual_enabled` 改为 `false`。速度单位分别为 `m/s` 和 `rad/s`。
+
+正式电机对象为 `chassis_motors[0]`（左轮）和 `chassis_motors[1]`（右轮），可直接观察 `target_speed`、`measured_speed`、`control_output` 和 `speed_pid`。首次测试必须架空车轮，建议从 `vx=0.05 m/s, wz=0` 开始，并准备断电急停。
+
 ## 当前状态
 
-电机 1、左编码器和 DRV8701E 已完成单轮速度闭环实测。右轮方向、整车轮距、轮径、编码器参数、转向符号和双轮运行尚未验证，启用底盘前必须架空车轮并保留急停手段。
+电机 1、左编码器和 DRV8701E 已完成单轮速度闭环实测。两路正式实例已接入并通过宿主注册测试；右轮方向、整车轮距、轮径、编码器参数、转向符号和双轮运行仍需本轮实测确认。
 
 INS 返航模板默认关闭；只有同时定义 `ROBOT_ENABLE_CHASSIS_APP` 和 `ROBOT_ENABLE_INS_APP` 时才接入消息中心。平衡底盘、麦克纳姆底盘和舵轮只保留扩展入口，尚无可用实现。
