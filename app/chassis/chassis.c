@@ -14,21 +14,7 @@
 /* ====================== Chassis Configuration ====================== */
 #define CHASSIS_MOTOR_COUNT 2U
 
-#ifndef CHASSIS_WHEEL_RADIUS_M
-#define CHASSIS_WHEEL_RADIUS_M (0.076f)
-#endif
-#ifndef CHASSIS_TRACK_WIDTH_M
-#define CHASSIS_TRACK_WIDTH_M (0.40f)
-#endif
-
-#define CHASSIS_SPEED_KP  (0.000025f)
-#define CHASSIS_SPEED_KI  (0.0002f)
-#define CHASSIS_SPEED_KD  (0.0f)
-#define CHASSIS_SPEED_MAX_OUT   (1.0f)
-#define CHASSIS_SPEED_MAX_IOUT  (0.5f)
 #define CHASSIS_MOTOR_PWM_PERIOD_SEC (0.00005f)
-#define CHASSIS_MOTORA_REVERSE       false
-#define CHASSIS_MOTORB_REVERSE       false
 
 /* ====================== Motor Pin Definitions ====================== */
 #define MOTORA_PWM_HTIM  (&htim1)
@@ -100,13 +86,13 @@ void ChassisInit(void)
 
     if (!ChassisInitMotor(&chassis_motors[0], MOTORA_PWM_HTIM,
         MOTORA_PHASE_PORT, MOTORA_PHASE_PIN, &hencoder_left,
-        CHASSIS_MOTORA_REVERSE)) {
+        (bool) CHASSIS_LEFT_MOTOR_REVERSE)) {
         return;
     }
 
     if (!ChassisInitMotor(&chassis_motors[1], MOTORB_PWM_HTIM,
         MOTORB_PHASE_PORT, MOTORB_PHASE_PIN, &hencoder_right,
-        CHASSIS_MOTORB_REVERSE)) {
+        (bool) CHASSIS_RIGHT_MOTOR_REVERSE)) {
         return;
     }
 
@@ -210,10 +196,10 @@ static void ChassisUpdateMode(void)
     float v_left     = g_cmd.vx - g_cmd.wz * half_track;
     float v_right    = g_cmd.vx + g_cmd.wz * half_track;
 
-    const float ppr      = 11.0f;
-    const float gear     = 19.0f;
     const float two_pi_r = 2.0f * 3.14159265f * CHASSIS_WHEEL_RADIUS_M;
-    const float conv     = (ppr * 4.0f * gear) / two_pi_r;
+    const float conv = (CHASSIS_ENCODER_PPR *
+        CHASSIS_ENCODER_QUADRATURE * CHASSIS_MOTOR_GEAR_RATIO) /
+        two_pi_r;
 
     Motor_SetTargetSpeed(&chassis_motors[0], v_left * conv);
     Motor_SetTargetSpeed(&chassis_motors[1], v_right * conv);

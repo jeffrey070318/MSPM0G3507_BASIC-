@@ -38,3 +38,15 @@
 - [x] Document the safe startup state, explicit manual command API, wheel-off-ground first run, and remaining right-wheel direction validation.
 - [x] Build FreeRTOS, NoRTOS, and BSP/module link-check targets; run the SysConfig static checker.
 - [x] Review the final diff and commit only on the feature branch.
+
+### Task 3: Centralize Chassis Tuning Parameters
+
+**Files:**
+- Modify: `app/robot_def.h`
+- Modify: `app/chassis/chassis.c`
+- Modify: `module/ins/ins.h`
+- Modify: `tests/chassis_registration_test.c`
+
+- [x] Move chassis mechanical, encoder, transmission, speed PID, limit, and direction parameters into clearly commented sections in `robot_def.h`.
+- [x] Make chassis registration, kinematics, and INS odometry consume the shared parameters.
+- [x] Verify PID registration and target-speed conversion through the chassis host test.

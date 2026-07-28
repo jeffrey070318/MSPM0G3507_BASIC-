@@ -6,9 +6,26 @@
 
 ## 方向配置
 
-`CHASSIS_MOTORA_REVERSE` 和 `CHASSIS_MOTORB_REVERSE` 是左右轮各自唯一的反向配置。初始化时同一个值会同时写入电机驱动方向和编码器反馈方向，避免 PID 因反馈符号相反形成正反馈并持续加大输出。
+`CHASSIS_LEFT_MOTOR_REVERSE` 和 `CHASSIS_RIGHT_MOTOR_REVERSE` 是左右轮各自唯一的反向配置。初始化时同一个值会同时写入电机驱动方向和编码器反馈方向，避免 PID 因反馈符号相反形成正反馈并持续加大输出。
 
 首次接线仍需架空车轮确认闭环符号：给出较小正目标时，测量速度应为正，且误差随加速减小。若符号错误，应先检查电机线序和编码器 A/B 相；确认基础闭环正确后，才用上述宏整体翻转某一侧的车体前进方向。
+
+## 调参位置
+
+底盘实车参数统一放在 `app/robot_def.h`，`chassis.c` 不再保存参数副本：
+
+| 参数 | 用途 |
+| --- | --- |
+| `CHASSIS_WHEEL_RADIUS_M` | 车轮半径，单位 m |
+| `CHASSIS_TRACK_WIDTH_M` | 左右轮中心距，单位 m |
+| `CHASSIS_ENCODER_PPR` | 编码器单通道每圈脉冲数 |
+| `CHASSIS_ENCODER_QUADRATURE` | AB 相解码倍率，当前为 4 |
+| `CHASSIS_MOTOR_GEAR_RATIO` | 电机到车轮的减速比 |
+| `CHASSIS_SPEED_KP/KI/KD` | 两路速度 PID 参数 |
+| `CHASSIS_SPEED_MAX_OUT/MAX_IOUT` | PID 输出和积分限幅 |
+| `CHASSIS_LEFT/RIGHT_MOTOR_REVERSE` | 左右轮驱动与反馈同步反向 |
+
+INS 的编码器里程换算直接引用同一组轮径、PPR、倍率和减速比，因此只需修改一处。
 
 ## 运行流程
 

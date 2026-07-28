@@ -5,6 +5,7 @@
 
 #include "chassis.h"
 #include "motor.h"
+#include "robot_def.h"
 #include "ti_msp_dl_config.h"
 
 extern Motor_Device_t chassis_motors[2];
@@ -24,6 +25,16 @@ static uint32_t motor_init_count;
 static uint32_t motor_stop_count[2];
 static uint32_t motor_enable_count[2];
 static uint32_t motor_update_count[2];
+
+static float AbsFloat(float value)
+{
+    return (value < 0.0f) ? -value : value;
+}
+
+static void AssertNear(float actual, float expected)
+{
+    assert(AbsFloat(actual - expected) < 0.0001f);
+}
 
 static size_t MotorIndex(const Motor_Device_t *motor)
 {
@@ -91,6 +102,15 @@ int main(void)
     assert(captured_configs[0].encoder == &hencoder_left);
     assert(captured_configs[0].driver.config.drv8701e.reverse ==
         captured_configs[0].encoder_reverse);
+    assert(captured_configs[0].encoder_reverse ==
+        (bool) CHASSIS_LEFT_MOTOR_REVERSE);
+    AssertNear(captured_configs[0].speed_pid.kp, CHASSIS_SPEED_KP);
+    AssertNear(captured_configs[0].speed_pid.ki, CHASSIS_SPEED_KI);
+    AssertNear(captured_configs[0].speed_pid.kd, CHASSIS_SPEED_KD);
+    AssertNear(captured_configs[0].speed_pid.output_limit,
+        CHASSIS_SPEED_MAX_OUT);
+    AssertNear(captured_configs[0].speed_pid.integral_limit,
+        CHASSIS_SPEED_MAX_IOUT);
 
     assert(captured_configs[1].driver.type == MOTOR_DRIVER_DRV8701E);
     assert(captured_configs[1].driver.config.drv8701e.pwm_handle == &htim2);
@@ -101,6 +121,8 @@ int main(void)
     assert(captured_configs[1].encoder == &hencoder_right);
     assert(captured_configs[1].driver.config.drv8701e.reverse ==
         captured_configs[1].encoder_reverse);
+    assert(captured_configs[1].encoder_reverse ==
+        (bool) CHASSIS_RIGHT_MOTOR_REVERSE);
 
     ChassisTask();
     assert(motor_stop_count[0] == 1U);
@@ -115,9 +137,16 @@ int main(void)
     assert(motor_enable_count[1] == 1U);
     assert(motor_update_count[0] == 1U);
     assert(motor_update_count[1] == 1U);
-    assert(registered_motors[0]->target_speed > 0.0f);
-    assert(registered_motors[1]->target_speed >
-        registered_motors[0]->target_speed);
+    const float counts_per_meter =
+        (CHASSIS_ENCODER_PPR * CHASSIS_ENCODER_QUADRATURE *
+            CHASSIS_MOTOR_GEAR_RATIO) /
+        (2.0f * 3.14159265f * CHASSIS_WHEEL_RADIUS_M);
+    AssertNear(registered_motors[0]->target_speed,
+        (0.2f - 0.1f * CHASSIS_TRACK_WIDTH_M * 0.5f) *
+            counts_per_meter);
+    AssertNear(registered_motors[1]->target_speed,
+        (0.2f + 0.1f * CHASSIS_TRACK_WIDTH_M * 0.5f) *
+            counts_per_meter);
 
     ChassisDisableManualCommand();
     assert(!chassis_manual_enabled);

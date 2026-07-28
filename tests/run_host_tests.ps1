@@ -62,7 +62,7 @@ try {
         "-Imodule/vision", "tests/vision_test.c", "module/vision/vision.c"
     )
     Invoke-HostTest "ins_test" @(
-        "-Itests/ins_stubs", "-Itests/module_io_stubs",
+        "-Itests/ins_stubs", "-Itests/module_io_stubs", "-Iapp",
         "-Imodule/imu", "-Imodule/algorithm", "-Imodule/ins",
         "tests/ins_test.c", "module/ins/ins.c", "module/algorithm/pid.c"
     )
