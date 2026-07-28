@@ -57,6 +57,8 @@ typedef struct {
 typedef struct {
     Encoder_Device_t *encoder;
     float target_speed;
+    float measured_speed;
+    float control_output;
     bool enabled;
 } Motor_Device_t;
 

@@ -61,3 +61,16 @@
 - [x] Keep runtime state as a small set of directly named variables without adding another abstraction layer.
 - [x] Separate command selection, differential kinematics, motor application, and feedback publication into focused functions.
 - [x] Preserve the public API, Live Watch symbols, and tested runtime behavior.
+
+### Task 5: Integrate the Normal-Mode OLED Display
+
+**Files:**
+- Modify: `app/robot.c`
+- Modify: `app/robot.h`
+- Modify: `app/robot_task.h`
+- Create: `tests/robot_oled_test.c`
+
+- [x] Test normal-mode OLED task creation, initialization retry, and five display rows.
+- [x] Render chassis state, target/measured speeds, outputs, and manual velocity command from `robot.c`.
+- [x] Refresh in a generic low-priority 5 Hz OLED task so blocking I2C does not delay chassis control.
+- [x] Keep hardware-test mode isolated and verify all host and firmware builds.

@@ -5,6 +5,9 @@
 
 #if defined(ROBOT_ENABLE_CHASSIS_APP)
 #include "chassis.h"
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+#include "motor.h"
+#endif
 #endif
 
 #if defined(ROBOT_ENABLE_GIMBAL_APP)
@@ -20,7 +23,19 @@
 #endif
 
 #include "imu.h"
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+#include "oled.h"
+#endif
 #include "vofa.h"
+
+#if defined(ROBOT_ENABLE_CHASSIS_APP) && \
+    (HARDWARE_TEST_MODE == HARDWARE_TEST_NONE)
+extern Motor_Device_t chassis_motors[2];
+#endif
+
+volatile bool robot_oled_initialized;
+volatile uint32_t robot_oled_refresh_count;
+volatile uint32_t robot_oled_error_count;
 
 #if defined(ROBOT_ENABLE_INS_APP)
 #include "ins.h"
@@ -106,4 +121,47 @@ void RobotTask()
     ChassisTask();
 #endif
 
+}
+
+void RobotOLEDTask(void)
+{
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+    if (!robot_oled_initialized) {
+        if (OLED_init_ex() != DEVICE_OK) {
+            robot_oled_error_count++;
+            return;
+        }
+        robot_oled_initialized = true;
+    }
+
+    OLED_operate_gram(PEN_CLEAR);
+
+#if defined(ROBOT_ENABLE_CHASSIS_APP)
+    const int left_target = (int) chassis_motors[0].target_speed;
+    const int left_measured = (int) chassis_motors[0].measured_speed;
+    const int right_target = (int) chassis_motors[1].target_speed;
+    const int right_measured = (int) chassis_motors[1].measured_speed;
+    const int left_output =
+        (int) (chassis_motors[0].control_output * 1000.0f);
+    const int right_output =
+        (int) (chassis_motors[1].control_output * 1000.0f);
+    const int vx_mmps = (int) (chassis_manual_vx_mps * 1000.0f);
+    const int wz_mradps = (int) (chassis_manual_wz_radps * 1000.0f);
+
+    const bool motor_enabled =
+        chassis_motors[0].enabled || chassis_motors[1].enabled;
+    OLED_printf(0U, 0U, "M:%s CMD:%s",
+        motor_enabled ? "ON" : "OFF",
+        chassis_manual_enabled ? "ON" : "OFF");
+    OLED_printf(1U, 0U, "LT:%6d LM:%6d", left_target, left_measured);
+    OLED_printf(2U, 0U, "RT:%6d RM:%6d", right_target, right_measured);
+    OLED_printf(3U, 0U, "LO:%4d RO:%4d", left_output, right_output);
+    OLED_printf(4U, 0U, "V:%5d W:%5d", vx_mmps, wz_mradps);
+#else
+    OLED_printf(0U, 0U, "ROBOT READY");
+#endif
+
+    OLED_refresh_gram();
+    robot_oled_refresh_count++;
+#endif
 }
