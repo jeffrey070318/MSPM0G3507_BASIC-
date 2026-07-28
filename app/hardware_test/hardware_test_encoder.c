@@ -10,6 +10,9 @@ volatile int16_t hardware_test_encoder_left_speed;
 volatile int16_t hardware_test_encoder_right_speed;
 volatile uint32_t hardware_test_encoder_left_invalid;
 volatile uint32_t hardware_test_encoder_right_invalid;
+volatile int32_t hardware_test_encoder_total[2];
+volatile int16_t hardware_test_encoder_speed[2];
+volatile uint32_t hardware_test_encoder_invalid[2];
 
 Device_Status_e HardwareTestInit(void)
 {
@@ -31,6 +34,13 @@ void HardwareTestRun(void)
         Encoder_Get_InvalidTransitions(&hencoder_left);
     hardware_test_encoder_right_invalid =
         Encoder_Get_InvalidTransitions(&hencoder_right);
+
+    hardware_test_encoder_total[0] = hardware_test_encoder_left_total;
+    hardware_test_encoder_total[1] = hardware_test_encoder_right_total;
+    hardware_test_encoder_speed[0] = hardware_test_encoder_left_speed;
+    hardware_test_encoder_speed[1] = hardware_test_encoder_right_speed;
+    hardware_test_encoder_invalid[0] = hardware_test_encoder_left_invalid;
+    hardware_test_encoder_invalid[1] = hardware_test_encoder_right_invalid;
 }
 
 #endif

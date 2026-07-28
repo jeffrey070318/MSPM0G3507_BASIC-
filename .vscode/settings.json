@@ -1,14 +1,12 @@
 {
+    "cmake.useCMakePresets": "always",
+    "cmake.configurePreset": "local",
+    "cmake.buildPreset": "local",
     "cmake.configureOnOpen": true,
-    "cmake.generator": "Ninja",
-    "cmake.buildDirectory": "${workspaceFolder}/build",
-    "cmake.configureArgs": [
-        "-DUSE_FREERTOS=ON"
-    ],
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
-    "cortex-debug.openocdPath": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
-    "cortex-debug.armToolchainPath": "D:/Program Files/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin",
+    "cortex-debug.openocdPath": "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe",
+    "cortex-debug.armToolchainPath": "D:/Toolchain/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi/bin",
     "files.associations": {
         "FreeRTOS.h": "c",
         "task.h": "c",

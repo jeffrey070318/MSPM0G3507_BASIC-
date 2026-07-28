@@ -1,12 +1,32 @@
-set(MSPM0_SDK_DIR "D:/tools/ti/mspm0_sdk_2_10_00_04" CACHE PATH
+set(_mspm0_sdk_default "D:/tools/ti/mspm0_sdk_2_10_00_04")
+if(EXISTS "D:/CCSToolchain/mspm0_sdk_2_09_00_01/.metadata/product.json")
+    set(_mspm0_sdk_default "D:/CCSToolchain/mspm0_sdk_2_09_00_01")
+endif()
+
+set(_sysconfig_cli_default "D:/tools/ti/sysconfig/sysconfig_cli.bat")
+if(EXISTS "D:/CCSToolchain/sysconfig/sysconfig_cli.bat")
+    set(_sysconfig_cli_default "D:/CCSToolchain/sysconfig/sysconfig_cli.bat")
+endif()
+
+set(_openocd_default
+    "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe")
+set(_openocd_scripts_default
+    "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts")
+if(EXISTS "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe")
+    set(_openocd_default
+        "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/bin/openocd.exe")
+    set(_openocd_scripts_default
+        "D:/Toolchain/xpack-openocd-0.12.0-7-win32-x64/xpack-openocd-0.12.0-7/openocd/scripts")
+endif()
+
+set(MSPM0_SDK_DIR "${_mspm0_sdk_default}" CACHE PATH
     "Path to the MSPM0 SDK root")
-set(SYSCONFIG_CLI "D:/tools/ti/sysconfig/sysconfig_cli.bat"
-    CACHE FILEPATH "Path to sysconfig_cli.bat")
-set(OPENOCD_EXE "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe"
-    CACHE FILEPATH "Path to OpenOCD executable")
-set(OPENOCD_SCRIPTS_DIR
-    "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts"
-    CACHE PATH "Path to OpenOCD scripts directory")
+set(SYSCONFIG_CLI "${_sysconfig_cli_default}" CACHE FILEPATH
+    "Path to sysconfig_cli.bat")
+set(OPENOCD_EXE "${_openocd_default}" CACHE FILEPATH
+    "Path to OpenOCD executable")
+set(OPENOCD_SCRIPTS_DIR "${_openocd_scripts_default}" CACHE PATH
+    "Path to OpenOCD scripts directory")
 
 set(MSPM0_DEVICE MSPM0G3507 CACHE STRING "Target MSPM0 device")
 set(MSPM0_ARCH_FLAGS

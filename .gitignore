@@ -2,6 +2,12 @@ build/
 build-nortos/
 build-link-check/
 build-link-check-nortos/
+Debug/
+Release/
+
+# CMake shared presets should be committed. Put local tool paths and
+# per-machine overrides in CMakeUserPresets.json.
+CMakeUserPresets.json
 
 # Prerequisites
 *.d
@@ -52,8 +58,27 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-build
-./idea
+
+# IDE / editor local state
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/c_cpp_properties.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+!.vscode/*.example.json
 .vscode/.cortex-debug.peripherals.state.json
 .vscode/.cortex-debug.registers.state.json
+.vscode/ipch/
+.vscode/.browse.c_cpp.db*
+.vscode/*.log
+
+# Debugger local sessions
 *.jdebug*
+
+# CCS / Eclipse generated state
+.metadata/
+.recommenders/
+.settings/*.bak
+
+build

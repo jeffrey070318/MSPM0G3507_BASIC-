@@ -3,8 +3,8 @@
     "tasks": [
         {
             "label": "CMake: Configure FreeRTOS",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "-S",
                 "${workspaceFolder}",
@@ -12,6 +12,7 @@
                 "${workspaceFolder}/build",
                 "-G",
                 "Ninja",
+                "-DCMAKE_MAKE_PROGRAM=D:/Toolchain/ninja-win/ninja.exe",
                 "-DUSE_FREERTOS=ON"
             ],
             "options": {
@@ -21,8 +22,8 @@
         },
         {
             "label": "CMake: Configure NoRTOS",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "-S",
                 "${workspaceFolder}",
@@ -30,6 +31,7 @@
                 "${workspaceFolder}/build-nortos",
                 "-G",
                 "Ninja",
+                "-DCMAKE_MAKE_PROGRAM=D:/Toolchain/ninja-win/ninja.exe",
                 "-DUSE_FREERTOS=OFF"
             ],
             "options": {
@@ -39,8 +41,8 @@
         },
         {
             "label": "CMake: Build",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build"
@@ -56,8 +58,8 @@
         },
         {
             "label": "CMake: Build NoRTOS",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build-nortos"
@@ -69,8 +71,8 @@
         },
         {
             "label": "OpenOCD: Probe CMSIS-DAP",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -84,8 +86,8 @@
         },
         {
             "label": "OpenOCD: Flash CMSIS-DAP",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -106,8 +108,8 @@
         },
         {
             "label": "OpenOCD: Erase CMSIS-DAP",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -121,8 +123,8 @@
         },
         {
             "label": "OpenOCD: Probe XDS110",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -136,8 +138,8 @@
         },
         {
             "label": "OpenOCD: Flash XDS110",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -154,8 +156,8 @@
         },
         {
             "label": "OpenOCD: Erase XDS110",
-            "type": "shell",
-            "command": "cmake",
+            "type": "process",
+            "command": "D:/Toolchain/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
