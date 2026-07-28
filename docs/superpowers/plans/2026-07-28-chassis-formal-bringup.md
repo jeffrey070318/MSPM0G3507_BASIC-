@@ -50,3 +50,14 @@
 - [x] Move chassis mechanical, encoder, transmission, speed PID, limit, and direction parameters into clearly commented sections in `robot_def.h`.
 - [x] Make chassis registration, kinematics, and INS odometry consume the shared parameters.
 - [x] Verify PID registration and target-speed conversion through the chassis host test.
+
+### Task 4: Simplify Chassis Source Layout
+
+**Files:**
+- Modify: `app/chassis/chassis.c`
+- Modify: `app/chassis/chassis.h`
+
+- [x] Remove left/right pin macros and register both DRV8701E instances explicitly in `ChassisInit()`.
+- [x] Keep runtime state as a small set of directly named variables without adding another abstraction layer.
+- [x] Separate command selection, differential kinematics, motor application, and feedback publication into focused functions.
+- [x] Preserve the public API, Live Watch symbols, and tested runtime behavior.
