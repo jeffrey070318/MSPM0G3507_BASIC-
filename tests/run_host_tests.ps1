@@ -35,6 +35,11 @@ try {
         "-Itests/chassis_stubs", "-Iapp/chassis", "-Iapp",
         "tests/chassis_registration_test.c", "app/chassis/chassis.c"
     )
+    Invoke-HostTest "line_follow_test" @(
+        "-Itests/line_follow_stubs", "-Iapp/line_follow", "-Iapp",
+        "-Imodule/algorithm", "tests/line_follow_test.c",
+        "app/line_follow/line_follow.c", "module/algorithm/pid.c"
+    )
     Invoke-HostTest "hardware_test_motor_sequence_test" @(
         "-Iapp/hardware_test",
         "tests/hardware_test_motor_sequence_test.c",

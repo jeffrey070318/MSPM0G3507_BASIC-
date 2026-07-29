@@ -56,6 +56,22 @@ typedef enum {
 
 /* ==========================实车调参区域========================== */
 
+/* --------------------------循迹参数------------------------------ */
+/* 以下为低速初值，灰度方向、速度和 PID 均需实车验证。 */
+#define LINE_FOLLOW_SENSOR_ACTIVE_STATE  GPIO_PIN_SET
+#define LINE_FOLLOW_SENSOR_CHANNEL_ORDER GRAY_SENSOR_CHANNEL_1_ON_LEFT
+#define LINE_FOLLOW_SENSOR_SETTLE_US     5U
+#define LINE_FOLLOW_BASE_SPEED_MPS       0.15f
+#define LINE_FOLLOW_MAX_WZ_RADPS         1.5f
+#define LINE_FOLLOW_KP                   2.0f
+#define LINE_FOLLOW_KI                   0.0f
+#define LINE_FOLLOW_KD                   0.0f
+#define LINE_FOLLOW_MAX_IOUT             0.5f
+#define LINE_FOLLOW_DEADBAND             0.02f
+#define LINE_FOLLOW_A_MARKER_ACTIVE_MIN       6U
+#define LINE_FOLLOW_A_MARKER_DEBOUNCE_SAMPLES 3U
+#define LINE_FOLLOW_A_MARKER_REARM_SAMPLES    3U
+
 /* --------------------------底盘机械参数-------------------------- */
 /* 车轮有效半径，单位 m；应以车辆实际行驶距离反算校准。 */
 #define CHASSIS_WHEEL_RADIUS_M (0.076f)
