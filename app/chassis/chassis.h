@@ -3,20 +3,22 @@
 
 #include <stdbool.h>
 
-extern volatile bool chassis_manual_enabled;
-extern volatile float chassis_manual_vx_mps;
-extern volatile float chassis_manual_wz_radps;
+typedef struct {
+    float vx_mps;
+    float wz_radps;
+    bool enabled;
+} Chassis_Command_t;
 
-/** 初始化两路底盘电机；由 RobotInit() 在调度器启动前调用。 */
-void ChassisInit(void);
+typedef struct {
+    float left_target_counts_s;
+    float left_measured_counts_s;
+    float right_target_counts_s;
+    float right_measured_counts_s;
+    bool enabled;
+} Chassis_Status_t;
 
-/** 接收命令并更新差速运动学和两路速度闭环。 */
-void ChassisTask(void);
+bool ChassisInit(void);
+void ChassisTask(const Chassis_Command_t *command,
+    float dt_seconds, Chassis_Status_t *status);
 
-/** 启用手动联调命令，速度单位为 m/s 和 rad/s。 */
-void ChassisSetManualCommand(float vx_mps, float wz_radps);
-
-/** 禁用手动联调命令并恢复零力状态。 */
-void ChassisDisableManualCommand(void);
-
-#endif // CHASSIS_H
+#endif

@@ -82,15 +82,9 @@ void Motor_Stop(Motor_Device_t *motor)
     motor->enabled = false;
 }
 
-float DWT_GetDeltaT(uint32_t *last_tick)
-{
-    (*last_tick)++;
-    return 0.005f;
-}
-
 int main(void)
 {
-    ChassisInit();
+    assert(ChassisInit());
 
     assert(motor_init_count == 2U);
     assert(captured_configs[0].driver.type == MOTOR_DRIVER_DRV8701E);
@@ -123,20 +117,27 @@ int main(void)
         captured_configs[1].encoder_reverse);
     assert(captured_configs[1].encoder_reverse ==
         (bool) CHASSIS_RIGHT_MOTOR_REVERSE);
-
-    ChassisTask();
     assert(motor_stop_count[0] == 1U);
     assert(motor_stop_count[1] == 1U);
 
-    ChassisSetManualCommand(0.2f, 0.1f);
-    assert(chassis_manual_enabled);
-    assert(chassis_manual_vx_mps == 0.2f);
-    assert(chassis_manual_wz_radps == 0.1f);
-    ChassisTask();
+    Chassis_Command_t command = {0};
+    Chassis_Status_t status = {0};
+    ChassisTask(&command, 0.005f, &status);
+    assert(motor_stop_count[0] == 2U);
+    assert(motor_stop_count[1] == 2U);
+    assert(!status.enabled);
+
+    command = (Chassis_Command_t) {
+        .vx_mps = 0.2f,
+        .wz_radps = 0.1f,
+        .enabled = true,
+    };
+    ChassisTask(&command, 0.005f, &status);
     assert(motor_enable_count[0] == 1U);
     assert(motor_enable_count[1] == 1U);
     assert(motor_update_count[0] == 1U);
     assert(motor_update_count[1] == 1U);
+    assert(status.enabled);
     const float counts_per_meter =
         (CHASSIS_ENCODER_PPR * CHASSIS_ENCODER_QUADRATURE *
             CHASSIS_MOTOR_GEAR_RATIO) /
@@ -148,10 +149,15 @@ int main(void)
         (0.2f + 0.1f * CHASSIS_TRACK_WIDTH_M * 0.5f) *
             counts_per_meter);
 
-    ChassisDisableManualCommand();
-    assert(!chassis_manual_enabled);
-    ChassisTask();
-    assert(motor_stop_count[0] == 2U);
-    assert(motor_stop_count[1] == 2U);
+    AssertNear(status.left_target_counts_s,
+        registered_motors[0]->target_speed);
+    AssertNear(status.right_target_counts_s,
+        registered_motors[1]->target_speed);
+
+    command.enabled = false;
+    ChassisTask(&command, 0.005f, &status);
+    assert(motor_stop_count[0] == 3U);
+    assert(motor_stop_count[1] == 3U);
+    assert(!status.enabled);
     return 0;
 }
