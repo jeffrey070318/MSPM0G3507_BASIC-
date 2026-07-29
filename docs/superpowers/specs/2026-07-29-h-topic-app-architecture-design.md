@@ -12,6 +12,7 @@
 - `line_follow` 只处理灰度数据并产生底盘运动建议，不直接操作电机。
 - `chassis` 独占两路底盘电机，只接受带使能位的速度命令。
 - `ball_balance` 独占步进设备，只接受目标位置和使能命令。
+- 每个 app 对外只保留 `Init()` 和 `Task()`；细分步骤全部是 `.c` 内部的 `static` 函数。
 - `robot.c` 只负责初始化、固定周期调度和状态汇总，不保存比赛状态，不实现 PID。
 - 当前一对一数据流使用有类型的直接函数调用，不为未来可能出现的消费者预先引入消息中心。
 - BSP 和 module 层保持通用；赛题流程、单位换算、限幅和参数归 app 层。
@@ -42,7 +43,7 @@ app/
 
 ### `competition`
 
-负责按键启动、比赛模式、比赛阶段、计时、A 标志事件消费、整车使能和安全停机。它读取 `line_follow` 与 `ball_balance` 的状态，向二者下发是否运行及目标，不访问 BSP 引脚，也不直接修改 Motor 或 Stepper 结构体。
+负责按键启动、比赛模式、比赛阶段、计时、A 标志事件消费、整车使能和安全停机。它读取 `line_follow` 与 `ball_balance` 的状态，通过输出参数生成下一周期命令，不访问 BSP 引脚，也不直接修改 Motor 或 Stepper 结构体。
 
 ### `line_follow`
 
@@ -58,7 +59,7 @@ app/
 
 ## 4. 公共接口
 
-公共头文件只暴露命令、状态和生命周期函数，不暴露 BSP 句柄或内部设备实例。
+公共头文件只暴露命令/状态数据类型以及 `Init()`、`Task()` 两个生命周期函数，不暴露 BSP 句柄、内部设备实例或细分操作函数。任务参数由 `robot.c` 中的应用上下文连接；`robot.c` 只搬运有类型的数据，不参与控制决策。
 
 ### 底盘
 
@@ -77,14 +78,12 @@ typedef struct {
     bool enabled;
 } Chassis_Status_t;
 
-bool Chassis_Init(void);
-void Chassis_SetCommand(const Chassis_Command_t *command);
-void Chassis_Update(float dt_seconds);
-void Chassis_Stop(void);
-void Chassis_GetStatus(Chassis_Status_t *status);
+bool ChassisInit(void);
+void ChassisTask(const Chassis_Command_t *command,
+    float dt_seconds, Chassis_Status_t *status);
 ```
 
-`Chassis_SetCommand()` 复制输入，不保存调用者指针。`enabled == false`、线路丢失或比赛停止最终都必须走 `Chassis_Stop()`，将目标清零并关闭两个电机输出。
+`ChassisTask()` 只在调用期间读取输入，不保存调用者指针。`enabled == false` 时，它在同一次调用中将目标清零并关闭两个电机输出。线路丢失和比赛停止由 `competition` 生成禁用命令，不需要额外公开 `Stop()`。
 
 ### 循迹
 
@@ -96,10 +95,9 @@ typedef struct {
     bool a_marker_event;
 } LineFollow_Output_t;
 
-bool LineFollow_Init(void);
-void LineFollow_SetEnabled(bool enabled);
-void LineFollow_Update(float dt_seconds);
-void LineFollow_GetOutput(LineFollow_Output_t *output);
+bool LineFollowInit(void);
+void LineFollowTask(bool enabled, float dt_seconds,
+    LineFollow_Output_t *output);
 ```
 
 禁用时输出速度为零且不积累 PID 积分。线路无效时 `line_valid` 为假，速度建议必须为零；恢复识别后重新进入闭环，不能沿用失线期间的积分。
@@ -120,15 +118,12 @@ typedef struct {
     bool at_soft_limit;
 } BallBalance_Status_t;
 
-bool BallBalance_Init(void);
-void BallBalance_SetCommand(const BallBalance_Command_t *command);
-void BallBalance_Update(uint32_t now_ms, float dt_seconds);
-void BallBalance_StepperService(void);
-void BallBalance_Stop(void);
-void BallBalance_GetStatus(BallBalance_Status_t *status);
+bool BallBalanceInit(void);
+void BallBalanceTask(const BallBalance_Command_t *command,
+    uint32_t now_ms, float dt_seconds, BallBalance_Status_t *status);
 ```
 
-`target_position` 与视觉测量使用同一协议坐标单位，协议确定后统一在 `ball_balance` 内转换。`BallBalance_Update()` 只在收到新且有效的视觉帧时更新位置外环，避免对同一帧重复累计。`BallBalance_StepperService()` 每 1 ms 调用一次 `Stepper_Task(device, 1U)`，与较慢的球位置外环分离。
+`target_position` 与视觉测量使用同一协议坐标单位，协议确定后统一在 `ball_balance` 内转换。`BallBalanceTask()` 每 1 ms 被调用并始终服务一次 `Stepper_Task(device, 1U)`；视觉接收和位置外环由内部静态函数按新帧触发，避免对同一帧重复累计。`enabled == false` 时同一个任务入口停止运动并使能脚回到安全状态。
 
 ### 比赛协调
 
@@ -148,14 +143,21 @@ typedef struct {
     bool vision_valid;
 } Competition_Status_t;
 
-bool Competition_Init(void);
-void Competition_Update(uint32_t now_ms);
-void Competition_RequestStart(void);
-void Competition_RequestStop(void);
-void Competition_GetStatus(Competition_Status_t *status);
+typedef struct {
+    bool line_follow_enabled;
+    Chassis_Command_t chassis;
+    BallBalance_Command_t ball_balance;
+    Competition_Status_t status;
+} Competition_Output_t;
+
+bool CompetitionInit(void);
+void CompetitionTask(uint32_t now_ms,
+    const LineFollow_Output_t *line_follow,
+    const BallBalance_Status_t *ball_balance,
+    Competition_Output_t *output);
 ```
 
-状态迁移由表驱动的事件处理函数完成，不使用一个不断膨胀的 `switch-case`。状态处理函数只组合上述公开接口，不持有 Motor、Stepper 或 GPIO 句柄。
+`CompetitionTask()` 内部读取已注册的按键并更新状态。状态迁移由表驱动的内部事件处理函数完成，不使用一个不断膨胀的 `switch-case`。状态处理函数只修改 `Competition_Output_t`，不持有 Motor、Stepper 或 GPIO 句柄。
 
 ## 5. 状态与数据流
 
@@ -163,17 +165,14 @@ void Competition_GetStatus(Competition_Status_t *status);
 按键 / 比赛计时 / 安全状态
              |
              v
-      Competition_Update
+       CompetitionTask
+             |
+             v
+      Competition_Output_t
           |          |
-          |          +--> BallBalance_SetCommand
+          |          +--> BallBalanceTask
           |
-          +--> LineFollow_SetEnabled
-                        |
-                        v
-              LineFollow_GetOutput
-                        |
-                        v
-                Chassis_SetCommand
+          +--> LineFollowTask --> ChassisTask
 ```
 
 状态语义如下：
@@ -192,21 +191,21 @@ FreeRTOS 使用绝对周期延时，避免任务执行时间造成持续漂移�
 
 | 工作 | 周期 | 所属 |
 | --- | ---: | --- |
-| 步进脉冲服务 | 1 ms | `BallBalance_StepperService()` |
-| 灰度更新、循迹 PID、底盘闭环 | 5 ms | `RobotTask()` 控制路径 |
-| 比赛状态和计时 | 5 ms | `Competition_Update()` |
-| 球位置外环 | 10-20 ms 或新视觉帧 | `BallBalance_Update()` |
+| 步进脉冲服务 | 1 ms | `BallBalanceTask()` 内部 |
+| 灰度更新、循迹 PID、底盘闭环 | 5 ms | 各 app 的 `Task()` |
+| 比赛状态和计时 | 5 ms | `CompetitionTask()` |
+| 球位置外环 | 新视觉帧触发 | `BallBalanceTask()` 内部 |
 | OLED 状态显示 | 200 ms | 现有 OLED 任务 |
 | UART 接收 | DMA/中断持续接收 | BSP/module |
 
-首版保留一个 5 ms 整车控制任务，调用顺序固定为：采集输入、更新 `competition`、更新 `line_follow`、形成底盘命令、更新 `chassis`、按到期条件更新球位置外环。步进 1 ms 服务单独任务运行，不能塞进 5 ms 主循环。
+首版使用一个 1 ms 整车控制任务，不再额外创建步进任务。每个周期先调用 `BallBalanceTask()` 服务步进脉冲；每累计 5 个周期，再依次调用 `LineFollowTask()`、`CompetitionTask()` 和 `ChassisTask()`。`line_follow` 使用上一周期的使能命令，`competition` 消费本周期最新线路结果并生成新命令，`chassis` 在本周期立即执行新命令；新的平衡命令在下一个 1 ms 周期生效。这个固定的一周期传递延迟换来单任务数据一致性，不需要锁、队列或消息中心。
 
 `robot.c` 不直接拼 OLED 文本。OLED 任务读取各 app 的只读状态快照，显示比赛状态、用时、线路有效性、球位置、视觉有效性、左右轮目标与反馈。显示失败只增加诊断计数，不改变控制状态。
 
 ## 7. 安全与限幅
 
 - 上电后底盘和步进均保持禁用，初始化顺序不能产生短时输出。
-- 启用平衡前由操作者把机构放在约定中位，`BallBalance_Init()` 将该位置记为软件零点；没有限位开关前不宣称支持自动回零。
+- 启用平衡前由操作者把机构放在约定中位，`BallBalanceInit()` 将该位置记为软件零点；没有限位开关前不宣称支持自动回零。
 - 所有步进相对位移先经过单周期最大步数限制，再经过累计软件行程限制。
 - 到达软件限位时只允许向离开限位的方向移动，并在状态中报告 `at_soft_limit`。
 - 新的 `Stepper_Move()` 命令不能无条件覆盖正在执行的剩余步数。首版策略是仅在当前小步移动完成后接收下一次外环命令，防止控制周期不断重置运动。
@@ -246,7 +245,7 @@ FreeRTOS 使用绝对周期延时，避免任务执行时间造成持续漂移�
 - `chassis`：差速换算、使能/停止、左右方向一致性、命令复制和无效 `dt` 保护。
 - `ball_balance`：新帧驱动、重复帧不积分、视觉超时、死区、单步限幅、累计软限位、禁用清零。
 - `competition`：每个合法迁移、停止优先级、完成锁定、失线保护、视觉超时降级和 A 标志消费。
-- `robot`：硬件测试模式隔离、初始化失败保持安全、5 ms 与 1 ms 调度入口存在。
+- `robot`：硬件测试模式隔离、初始化失败保持安全、1 ms 基准节拍和 5 ms 分频顺序正确。
 
 ### 构建验证
 
