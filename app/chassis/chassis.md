@@ -25,28 +25,31 @@
 | `CHASSIS_SPEED_MAX_OUT/MAX_IOUT` | PID 输出和积分限幅 |
 | `CHASSIS_LEFT/RIGHT_MOTOR_REVERSE` | 左右轮驱动与反馈同步反向 |
 
-INS 的编码器里程换算直接引用同一组轮径、PPR、倍率和减速比，因此只需修改一处。
-
 ## 运行流程
 
-1. 接收速度指令；没有有效指令时进入 `CHASSIS_ZERO_FORCE`。
+1. `ChassisTask()` 接收 `Chassis_Command_t`；空指针或 `enabled=false` 时立即停机。
 2. 按轮距计算左右轮目标线速度。
 3. 根据轮径、编码器线数和减速比换算为 `counts/s`。
 4. 更新左右编码器速度 PID 并输出到 DRV8701E。
-5. 启用 INS 时，通过消息中心发布左右累计编码器值。
+5. 通过 `Chassis_Status_t` 返回左右目标值、反馈值和使能状态。
 
 ## 正式联调入口
 
-当前已启用 `ROBOT_ENABLE_CHASSIS_APP`，`ChassisInit()` 会直接注册两路 DRV8701E：左轮使用 `htim1 + MOTOR_GPIO_AIN1 + hencoder_left`，右轮使用 `htim2 + MOTOR_GPIO_BIN1 + hencoder_right`。上电默认保持 `CHASSIS_ZERO_FORCE`，不会自动前进。
+`ChassisInit()` 直接注册两路 DRV8701E：左轮使用 `htim1 + MOTOR_GPIO_AIN1 + hencoder_left`，右轮使用 `htim2 + MOTOR_GPIO_BIN1 + hencoder_right`。初始化和禁用命令都会明确停止两路输出，不会自动前进。
 
-未启用 INS 时，可调用：
+联调也使用正式任务接口，不保留手动全局：
 
 ```c
-ChassisSetManualCommand(0.05f, 0.0f);
-ChassisDisableManualCommand();
+Chassis_Command_t command = {
+    .vx_mps = 0.05f,
+    .wz_radps = 0.0f,
+    .enabled = true,
+};
+Chassis_Status_t status;
+ChassisTask(&command, 0.005f, &status);
 ```
 
-也可以在 Live Watch/Global Variables 中先设置 `chassis_manual_vx_mps` 和 `chassis_manual_wz_radps`，最后将 `chassis_manual_enabled` 改为 `true`。停止时先将 `chassis_manual_enabled` 改为 `false`。速度单位分别为 `m/s` 和 `rad/s`。
+停止时将 `command.enabled` 设为 `false` 并再次调用 `ChassisTask()`。速度单位分别为 `m/s` 和 `rad/s`。
 
 正式电机对象为 `chassis_motors[0]`（左轮）和 `chassis_motors[1]`（右轮），可直接观察 `target_speed`、`measured_speed`、`control_output` 和 `speed_pid`。首次测试必须架空车轮，建议从 `vx=0.05 m/s, wz=0` 开始，并准备断电急停。
 
@@ -54,4 +57,4 @@ ChassisDisableManualCommand();
 
 电机 1、左编码器和 DRV8701E 已完成单轮速度闭环实测。两路正式实例已接入并通过宿主注册测试；右轮方向、整车轮距、轮径、编码器参数、转向符号和双轮运行仍需本轮实测确认。
 
-INS 返航模板默认关闭；只有同时定义 `ROBOT_ENABLE_CHASSIS_APP` 和 `ROBOT_ENABLE_INS_APP` 时才接入消息中心。平衡底盘、麦克纳姆底盘和舵轮只保留扩展入口，尚无可用实现。
+当前 H 题应用不接入 INS 消息中心。平衡底盘、麦克纳姆底盘和舵轮不属于本实现。
