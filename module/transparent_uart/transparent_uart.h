@@ -7,7 +7,8 @@
 #include "bsp_def.h"
 
 typedef enum {
-    TRANSPARENT_UART_PORT_2 = 0,
+    TRANSPARENT_UART_PORT_1 = 0,
+    TRANSPARENT_UART_PORT_2,
     TRANSPARENT_UART_PORT_3,
 } TransparentUART_Port_e;
 

@@ -25,6 +25,7 @@ const GPIO6         = GPIO.addInstance();
 const GPIO7         = GPIO.addInstance();
 const GPIO8         = GPIO.addInstance();
 const GPIO9         = GPIO.addInstance();
+const GPIO10        = GPIO.addInstance();
 const I2C           = scripting.addModule("/ti/driverlib/I2C", {}, false);
 const I2C1          = I2C.addInstance();
 const I2C2          = I2C.addInstance();
@@ -158,6 +159,16 @@ GPIO9.associatedPins[3].pin.$assign = "PA21";
 GPIO9.associatedPins[4].direction   = "INPUT";
 GPIO9.associatedPins[4].$name       = "BOARD_PA23";
 GPIO9.associatedPins[4].pin.$assign = "PA23";
+
+GPIO10.$name                         = "STEPPER_GPIO";
+GPIO10.associatedPins.create(3);
+GPIO10.associatedPins[0].$name       = "STEP";
+GPIO10.associatedPins[0].pin.$assign = "PB0";
+GPIO10.associatedPins[1].$name       = "DIR";
+GPIO10.associatedPins[1].pin.$assign = "PB5";
+GPIO10.associatedPins[2].$name       = "EN";
+GPIO10.associatedPins[2].initialValue = "SET";
+GPIO10.associatedPins[2].pin.$assign = "PB6";
 
 I2C1.basicEnableController             = true;
 I2C1.$name                             = "OLED_I2C";

@@ -4,7 +4,7 @@
 
 #include "bsp_usart.h"
 
-#define TRANSPARENT_UART_PORT_COUNT 2U
+#define TRANSPARENT_UART_PORT_COUNT 3U
 #define TRANSPARENT_UART_RX_BUFFER_SIZE 16U
 
 static USARTInstance *transparent_uart_instances[
@@ -13,12 +13,16 @@ static USARTInstance *transparent_uart_instances[
 static bool TransparentUARTPortIsValid(TransparentUART_Port_e port)
 {
     return (port == TRANSPARENT_UART_PORT_2) ||
+           (port == TRANSPARENT_UART_PORT_1) ||
            (port == TRANSPARENT_UART_PORT_3);
 }
 
 static UART_HandleTypeDef *TransparentUARTGetHandle(
     TransparentUART_Port_e port)
 {
+    if (port == TRANSPARENT_UART_PORT_1) {
+        return &huart1;
+    }
     if (port == TRANSPARENT_UART_PORT_2) {
         return &huart2;
     }
