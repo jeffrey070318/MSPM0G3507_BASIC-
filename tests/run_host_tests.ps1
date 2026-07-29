@@ -40,6 +40,10 @@ try {
         "-Imodule/algorithm", "tests/line_follow_test.c",
         "app/line_follow/line_follow.c", "module/algorithm/pid.c"
     )
+    Invoke-HostTest "ball_balance_test" @(
+        "-Itests/ball_balance_stubs", "-Iapp/ball_balance", "-Iapp",
+        "tests/ball_balance_test.c", "app/ball_balance/ball_balance.c"
+    )
     Invoke-HostTest "hardware_test_motor_sequence_test" @(
         "-Iapp/hardware_test",
         "tests/hardware_test_motor_sequence_test.c",

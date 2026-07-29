@@ -72,6 +72,15 @@ typedef enum {
 #define LINE_FOLLOW_A_MARKER_DEBOUNCE_SAMPLES 3U
 #define LINE_FOLLOW_A_MARKER_REARM_SAMPLES    3U
 
+/* --------------------------平衡机构参数-------------------------- */
+/* UART3 暂分配给视觉；协议确定前平衡任务不会发出运动命令。 */
+#define BALL_BALANCE_VISION_PORT TRANSPARENT_UART_PORT_3
+#define BALL_BALANCE_VISION_TIMEOUT_MS 100U
+#define BALL_BALANCE_TARGET_POSITION   0.0f
+#define BALL_BALANCE_SOFT_LIMIT_STEPS  2000
+#define BALL_BALANCE_MAX_MOVE_STEPS    20U
+#define BALL_BALANCE_STEPPER_SPEED_SPS 200U
+
 /* --------------------------底盘机械参数-------------------------- */
 /* 车轮有效半径，单位 m；应以车辆实际行驶距离反算校准。 */
 #define CHASSIS_WHEEL_RADIUS_M (0.076f)
