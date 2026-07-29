@@ -56,6 +56,10 @@ typedef enum {
 
 /* ==========================实车调参区域========================== */
 
+/* --------------------------比赛参数------------------------------ */
+#define COMPETITION_KEY_DEBOUNCE_SAMPLES 3U
+#define COMPETITION_TIME_LIMIT_MS        120000U
+
 /* --------------------------循迹参数------------------------------ */
 /* 以下为低速初值，灰度方向、速度和 PID 均需实车验证。 */
 #define LINE_FOLLOW_SENSOR_ACTIVE_STATE  GPIO_PIN_SET
