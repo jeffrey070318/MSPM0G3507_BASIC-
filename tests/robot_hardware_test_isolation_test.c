@@ -2,7 +2,6 @@
 #include <stddef.h>
 
 #include "bsp_init.h"
-#include "chassis.h"
 #include "framework_runtime.h"
 #include "imu.h"
 #include "robot.h"
@@ -13,7 +12,6 @@ static unsigned bsp_init_count;
 static unsigned imu_init_count;
 static unsigned vofa_init_count;
 static unsigned created_task_count;
-static unsigned chassis_init_count;
 
 volatile FrameworkBootStage_e framework_boot_stage;
 volatile uint32_t framework_robot_heartbeat;
@@ -29,15 +27,6 @@ void __disable_irq(void)
 }
 
 void __enable_irq(void)
-{
-}
-
-void ChassisInit(void)
-{
-    chassis_init_count++;
-}
-
-void ChassisTask(void)
 {
 }
 
@@ -105,7 +94,6 @@ int main(void)
     assert(bsp_init_count == 1U);
     assert(vofa_init_count == 0U);
     assert(imu_init_count == 0U);
-    assert(chassis_init_count == 0U);
     assert(created_task_count == 1U);
     return 0;
 }

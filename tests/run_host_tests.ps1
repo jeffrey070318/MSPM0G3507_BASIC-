@@ -26,10 +26,19 @@ function Invoke-HostTest {
 
 Push-Location $projectRoot
 try {
+    Invoke-HostTest "robot_schedule_test" @(
+        "-DHARDWARE_TEST_MODE=0", "-Itests/hardware_test_task_stubs",
+        "-Itests/chassis_stubs", "-Iapp/hardware_test",
+        "-Iapp/competition", "-Iapp/line_follow", "-Iapp/ball_balance",
+        "-Iapp/chassis", "-Iapp", "-Imodule/oled",
+        "tests/robot_schedule_test.c", "app/robot.c"
+    )
     Invoke-HostTest "robot_oled_test" @(
         "-DHARDWARE_TEST_MODE=0", "-Itests/hardware_test_task_stubs",
-        "-Itests/chassis_stubs", "-Iapp/hardware_test", "-Iapp/chassis",
-        "-Iapp", "-Imodule/oled", "tests/robot_oled_test.c", "app/robot.c"
+        "-Itests/chassis_stubs", "-Iapp/hardware_test",
+        "-Iapp/competition", "-Iapp/line_follow", "-Iapp/ball_balance",
+        "-Iapp/chassis", "-Iapp", "-Imodule/oled",
+        "tests/robot_oled_test.c", "app/robot.c"
     )
     Invoke-HostTest "chassis_registration_test" @(
         "-Itests/chassis_stubs", "-Iapp/chassis", "-Iapp",

@@ -1,70 +1,22 @@
-/* 注意该文件应只用于任务初始化,只能被robot.c包含 */
+/* This file defines task entry points and is included only by robot.c. */
 #pragma once
 
 #include "FreeRTOS.h"
 #include "task.h"
 
 #include "framework_runtime.h"
-#include "robot.h"
-
 #include "hardware_test_config.h"
+#include "robot.h"
 
 #if HARDWARE_TEST_MODE != HARDWARE_TEST_NONE
 #include "hardware_test_task.h"
 #endif
 
-#if defined(ROBOT_ENABLE_INS_APP) && __has_include("ins.h")
-#include "ins.h"
-#define ROBOT_HAS_INS_TASK 1
-#else
-#define ROBOT_HAS_INS_TASK 0
-#endif
-
-#if __has_include("motor_task.h")
-#include "motor_task.h"
-#define ROBOT_HAS_MOTOR_TASK 1
-#else
-#define ROBOT_HAS_MOTOR_TASK 0
-#endif
-
-#if __has_include("referee_task.h")
-#include "referee_task.h"
-#define ROBOT_HAS_REFEREE_TASK 1
-#else
-#define ROBOT_HAS_REFEREE_TASK 0
-#endif
-
-#if __has_include("master_process.h")
-#include "master_process.h"
-#define ROBOT_HAS_MASTER_PROCESS 1
-#else
-#define ROBOT_HAS_MASTER_PROCESS 0
-#endif
-
-#if __has_include("daemon.h")
-#include "daemon.h"
-#define ROBOT_HAS_DAEMON_TASK 1
-#else
-#define ROBOT_HAS_DAEMON_TASK 0
-#endif
-
-#if __has_include("HT04.h")
-#include "HT04.h"
-#define ROBOT_HAS_HT04 1
-#else
-#define ROBOT_HAS_HT04 0
-#endif
-
-TaskHandle_t insTaskHandle;
-TaskHandle_t robotTaskHandle;
-TaskHandle_t motorTaskHandle;
-TaskHandle_t daemonTaskHandle;
-TaskHandle_t uiTaskHandle;
 #if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
-TaskHandle_t oledTaskHandle;
-#endif
-#if HARDWARE_TEST_MODE != HARDWARE_TEST_NONE
-TaskHandle_t hardwareTestTaskHandle;
+static TaskHandle_t robotTaskHandle;
+static TaskHandle_t oledTaskHandle;
+#else
+static TaskHandle_t hardwareTestTaskHandle;
 #endif
 
 static void RobotCreateTask(TaskFunction_t task_code, const char *task_name,
@@ -73,125 +25,35 @@ static void RobotCreateTask(TaskFunction_t task_code, const char *task_name,
 {
     BaseType_t status = xTaskCreate(
         task_code, task_name, stack_depth, NULL, priority, task_handle);
-
-    if (status != pdPASS) {
-        configASSERT(status == pdPASS);
-    }
+    configASSERT(status == pdPASS);
 }
 
-#if ROBOT_HAS_INS_TASK
-void StartINSTASK(void *argument);
-#endif
-#if ROBOT_HAS_MOTOR_TASK
-void StartMOTORTASK(void *argument);
-#endif
-#if ROBOT_HAS_DAEMON_TASK
-void StartDAEMONTASK(void *argument);
-#endif
-void StartROBOTTASK(void *argument);
 #if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
-void StartOLEDTASK(void *argument);
-#endif
-#if ROBOT_HAS_REFEREE_TASK
-void StartUITASK(void *argument);
+static void StartRobotTask(void *argument);
+static void StartOLEDTask(void *argument);
 #endif
 
-/**
- * @brief 初始化机器人任务,所有持续运行的任务都在这里初始化
- */
-void OSTaskInit()
+static void OSTaskInit(void)
 {
 #if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
-#if ROBOT_HAS_INS_TASK
-    RobotCreateTask(StartINSTASK, "instask", 1024U,
-        tskIDLE_PRIORITY + 3U, &insTaskHandle);
-#endif
-
-#if ROBOT_HAS_MOTOR_TASK
-    RobotCreateTask(StartMOTORTASK, "motortask", 256U,
-        tskIDLE_PRIORITY + 2U, &motorTaskHandle);
-#endif
-
-#if ROBOT_HAS_DAEMON_TASK
-    RobotCreateTask(StartDAEMONTASK, "daemontask", 128U,
-        tskIDLE_PRIORITY + 2U, &daemonTaskHandle);
-#endif
-
-    RobotCreateTask(StartROBOTTASK, "robottask", 1024U,
+    RobotCreateTask(StartRobotTask, "robot", 1024U,
         tskIDLE_PRIORITY + 2U, &robotTaskHandle);
-
-    RobotCreateTask(StartOLEDTASK, "oledtask", 256U,
+    RobotCreateTask(StartOLEDTask, "oled", 256U,
         tskIDLE_PRIORITY + 1U, &oledTaskHandle);
-
-#if ROBOT_HAS_REFEREE_TASK
-    RobotCreateTask(StartUITASK, "uitask", 512U,
-        tskIDLE_PRIORITY + 2U, &uiTaskHandle);
-#endif
-
-#if ROBOT_HAS_HT04
-    HTMotorControlInit();
-#endif
 #else
     RobotCreateTask(StartHARDWARETESTTASK, "hardwaretest", 256U,
         tskIDLE_PRIORITY + 1U, &hardwareTestTaskHandle);
 #endif
 }
 
-#if ROBOT_HAS_INS_TASK
-__attribute__((noreturn)) void StartINSTASK(void *argument)
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+__attribute__((noreturn)) static void StartRobotTask(void *argument)
 {
     (void) argument;
-
-    (void) INS_Init();
-    TickType_t last_wake_time = xTaskGetTickCount();
-    const TickType_t period_ticks = pdMS_TO_TICKS(1U);
-    for (;;) {
-        INS_Task(0.001f);
-#if ROBOT_HAS_MASTER_PROCESS
-        VisionSend();
-#endif
-        vTaskDelayUntil(&last_wake_time, period_ticks);
-    }
-}
-#endif
-
-#if ROBOT_HAS_MOTOR_TASK
-__attribute__((noreturn)) void StartMOTORTASK(void *argument)
-{
-    (void) argument;
-
-    TickType_t last_wake_time = xTaskGetTickCount();
-    const TickType_t period_ticks = pdMS_TO_TICKS(1U);
-    for (;;) {
-        MotorControlTask();
-        vTaskDelayUntil(&last_wake_time, period_ticks);
-    }
-}
-#endif
-
-#if ROBOT_HAS_DAEMON_TASK
-__attribute__((noreturn)) void StartDAEMONTASK(void *argument)
-{
-    (void) argument;
-
-    TickType_t last_wake_time = xTaskGetTickCount();
-    const TickType_t period_ticks = pdMS_TO_TICKS(10U);
-    for (;;) {
-#if ROBOT_HAS_DAEMON_TASK
-        DaemonTask();
-#endif
-        vTaskDelayUntil(&last_wake_time, period_ticks);
-    }
-}
-#endif
-
-__attribute__((noreturn)) void StartROBOTTASK(void *argument)
-{
-    (void) argument;
-
     framework_boot_stage = FRAMEWORK_BOOT_SCHEDULER_RUNNING;
+
     TickType_t last_wake_time = xTaskGetTickCount();
-    const TickType_t period_ticks = pdMS_TO_TICKS(5U);
+    const TickType_t period_ticks = pdMS_TO_TICKS(1U);
     for (;;) {
         framework_robot_heartbeat++;
         RobotTask();
@@ -199,8 +61,7 @@ __attribute__((noreturn)) void StartROBOTTASK(void *argument)
     }
 }
 
-#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
-__attribute__((noreturn)) void StartOLEDTASK(void *argument)
+__attribute__((noreturn)) static void StartOLEDTask(void *argument)
 {
     (void) argument;
 
@@ -208,21 +69,6 @@ __attribute__((noreturn)) void StartOLEDTASK(void *argument)
     const TickType_t period_ticks = pdMS_TO_TICKS(200U);
     for (;;) {
         RobotOLEDTask();
-        vTaskDelayUntil(&last_wake_time, period_ticks);
-    }
-}
-#endif
-
-#if ROBOT_HAS_REFEREE_TASK
-__attribute__((noreturn)) void StartUITASK(void *argument)
-{
-    (void) argument;
-
-    MyUIInit();
-    TickType_t last_wake_time = xTaskGetTickCount();
-    const TickType_t period_ticks = pdMS_TO_TICKS(1U);
-    for (;;) {
-        UITask();
         vTaskDelayUntil(&last_wake_time, period_ticks);
     }
 }

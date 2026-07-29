@@ -1,126 +1,103 @@
 #include "bsp_init.h"
+#include "hardware_test_config.h"
 #include "robot.h"
-#include "robot_def.h"
 #include "robot_task.h"
 
-#if defined(ROBOT_ENABLE_CHASSIS_APP)
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+#include "ball_balance.h"
 #include "chassis.h"
-#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
-#include "motor.h"
-#endif
-#endif
-
-#if defined(ROBOT_ENABLE_GIMBAL_APP)
-#include "gimbal.h"
-#endif
-
-#if defined(ROBOT_ENABLE_SHOOT_APP)
-#include "shoot.h"
-#endif
-
-#if defined(ROBOT_ENABLE_CMD_APP)
-#include "robot_cmd.h"
-#endif
-
+#include "competition.h"
 #include "imu.h"
-#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+#include "line_follow.h"
 #include "oled.h"
-#endif
 #include "vofa.h"
-
-#if defined(ROBOT_ENABLE_CHASSIS_APP) && \
-    (HARDWARE_TEST_MODE == HARDWARE_TEST_NONE)
-extern Motor_Device_t chassis_motors[2];
 #endif
+
+#define ROBOT_FAST_PERIOD_SECONDS 0.001f
+#define ROBOT_CONTROL_PERIOD_SECONDS 0.005f
+#define ROBOT_CONTROL_DIVIDER 5U
 
 volatile bool robot_oled_initialized;
 volatile uint32_t robot_oled_refresh_count;
 volatile uint32_t robot_oled_error_count;
 
-#if defined(ROBOT_ENABLE_INS_APP)
-#include "ins.h"
-#include "message_center.h"
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+typedef struct {
+    LineFollow_Output_t line_follow;
+    BallBalance_Status_t ball_balance;
+    Chassis_Status_t chassis;
+    Competition_Output_t competition;
+    uint32_t uptime_ms;
+    uint8_t control_divider;
+    bool app_ready;
+} Robot_App_Context_t;
 
-static Publisher_t *g_imu_publisher;
+static Robot_App_Context_t g_robot_app;
+
+static void RobotTelemetryTask(void)
+{
+    IMU_Data_t imu_data;
+    if (IMU_ReadAll(&imu_data) != DEVICE_OK) {
+        return;
+    }
+
+    float vofa_buf[9] = {
+        imu_data.ax, imu_data.ay, imu_data.az,
+        imu_data.gx, imu_data.gy, imu_data.gz,
+        imu_data.roll, imu_data.pitch, imu_data.yaw,
+    };
+    (void) VOFA_JustFloatOutputDMA(vofa_buf, 9U);
+}
+
+static void RobotControlTask(void)
+{
+    LineFollowTask(g_robot_app.competition.line_follow_enabled,
+        ROBOT_CONTROL_PERIOD_SECONDS, &g_robot_app.line_follow);
+    CompetitionTask(g_robot_app.uptime_ms, g_robot_app.app_ready,
+        &g_robot_app.line_follow, &g_robot_app.ball_balance,
+        &g_robot_app.competition);
+    ChassisTask(&g_robot_app.competition.chassis,
+        ROBOT_CONTROL_PERIOD_SECONDS, &g_robot_app.chassis);
+}
 #endif
 
-void RobotInit()
-{  
+void RobotInit(void)
+{
     __disable_irq();
-    
     BSPInit();
 
 #if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
     (void) VOFA_Init();
     (void) IMU_Init();
 
-#if defined(ROBOT_ENABLE_INS_APP)
-    g_imu_publisher = PubRegister(INS_IMU_TOPIC, sizeof(IMU_Data_t));
-#endif
-
-#if defined(ROBOT_ENABLE_CMD_APP)
-    RobotCMDInit();
-#endif
-
-#if defined(ROBOT_ENABLE_GIMBAL_APP)
-    // GimbalInit();
-#endif
-
-#if defined(ROBOT_ENABLE_SHOOT_APP)
-    // ShootInit();
-#endif
-
-#if defined(ROBOT_ENABLE_CHASSIS_APP)
-    ChassisInit();
-#endif
+    const bool chassis_ready = ChassisInit();
+    const bool line_ready = LineFollowInit();
+    const bool balance_ready = BallBalanceInit();
+    const bool competition_ready = CompetitionInit();
+    g_robot_app = (Robot_App_Context_t) {0};
+    g_robot_app.app_ready = chassis_ready && line_ready &&
+        balance_ready && competition_ready;
 #endif
 
     OSTaskInit();
-
     __enable_irq();
 }
 
-void RobotTask()
+void RobotTask(void)
 {
-    {
-        IMU_Data_t imu_data;
-        if (IMU_ReadAll(&imu_data) == DEVICE_OK) {
-            float vofa_buf[9];
-            vofa_buf[0] = imu_data.ax;
-            vofa_buf[1] = imu_data.ay;
-            vofa_buf[2] = imu_data.az;
-            vofa_buf[3] = imu_data.gx;
-            vofa_buf[4] = imu_data.gy;
-            vofa_buf[5] = imu_data.gz;
-            vofa_buf[6] = imu_data.roll;
-            vofa_buf[7] = imu_data.pitch;
-            vofa_buf[8] = imu_data.yaw;
-            (void) VOFA_JustFloatOutputDMA(vofa_buf, 9U);
+#if HARDWARE_TEST_MODE == HARDWARE_TEST_NONE
+    g_robot_app.uptime_ms++;
+    BallBalanceTask(&g_robot_app.competition.ball_balance,
+        g_robot_app.uptime_ms, ROBOT_FAST_PERIOD_SECONDS,
+        &g_robot_app.ball_balance);
 
-#if defined(ROBOT_ENABLE_INS_APP)
-            if (g_imu_publisher != NULL) {
-                (void) PubPushMessage(g_imu_publisher, &imu_data);
-            }
-#endif
-        }
+    g_robot_app.control_divider++;
+    if (g_robot_app.control_divider >= ROBOT_CONTROL_DIVIDER) {
+        g_robot_app.control_divider = 0U;
+        RobotTelemetryTask();
+        RobotControlTask();
     }
-
-#if defined(ROBOT_ENABLE_CMD_APP)
-    RobotCMDTask();
 #endif
-
-#if defined(ROBOT_ENABLE_GIMBAL_APP)
-    // GimbalTask();
-#endif
-
-#if defined(ROBOT_ENABLE_SHOOT_APP)
-    // ShootTask();
-#endif
-
-#if defined(ROBOT_ENABLE_CHASSIS_APP)
-    ChassisTask();
-#endif
-
 }
 
 void RobotOLEDTask(void)
@@ -135,32 +112,22 @@ void RobotOLEDTask(void)
     }
 
     OLED_operate_gram(PEN_CLEAR);
-
-#if defined(ROBOT_ENABLE_CHASSIS_APP)
-    const int left_target = (int) chassis_motors[0].target_speed;
-    const int left_measured = (int) chassis_motors[0].measured_speed;
-    const int right_target = (int) chassis_motors[1].target_speed;
-    const int right_measured = (int) chassis_motors[1].measured_speed;
-    const int left_output =
-        (int) (chassis_motors[0].control_output * 1000.0f);
-    const int right_output =
-        (int) (chassis_motors[1].control_output * 1000.0f);
-    const int vx_mmps = (int) (chassis_manual_vx_mps * 1000.0f);
-    const int wz_mradps = (int) (chassis_manual_wz_radps * 1000.0f);
-
-    const bool motor_enabled =
-        chassis_motors[0].enabled || chassis_motors[1].enabled;
-    OLED_printf(0U, 0U, "M:%s CMD:%s",
-        motor_enabled ? "ON" : "OFF",
-        chassis_manual_enabled ? "ON" : "OFF");
-    OLED_printf(1U, 0U, "LT:%6d LM:%6d", left_target, left_measured);
-    OLED_printf(2U, 0U, "RT:%6d RM:%6d", right_target, right_measured);
-    OLED_printf(3U, 0U, "LO:%4d RO:%4d", left_output, right_output);
-    OLED_printf(4U, 0U, "V:%5d W:%5d", vx_mmps, wz_mradps);
-#else
-    OLED_printf(0U, 0U, "ROBOT READY");
-#endif
-
+    OLED_printf(0U, 0U, "S:%u T:%lus",
+        (unsigned) g_robot_app.competition.status.state,
+        (unsigned long) (g_robot_app.competition.status.elapsed_ms / 1000U));
+    OLED_printf(1U, 0U, "L:%s V:%s B:%s",
+        g_robot_app.competition.status.line_valid ? "OK" : "NO",
+        g_robot_app.competition.status.vision_valid ? "OK" : "NO",
+        g_robot_app.ball_balance.enabled ? "ON" : "OFF");
+    OLED_printf(2U, 0U, "LT:%6d LM:%6d",
+        (int) g_robot_app.chassis.left_target_counts_s,
+        (int) g_robot_app.chassis.left_measured_counts_s);
+    OLED_printf(3U, 0U, "RT:%6d RM:%6d",
+        (int) g_robot_app.chassis.right_target_counts_s,
+        (int) g_robot_app.chassis.right_measured_counts_s);
+    OLED_printf(4U, 0U, "BALL:%4d ST:%5ld",
+        (int) g_robot_app.ball_balance.measured_position,
+        (long) g_robot_app.ball_balance.step_position);
     OLED_refresh_gram();
     robot_oled_refresh_count++;
 #endif

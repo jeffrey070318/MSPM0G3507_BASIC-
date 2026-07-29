@@ -6,10 +6,12 @@
 #include <string.h>
 
 #include "bsp_init.h"
+#include "ball_balance.h"
 #include "chassis.h"
+#include "competition.h"
 #include "framework_runtime.h"
 #include "imu.h"
-#include "motor.h"
+#include "line_follow.h"
 #include "oled.h"
 #include "robot.h"
 #include "task.h"
@@ -19,11 +21,6 @@ extern volatile bool robot_oled_initialized;
 extern volatile uint32_t robot_oled_refresh_count;
 extern volatile uint32_t robot_oled_error_count;
 void RobotOLEDTask(void);
-
-Motor_Device_t chassis_motors[2];
-volatile bool chassis_manual_enabled;
-volatile float chassis_manual_vx_mps;
-volatile float chassis_manual_wz_radps;
 
 volatile FrameworkBootStage_e framework_boot_stage;
 volatile uint32_t framework_robot_heartbeat;
@@ -72,12 +69,78 @@ Device_Status_e VOFA_JustFloatOutputDMA(
     return DEVICE_OK;
 }
 
-void ChassisInit(void)
+bool ChassisInit(void)
 {
+    return true;
 }
 
-void ChassisTask(void)
+void ChassisTask(const Chassis_Command_t *command,
+    float dt_seconds, Chassis_Status_t *status)
 {
+    (void) command;
+    (void) dt_seconds;
+    *status = (Chassis_Status_t) {
+        .left_target_counts_s = 123.0f,
+        .left_measured_counts_s = 120.0f,
+        .right_target_counts_s = 130.0f,
+        .right_measured_counts_s = 127.0f,
+        .enabled = true,
+    };
+}
+
+bool LineFollowInit(void)
+{
+    return true;
+}
+
+void LineFollowTask(bool enabled, float dt_seconds,
+    LineFollow_Output_t *output)
+{
+    (void) enabled;
+    (void) dt_seconds;
+    output->line_valid = true;
+}
+
+bool BallBalanceInit(void)
+{
+    return true;
+}
+
+void BallBalanceTask(const BallBalance_Command_t *command,
+    uint32_t now_ms, float dt_seconds, BallBalance_Status_t *status)
+{
+    (void) command;
+    (void) now_ms;
+    (void) dt_seconds;
+    *status = (BallBalance_Status_t) {
+        .measured_position = 42.0f,
+        .step_position = 321,
+        .vision_valid = true,
+        .enabled = true,
+    };
+}
+
+bool CompetitionInit(void)
+{
+    return true;
+}
+
+void CompetitionTask(uint32_t now_ms, bool app_ready,
+    const LineFollow_Output_t *line_follow,
+    const BallBalance_Status_t *ball_balance,
+    Competition_Output_t *output)
+{
+    (void) now_ms;
+    assert(app_ready);
+    output->status = (Competition_Status_t) {
+        .state = COMPETITION_RUNNING,
+        .elapsed_ms = 1234U,
+        .line_valid = line_follow->line_valid,
+        .vision_valid = ball_balance->vision_valid,
+    };
+    output->line_follow_enabled = true;
+    output->chassis.enabled = true;
+    output->ball_balance.enabled = true;
 }
 
 Device_Status_e OLED_init_ex(void)
@@ -148,25 +211,19 @@ int main(void)
     assert(oled_refresh_count == 0U);
 
     oled_init_status = DEVICE_OK;
-    chassis_manual_enabled = true;
-    chassis_manual_vx_mps = 0.05f;
-    chassis_manual_wz_radps = -0.10f;
-    chassis_motors[0].target_speed = 123.0f;
-    chassis_motors[0].measured_speed = 120.0f;
-    chassis_motors[0].control_output = 0.25f;
-    chassis_motors[1].target_speed = 130.0f;
-    chassis_motors[1].measured_speed = 127.0f;
-    chassis_motors[1].control_output = -0.30f;
+    for (uint32_t i = 0U; i < 5U; i++) {
+        RobotTask();
+    }
 
     RobotOLEDTask();
     assert(robot_oled_initialized);
     assert(robot_oled_refresh_count == 1U);
     assert(oled_clear_count == 1U);
     assert(oled_refresh_count == 1U);
-    assert(strcmp(oled_rows[0], "M:OFF CMD:ON") == 0);
-    assert(strcmp(oled_rows[1], "LT:   123 LM:   120") == 0);
-    assert(strcmp(oled_rows[2], "RT:   130 RM:   127") == 0);
-    assert(strcmp(oled_rows[3], "LO: 250 RO:-300") == 0);
-    assert(strcmp(oled_rows[4], "V:   50 W: -100") == 0);
+    assert(strcmp(oled_rows[0], "S:2 T:1s") == 0);
+    assert(strcmp(oled_rows[1], "L:OK V:OK B:ON") == 0);
+    assert(strcmp(oled_rows[2], "LT:   123 LM:   120") == 0);
+    assert(strcmp(oled_rows[3], "RT:   130 RM:   127") == 0);
+    assert(strcmp(oled_rows[4], "BALL:  42 ST:  321") == 0);
     return 0;
 }
