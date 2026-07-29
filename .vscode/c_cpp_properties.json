@@ -2,7 +2,7 @@
     "configurations": [
         {
             "name": "MSPM0G3507",
-            "compilerPath": "D:/Toolchain/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc.exe",
+            "compilerPath": "D:/STM32_Tools/arm-gnu-toolchain/bin/arm-none-eabi-gcc.exe",
             "compileCommands": [
                 "${workspaceFolder}/build/compile_commands.json"
             ],

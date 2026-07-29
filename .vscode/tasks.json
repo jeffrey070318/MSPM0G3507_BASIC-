@@ -4,7 +4,7 @@
         {
             "label": "CMake: Configure FreeRTOS",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "-S",
                 "${workspaceFolder}",
@@ -12,7 +12,7 @@
                 "${workspaceFolder}/build",
                 "-G",
                 "Ninja",
-                "-DCMAKE_MAKE_PROGRAM=D:/Toolchain/ninja-win/ninja.exe",
+                "-DCMAKE_MAKE_PROGRAM=D:/STM32_Tools/ninja-win/ninja.exe",
                 "-DUSE_FREERTOS=ON"
             ],
             "options": {
@@ -23,7 +23,7 @@
         {
             "label": "CMake: Configure NoRTOS",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "-S",
                 "${workspaceFolder}",
@@ -31,7 +31,7 @@
                 "${workspaceFolder}/build-nortos",
                 "-G",
                 "Ninja",
-                "-DCMAKE_MAKE_PROGRAM=D:/Toolchain/ninja-win/ninja.exe",
+                "-DCMAKE_MAKE_PROGRAM=D:/STM32_Tools/ninja-win/ninja.exe",
                 "-DUSE_FREERTOS=OFF"
             ],
             "options": {
@@ -42,7 +42,7 @@
         {
             "label": "CMake: Build",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build"
@@ -59,7 +59,7 @@
         {
             "label": "CMake: Build NoRTOS",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build-nortos"
@@ -72,7 +72,7 @@
         {
             "label": "OpenOCD: Probe CMSIS-DAP",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -87,7 +87,7 @@
         {
             "label": "OpenOCD: Flash CMSIS-DAP",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -109,7 +109,7 @@
         {
             "label": "OpenOCD: Erase CMSIS-DAP",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -124,7 +124,7 @@
         {
             "label": "OpenOCD: Probe XDS110",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -139,7 +139,7 @@
         {
             "label": "OpenOCD: Flash XDS110",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
@@ -157,7 +157,7 @@
         {
             "label": "OpenOCD: Erase XDS110",
             "type": "process",
-            "command": "D:/Toolchain/CMake/bin/cmake.exe",
+            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
             "args": [
                 "--build",
                 "${workspaceFolder}/build",
