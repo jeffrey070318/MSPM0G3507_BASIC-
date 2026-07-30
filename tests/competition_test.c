@@ -13,6 +13,9 @@ static bool key2_pressed;
 static bool key_init_ok = true;
 static uint32_t key_init_count;
 
+extern volatile uint8_t competition_debug_key_bits;
+extern volatile Competition_State_t competition_debug_state;
+
 bool KEY_Init(KEY_Device_t *key, GPIO_TypeDef *gpio_port,
     uint32_t gpio_pin, GPIO_PinState active_state)
 {
@@ -56,13 +59,18 @@ int main(void)
 
     assert(CompetitionInit());
     assert(key_init_count == 2U);
+    assert(competition_debug_key_bits == 0U);
+    assert(competition_debug_state == COMPETITION_DISARMED);
     CompetitionTask(now_ms, true, &line, &balance, &output);
     assert(output.status.state == COMPETITION_READY);
+    assert(competition_debug_state == COMPETITION_READY);
     assert(output.status.mode == COMPETITION_MODE_NONE);
 
     PressModeKey(true, &now_ms, &line, &balance, &output);
     assert(output.status.state == COMPETITION_RUNNING);
     assert(output.status.mode == COMPETITION_MODE_LINE_FOLLOW);
+    assert(competition_debug_key_bits == 0x01U);
+    assert(competition_debug_state == COMPETITION_RUNNING);
 
     line = (LineFollow_Output_t) {
         .vx_mps = 0.15f,
@@ -99,6 +107,8 @@ int main(void)
     PressModeKey(false, &now_ms, &line, &balance, &output);
     assert(output.status.state == COMPETITION_RUNNING);
     assert(output.status.mode == COMPETITION_MODE_BALL_BALANCE);
+    assert(competition_debug_key_bits == 0x02U);
+    assert(competition_debug_state == COMPETITION_RUNNING);
     now_ms += 5U;
     CompetitionTask(now_ms, true, &line, &balance, &output);
     assert(!output.line_follow_enabled);
@@ -107,6 +117,7 @@ int main(void)
 
     key_init_ok = false;
     assert(!CompetitionInit());
+    assert(competition_debug_state == COMPETITION_FAULT);
     CompetitionTask(0U, false, &line, &balance, &output);
     assert(output.status.state == COMPETITION_FAULT);
     assert(!output.chassis.enabled);

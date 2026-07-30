@@ -26,6 +26,9 @@ static uint32_t g_start_time_ms;
 static uint32_t g_a_marker_count;
 static bool g_initialized;
 
+volatile uint8_t competition_debug_key_bits;
+volatile Competition_State_t competition_debug_state;
+
 static void CompetitionSafeOutput(Competition_Output_t *output)
 {
     *output = (Competition_Output_t) {0};
@@ -33,9 +36,9 @@ static void CompetitionSafeOutput(Competition_Output_t *output)
         BALL_BALANCE_TARGET_POSITION;
 }
 
-static bool CompetitionReadKeyEvent(Competition_Key_t *key)
+static bool CompetitionUpdateKeyEvent(
+    Competition_Key_t *key, bool pressed)
 {
-    const bool pressed = KEY_IsPressed(&key->device);
     if (pressed != key->candidate) {
         key->candidate = pressed;
         key->stable_samples = 1U;
@@ -53,8 +56,16 @@ static bool CompetitionReadKeyEvent(Competition_Key_t *key)
 
 static Competition_Mode_t CompetitionReadModeRequest(void)
 {
-    const bool line_event = CompetitionReadKeyEvent(&g_line_key);
-    const bool balance_event = CompetitionReadKeyEvent(&g_balance_key);
+    const bool line_pressed = KEY_IsPressed(&g_line_key.device);
+    const bool balance_pressed = KEY_IsPressed(&g_balance_key.device);
+    competition_debug_key_bits =
+        (line_pressed ? 0x01U : 0U) |
+        (balance_pressed ? 0x02U : 0U);
+
+    const bool line_event =
+        CompetitionUpdateKeyEvent(&g_line_key, line_pressed);
+    const bool balance_event =
+        CompetitionUpdateKeyEvent(&g_balance_key, balance_pressed);
     if (line_event) {
         return COMPETITION_MODE_LINE_FOLLOW;
     }
@@ -166,6 +177,8 @@ bool CompetitionInit(void)
     g_mode = COMPETITION_MODE_NONE;
     g_start_time_ms = 0U;
     g_a_marker_count = 0U;
+    competition_debug_key_bits = 0U;
+    competition_debug_state = COMPETITION_DISARMED;
 
     const bool line_key_ready = KEY_Init(&g_line_key.device,
         KEY_GPIO_KEY1_PORT, KEY_GPIO_KEY1_PIN, GPIO_PIN_RESET);
@@ -175,6 +188,7 @@ bool CompetitionInit(void)
     if (!g_initialized) {
         g_state = COMPETITION_FAULT;
     }
+    competition_debug_state = g_state;
     return g_initialized;
 }
 
@@ -208,4 +222,5 @@ void CompetitionTask(uint32_t now_ms, bool app_ready,
         (line_follow != NULL) && line_follow->line_valid;
     output->status.vision_valid =
         (ball_balance != NULL) && ball_balance->vision_valid;
+    competition_debug_state = g_state;
 }
