@@ -2,6 +2,8 @@
 #include "robot_def.h"
 
 #include "bsp_dwt.h"
+#include "gray_sensor.h"
+#include "key.h"
 #include "motor.h"
 
 #if defined(ROBOT_ENABLE_INS_APP)
@@ -13,17 +15,40 @@
 
 #define CHASSIS_MOTOR_COUNT          (2U)
 #define CHASSIS_MOTOR_PWM_PERIOD_SEC (0.00005f)
+#define CHASSIS_LINE_TRACE_GRAY_SETTLE_TIME_US 5U
+#define CHASSIS_LINE_TRACE_DEFAULT_STOP_ACTIVE_COUNT 4U
 
 Motor_Device_t chassis_motors[CHASSIS_MOTOR_COUNT];
 
 volatile bool chassis_manual_enabled;
 volatile float chassis_manual_vx_mps;
 volatile float chassis_manual_wz_radps;
+volatile Device_Status_e chassis_line_trace_init_status = DEVICE_ERROR;
+volatile Chassis_LineTrace_State_e chassis_line_trace_state =
+    CHASSIS_LINE_TRACE_IDLE;
+volatile uint32_t chassis_line_trace_key1_press_count;
+volatile uint32_t chassis_line_trace_key3_press_count;
+volatile uint32_t chassis_line_trace_cross_count;
+volatile uint32_t chassis_line_trace_raw;
+volatile uint32_t chassis_line_trace_active_count;
+volatile float chassis_line_trace_offset;
+volatile float chassis_line_trace_base_vx_mps = 0.04f;
+volatile float chassis_line_trace_turn_kp = 1.0f;
+volatile uint32_t chassis_line_trace_stop_active_threshold =
+    CHASSIS_LINE_TRACE_DEFAULT_STOP_ACTIVE_COUNT;
+volatile uint32_t chassis_line_trace_key_active_level;
+volatile uint32_t chassis_line_trace_gray_active_level = 1U;
 
 static Chassis_Ctrl_Cmd_s g_command;
 static uint32_t g_control_timestamp_us;
 static bool g_initialized;
 static bool g_control_time_initialized;
+static KEY_Device_t line_trace_key1;
+static KEY_Device_t line_trace_key3;
+static GraySensorInstance *line_trace_sensor;
+static bool line_trace_key1_was_pressed;
+static bool line_trace_key3_was_pressed;
+static bool line_trace_cross_latched;
 
 #if defined(ROBOT_ENABLE_INS_APP)
 static Publisher_t *g_encoder_publisher;
@@ -39,6 +64,13 @@ static float ChassisControlDeltaTime(void);
 static void ChassisApplyCommand(float dt_seconds);
 static void ChassisSetWheelTargets(void);
 static void ChassisPublishFeedback(void);
+static void ChassisLineTraceInit(void);
+static void ChassisLineTraceTask(void);
+static GPIO_PinState ChassisLineTraceKeyActiveState(void);
+static GPIO_PinState ChassisLineTraceGrayActiveState(void);
+static bool ChassisLineTraceKeyPressed(KEY_Device_t *key);
+static void ChassisLineTraceStart(void);
+static void ChassisLineTraceStop(Chassis_LineTrace_State_e next_state);
 
 void ChassisInit(void)
 {
@@ -59,6 +91,7 @@ void ChassisInit(void)
     }
 
     ChassisClearCommand();
+    ChassisLineTraceInit();
 
 #if defined(ROBOT_ENABLE_INS_APP)
     g_encoder_publisher = PubRegister(
@@ -76,6 +109,7 @@ void ChassisTask(void)
         return;
     }
 
+    ChassisLineTraceTask();
     ChassisReceiveCommand();
     ChassisApplyCommand(ChassisControlDeltaTime());
     ChassisPublishFeedback();
@@ -213,4 +247,134 @@ static void ChassisPublishFeedback(void)
         (void) PubPushMessage(g_encoder_publisher, &encoder_data);
     }
 #endif
+}
+
+static GPIO_PinState ChassisLineTraceKeyActiveState(void)
+{
+    return (chassis_line_trace_key_active_level != 0U)
+        ? GPIO_PIN_SET
+        : GPIO_PIN_RESET;
+}
+
+static GPIO_PinState ChassisLineTraceGrayActiveState(void)
+{
+    return (chassis_line_trace_gray_active_level != 0U)
+        ? GPIO_PIN_SET
+        : GPIO_PIN_RESET;
+}
+
+static bool ChassisLineTraceKeyPressed(KEY_Device_t *key)
+{
+    key->active_state = ChassisLineTraceKeyActiveState();
+    return KEY_IsPressed(key);
+}
+
+static void ChassisLineTraceStart(void)
+{
+    chassis_line_trace_state = CHASSIS_LINE_TRACE_RUNNING;
+    chassis_line_trace_cross_count = 0U;
+    line_trace_cross_latched = false;
+}
+
+static void ChassisLineTraceStop(Chassis_LineTrace_State_e next_state)
+{
+    ChassisDisableManualCommand();
+    chassis_line_trace_state = next_state;
+    line_trace_cross_latched = false;
+}
+
+static void ChassisLineTraceInit(void)
+{
+    bool key_ok =
+        KEY_Init(&line_trace_key1, KEY_GPIO_KEY1_PORT, KEY_GPIO_KEY1_PIN,
+            ChassisLineTraceKeyActiveState()) &&
+        KEY_Init(&line_trace_key3, KEY_GPIO_KEY3_PORT, KEY_GPIO_KEY3_PIN,
+            ChassisLineTraceKeyActiveState());
+
+    GraySensor_Init_Config_s gray_config = {
+        .ad0_port = GRAY_SENSOR_GPIO_PORT,
+        .ad0_pin = GRAY_SENSOR_GPIO_AD0_PIN,
+        .ad1_port = GRAY_SENSOR_GPIO_PORT,
+        .ad1_pin = GRAY_SENSOR_GPIO_AD1_PIN,
+        .ad2_port = GRAY_SENSOR_GPIO_PORT,
+        .ad2_pin = GRAY_SENSOR_GPIO_AD2_PIN,
+        .out_port = GRAY_SENSOR_GPIO_PORT,
+        .out_pin = GRAY_SENSOR_GPIO_OUT_PIN,
+        .active_state = ChassisLineTraceGrayActiveState(),
+        .channel_order = GRAY_SENSOR_CHANNEL_1_ON_LEFT,
+        .settle_time_us = CHASSIS_LINE_TRACE_GRAY_SETTLE_TIME_US,
+        .id = NULL,
+    };
+    line_trace_sensor = GraySensorRegister(&gray_config);
+
+    chassis_line_trace_init_status =
+        (key_ok && (line_trace_sensor != NULL)) ? DEVICE_OK : DEVICE_ERROR;
+
+    if (chassis_line_trace_init_status == DEVICE_OK) {
+        line_trace_key1_was_pressed =
+            ChassisLineTraceKeyPressed(&line_trace_key1);
+        line_trace_key3_was_pressed =
+            ChassisLineTraceKeyPressed(&line_trace_key3);
+    }
+}
+
+static void ChassisLineTraceTask(void)
+{
+    if (chassis_line_trace_init_status != DEVICE_OK) {
+        return;
+    }
+
+    bool key1_pressed = ChassisLineTraceKeyPressed(&line_trace_key1);
+    bool key3_pressed = ChassisLineTraceKeyPressed(&line_trace_key3);
+
+    if (key1_pressed && !line_trace_key1_was_pressed) {
+        chassis_line_trace_key1_press_count++;
+        ChassisLineTraceStart();
+    }
+    if (key3_pressed && !line_trace_key3_was_pressed) {
+        chassis_line_trace_key3_press_count++;
+        ChassisLineTraceStop(CHASSIS_LINE_TRACE_IDLE);
+    }
+
+    line_trace_key1_was_pressed = key1_pressed;
+    line_trace_key3_was_pressed = key3_pressed;
+
+    if (chassis_line_trace_state != CHASSIS_LINE_TRACE_RUNNING) {
+        return;
+    }
+
+    line_trace_sensor->active_state = ChassisLineTraceGrayActiveState();
+    if (GraySensorUpdate(line_trace_sensor) != DEVICE_OK) {
+        ChassisLineTraceStop(CHASSIS_LINE_TRACE_ERROR);
+        return;
+    }
+
+    chassis_line_trace_raw = GraySensorGetRawValue(line_trace_sensor);
+    chassis_line_trace_active_count = line_trace_sensor->active_count;
+    chassis_line_trace_offset = line_trace_sensor->offset;
+
+    uint32_t threshold = chassis_line_trace_stop_active_threshold;
+    if (threshold == 0U) {
+        threshold = CHASSIS_LINE_TRACE_DEFAULT_STOP_ACTIVE_COUNT;
+    }
+    if (threshold > GRAY_SENSOR_CHANNEL_COUNT) {
+        threshold = GRAY_SENSOR_CHANNEL_COUNT;
+    }
+
+    bool on_long_black_line = line_trace_sensor->active_count >= threshold;
+    if (on_long_black_line && !line_trace_cross_latched) {
+        chassis_line_trace_cross_count++;
+        line_trace_cross_latched = true;
+    } else if (!on_long_black_line) {
+        line_trace_cross_latched = false;
+    }
+
+    if (chassis_line_trace_cross_count >= 2U) {
+        ChassisLineTraceStop(CHASSIS_LINE_TRACE_DONE);
+        return;
+    }
+
+    ChassisSetManualCommand(
+        chassis_line_trace_base_vx_mps,
+        chassis_line_trace_turn_kp * line_trace_sensor->offset);
 }
