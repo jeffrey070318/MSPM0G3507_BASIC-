@@ -12,6 +12,10 @@
 
 Motor_Device_t chassis_motors[CHASSIS_MOTOR_COUNT];
 
+volatile bool chassis_debug_enabled;
+volatile float chassis_debug_left_output;
+volatile float chassis_debug_right_output;
+
 static bool g_initialized;
 
 static bool ChassisInitMotor(Motor_Device_t *motor,
@@ -69,6 +73,10 @@ static void ChassisSetWheelTargets(const Chassis_Command_t *command)
 
 static void ChassisWriteStatus(Chassis_Status_t *status, bool enabled)
 {
+    chassis_debug_enabled = enabled;
+    chassis_debug_left_output = chassis_motors[0].control_output;
+    chassis_debug_right_output = chassis_motors[1].control_output;
+
     if (status == NULL) {
         return;
     }
