@@ -14,6 +14,12 @@ static uint32_t g_marker_active_samples;
 static uint32_t g_marker_clear_samples;
 static bool g_marker_latched;
 
+volatile bool line_follow_debug_enabled;
+volatile uint8_t line_follow_debug_raw_value;
+volatile uint8_t line_follow_debug_active_count;
+volatile float line_follow_debug_offset;
+volatile float line_follow_debug_wz_radps;
+
 static void LineFollowClearOutput(LineFollow_Output_t *output)
 {
     if (output != NULL) {
@@ -86,6 +92,12 @@ bool LineFollowInit(void)
     g_marker_active_samples = 0U;
     g_marker_clear_samples = 0U;
     g_marker_latched = false;
+    line_follow_debug_enabled = false;
+    line_follow_debug_raw_value = 0U;
+    line_follow_debug_active_count = 0U;
+    line_follow_debug_offset = 0.0f;
+    line_follow_debug_wz_radps = 0.0f;
+
     return (g_sensor != NULL) && PID_ControllerInit(&g_line_pid, &pid_config);
 }
 
@@ -93,6 +105,12 @@ void LineFollowTask(bool enabled, float dt_seconds,
     LineFollow_Output_t *output)
 {
     LineFollowClearOutput(output);
+    line_follow_debug_enabled = enabled;
+    line_follow_debug_raw_value = 0U;
+    line_follow_debug_active_count = 0U;
+    line_follow_debug_offset = 0.0f;
+    line_follow_debug_wz_radps = 0.0f;
+
     if ((output == NULL) || (g_sensor == NULL) || !enabled ||
         !(dt_seconds > 0.0f)) {
         LineFollowResetControl();
@@ -104,6 +122,9 @@ void LineFollowTask(bool enabled, float dt_seconds,
         return;
     }
 
+    line_follow_debug_raw_value = g_sensor->raw_value;
+    line_follow_debug_active_count = g_sensor->active_count;
+    line_follow_debug_offset = g_sensor->offset;
     output->a_marker_event =
         LineFollowUpdateMarker(g_sensor->active_count);
     if (g_sensor->active_count == 0U) {
@@ -115,4 +136,5 @@ void LineFollowTask(bool enabled, float dt_seconds,
     output->vx_mps = LINE_FOLLOW_BASE_SPEED_MPS;
     output->wz_radps = PID_ControllerUpdate(
         &g_line_pid, 0.0f, g_sensor->offset, dt_seconds);
+    line_follow_debug_wz_radps = output->wz_radps;
 }

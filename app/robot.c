@@ -94,7 +94,6 @@ void RobotTask(void)
     g_robot_app.control_divider++;
     if (g_robot_app.control_divider >= ROBOT_CONTROL_DIVIDER) {
         g_robot_app.control_divider = 0U;
-        RobotTelemetryTask();
         RobotControlTask();
     }
 #endif
@@ -111,6 +110,7 @@ void RobotOLEDTask(void)
         robot_oled_initialized = true;
     }
 
+    RobotTelemetryTask();
     OLED_operate_gram(PEN_CLEAR);
     OLED_printf(0U, 0U, "S:%u T:%lus",
         (unsigned) g_robot_app.competition.status.state,

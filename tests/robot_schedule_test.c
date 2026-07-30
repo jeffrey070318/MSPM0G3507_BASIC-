@@ -207,6 +207,10 @@ int main(void)
     assert(line_task_count == 1U);
     assert(competition_task_count == 1U);
     assert(chassis_task_count == 1U);
+    assert(imu_read_count == 0U);
+    assert(vofa_output_count == 0U);
+
+    RobotOLEDTask();
     assert(imu_read_count == 1U);
     assert(vofa_output_count == 0U);
     return 0;
