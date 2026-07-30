@@ -59,6 +59,10 @@ try {
         "-Iapp", "tests/competition_test.c",
         "app/competition/competition.c"
     )
+    Invoke-HostTest "pipe_axis_test" @(
+        "-Itests/module_io_stubs", "-Imodule/pipe_axis",
+        "tests/pipe_axis_test.c", "module/pipe_axis/pipe_axis.c"
+    )
     Invoke-HostTest "hardware_test_motor_sequence_test" @(
         "-Iapp/hardware_test",
         "tests/hardware_test_motor_sequence_test.c",

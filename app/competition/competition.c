@@ -6,17 +6,24 @@
 #include "robot_def.h"
 #include "ti_msp_dl_config.h"
 
+typedef struct {
+    KEY_Device_t device;
+    uint32_t stable_samples;
+    bool candidate;
+    bool debounced;
+} Competition_Key_t;
+
 typedef void (*CompetitionStateHandler)(uint32_t now_ms,
-    bool start_event, const LineFollow_Output_t *line_follow,
+    Competition_Mode_t requested_mode,
+    const LineFollow_Output_t *line_follow,
     Competition_Output_t *output);
 
-static KEY_Device_t g_start_key;
+static Competition_Key_t g_line_key;
+static Competition_Key_t g_balance_key;
 static Competition_State_t g_state;
+static Competition_Mode_t g_mode;
 static uint32_t g_start_time_ms;
 static uint32_t g_a_marker_count;
-static uint32_t g_key_stable_samples;
-static bool g_key_candidate;
-static bool g_key_debounced;
 static bool g_initialized;
 
 static void CompetitionSafeOutput(Competition_Output_t *output)
@@ -26,60 +33,85 @@ static void CompetitionSafeOutput(Competition_Output_t *output)
         BALL_BALANCE_TARGET_POSITION;
 }
 
-static bool CompetitionReadStartEvent(void)
+static bool CompetitionReadKeyEvent(Competition_Key_t *key)
 {
-    const bool pressed = KEY_IsPressed(&g_start_key);
-    if (pressed != g_key_candidate) {
-        g_key_candidate = pressed;
-        g_key_stable_samples = 1U;
-    } else if (g_key_stable_samples < COMPETITION_KEY_DEBOUNCE_SAMPLES) {
-        g_key_stable_samples++;
+    const bool pressed = KEY_IsPressed(&key->device);
+    if (pressed != key->candidate) {
+        key->candidate = pressed;
+        key->stable_samples = 1U;
+    } else if (key->stable_samples < COMPETITION_KEY_DEBOUNCE_SAMPLES) {
+        key->stable_samples++;
     }
 
-    if ((g_key_stable_samples >= COMPETITION_KEY_DEBOUNCE_SAMPLES) &&
-        (g_key_debounced != g_key_candidate)) {
-        g_key_debounced = g_key_candidate;
-        return g_key_debounced;
+    if ((key->stable_samples >= COMPETITION_KEY_DEBOUNCE_SAMPLES) &&
+        (key->debounced != key->candidate)) {
+        key->debounced = key->candidate;
+        return key->debounced;
     }
     return false;
 }
 
+static Competition_Mode_t CompetitionReadModeRequest(void)
+{
+    const bool line_event = CompetitionReadKeyEvent(&g_line_key);
+    const bool balance_event = CompetitionReadKeyEvent(&g_balance_key);
+    if (line_event) {
+        return COMPETITION_MODE_LINE_FOLLOW;
+    }
+    if (balance_event) {
+        return COMPETITION_MODE_BALL_BALANCE;
+    }
+    return COMPETITION_MODE_NONE;
+}
+
 static void CompetitionDisarmedHandler(uint32_t now_ms,
-    bool start_event, const LineFollow_Output_t *line_follow,
+    Competition_Mode_t requested_mode,
+    const LineFollow_Output_t *line_follow,
     Competition_Output_t *output)
 {
     (void) now_ms;
-    (void) start_event;
+    (void) requested_mode;
     (void) line_follow;
     (void) output;
     g_state = COMPETITION_READY;
 }
 
 static void CompetitionReadyHandler(uint32_t now_ms,
-    bool start_event, const LineFollow_Output_t *line_follow,
+    Competition_Mode_t requested_mode,
+    const LineFollow_Output_t *line_follow,
     Competition_Output_t *output)
 {
     (void) line_follow;
     (void) output;
-    if (start_event) {
+    if (requested_mode != COMPETITION_MODE_NONE) {
         g_start_time_ms = now_ms;
         g_a_marker_count = 0U;
+        g_mode = requested_mode;
         g_state = COMPETITION_RUNNING;
     }
 }
 
 static void CompetitionRunningHandler(uint32_t now_ms,
-    bool start_event, const LineFollow_Output_t *line_follow,
+    Competition_Mode_t requested_mode,
+    const LineFollow_Output_t *line_follow,
     Competition_Output_t *output)
 {
-    if (start_event ||
+    if ((requested_mode != COMPETITION_MODE_NONE) ||
         ((now_ms - g_start_time_ms) >= COMPETITION_TIME_LIMIT_MS)) {
         g_state = COMPETITION_FINISHED;
         return;
     }
 
+    if (g_mode == COMPETITION_MODE_BALL_BALANCE) {
+        output->ball_balance.enabled = true;
+        return;
+    }
+
+    if (g_mode != COMPETITION_MODE_LINE_FOLLOW) {
+        return;
+    }
+
     output->line_follow_enabled = true;
-    output->ball_balance.enabled = true;
     if (line_follow != NULL) {
         if (line_follow->a_marker_event) {
             g_a_marker_count++;
@@ -93,23 +125,26 @@ static void CompetitionRunningHandler(uint32_t now_ms,
 }
 
 static void CompetitionFinishedHandler(uint32_t now_ms,
-    bool start_event, const LineFollow_Output_t *line_follow,
+    Competition_Mode_t requested_mode,
+    const LineFollow_Output_t *line_follow,
     Competition_Output_t *output)
 {
     (void) now_ms;
     (void) line_follow;
     (void) output;
-    if (start_event) {
+    if (requested_mode != COMPETITION_MODE_NONE) {
+        g_mode = COMPETITION_MODE_NONE;
         g_state = COMPETITION_READY;
     }
 }
 
 static void CompetitionFaultHandler(uint32_t now_ms,
-    bool start_event, const LineFollow_Output_t *line_follow,
+    Competition_Mode_t requested_mode,
+    const LineFollow_Output_t *line_follow,
     Competition_Output_t *output)
 {
     (void) now_ms;
-    (void) start_event;
+    (void) requested_mode;
     (void) line_follow;
     (void) output;
 }
@@ -125,14 +160,18 @@ static const CompetitionStateHandler g_state_handlers[
 
 bool CompetitionInit(void)
 {
+    g_line_key = (Competition_Key_t) {0};
+    g_balance_key = (Competition_Key_t) {0};
     g_state = COMPETITION_DISARMED;
+    g_mode = COMPETITION_MODE_NONE;
     g_start_time_ms = 0U;
     g_a_marker_count = 0U;
-    g_key_stable_samples = 0U;
-    g_key_candidate = false;
-    g_key_debounced = false;
-    g_initialized = KEY_Init(&g_start_key, KEY_GPIO_KEY1_PORT,
-        KEY_GPIO_KEY1_PIN, GPIO_PIN_RESET);
+
+    const bool line_key_ready = KEY_Init(&g_line_key.device,
+        KEY_GPIO_KEY1_PORT, KEY_GPIO_KEY1_PIN, GPIO_PIN_RESET);
+    const bool balance_key_ready = KEY_Init(&g_balance_key.device,
+        KEY_GPIO_KEY2_PORT, KEY_GPIO_KEY2_PIN, GPIO_PIN_RESET);
+    g_initialized = line_key_ready && balance_key_ready;
     if (!g_initialized) {
         g_state = COMPETITION_FAULT;
     }
@@ -152,13 +191,14 @@ void CompetitionTask(uint32_t now_ms, bool app_ready,
     if (!g_initialized || !app_ready) {
         g_state = COMPETITION_FAULT;
     } else if (g_state < COMPETITION_STATE_COUNT) {
-        g_state_handlers[g_state](now_ms, CompetitionReadStartEvent(),
+        g_state_handlers[g_state](now_ms, CompetitionReadModeRequest(),
             line_follow, output);
     } else {
         g_state = COMPETITION_FAULT;
     }
 
     output->status.state = g_state;
+    output->status.mode = g_mode;
     output->status.elapsed_ms =
         (g_state == COMPETITION_RUNNING)
             ? (now_ms - g_start_time_ms)

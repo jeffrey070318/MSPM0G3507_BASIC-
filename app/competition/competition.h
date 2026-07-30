@@ -17,8 +17,15 @@ typedef enum {
     COMPETITION_STATE_COUNT,
 } Competition_State_t;
 
+typedef enum {
+    COMPETITION_MODE_NONE = 0,
+    COMPETITION_MODE_LINE_FOLLOW,
+    COMPETITION_MODE_BALL_BALANCE,
+} Competition_Mode_t;
+
 typedef struct {
     Competition_State_t state;
+    Competition_Mode_t mode;
     uint32_t elapsed_ms;
     uint32_t a_marker_count;
     bool line_valid;

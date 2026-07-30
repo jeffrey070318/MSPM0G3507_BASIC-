@@ -27,12 +27,14 @@ volatile int32_t hardware_test_stepper_position_steps;
 volatile uint16_t hardware_test_stepper_speed_sps;
 volatile bool hardware_test_stepper_running;
 
+/* 通过当前测试串口发送一段文本回包。 */
 static Device_Status_e StepperUARTSend(const char *text)
 {
     return TransparentUART_Send(
         &stepper_uart, (uint8_t *) text, (uint16_t) strlen(text));
 }
 
+/* 从命令行中取下一个空白分隔的 token。 */
 static char *NextToken(char **cursor)
 {
     char *token = strtok(*cursor, " \t\r\n");
@@ -40,6 +42,7 @@ static char *NextToken(char **cursor)
     return token;
 }
 
+/* 将命令关键字转成大写，让 move/Move/MOVE 都能识别。 */
 static void Uppercase(char *text)
 {
     while ((text != NULL) && (*text != '\0')) {
@@ -50,6 +53,7 @@ static void Uppercase(char *text)
     }
 }
 
+/* 解析速度参数，并限制到步进模块允许的范围。 */
 static uint16_t ParseSpeed(const char *token)
 {
     long speed = (token != NULL) ? strtol(token, NULL, 10)
@@ -63,6 +67,7 @@ static uint16_t ParseSpeed(const char *token)
     return (uint16_t) speed;
 }
 
+/* 解析 MOVE <steps> [speed]，正负 steps 决定上下方向。 */
 static Device_Status_e HandleMoveCommand(char **cursor)
 {
     char *steps_token = NextToken(cursor);
@@ -85,6 +90,7 @@ static Device_Status_e HandleMoveCommand(char **cursor)
         &stepper, direction, step_count, ParseSpeed(NextToken(cursor)));
 }
 
+/* 处理完整的一行串口命令，目前保留 MOVE、STOP、? 三个调试命令。 */
 static void HandleLine(char *line)
 {
     char *cursor = line;
@@ -115,6 +121,7 @@ static void HandleLine(char *line)
     }
 }
 
+/* 轮询串口接收缓冲，按换行组帧；单独 ? 可立即响应。 */
 static void PollUART(void)
 {
     uint8_t data[STEPPER_UART_RX_CHUNK_SIZE];
@@ -147,6 +154,7 @@ static void PollUART(void)
     }
 }
 
+/* 初始化步进电机和板载 UART1 调试口。 */
 Device_Status_e HardwareTestInit(void)
 {
     if (Stepper_Init(&stepper) != DEVICE_OK) {
@@ -162,6 +170,7 @@ Device_Status_e HardwareTestInit(void)
     return DEVICE_OK;
 }
 
+/* 硬件测试任务周期入口：收命令、发脉冲、导出调试变量。 */
 void HardwareTestRun(void)
 {
     PollUART();
