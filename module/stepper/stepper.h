@@ -34,11 +34,16 @@ typedef struct {
     int32_t position_steps;
 } Stepper_Device_t;
 
+/* 初始化 STEP/DIR/EN 输出，默认禁用电机并让 STEP 保持空闲高电平。 */
 Device_Status_e Stepper_Init(Stepper_Device_t *device);
+/* 控制驱动器 EN 脚；当前默认按低有效使能处理。 */
 Device_Status_e Stepper_Enable(Stepper_Device_t *device, bool enable);
+/* 启动一次相对移动，方向和步数由上层闭环或串口命令给出。 */
 Device_Status_e Stepper_Move(Stepper_Device_t *device,
     Stepper_Direction_e direction, uint32_t steps, uint16_t speed_sps);
+/* 停止当前未完成的相对移动，不改变已累计的位置。 */
 void Stepper_Stop(Stepper_Device_t *device);
+/* 1 ms 周期调用，按 speed_sps 累加并输出 STEP 低脉冲。 */
 void Stepper_Task(Stepper_Device_t *device, uint16_t elapsed_ms);
 
 #ifdef __cplusplus
