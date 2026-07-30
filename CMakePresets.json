@@ -26,36 +26,6 @@
             "cacheVariables": {
                 "USE_FREERTOS": "OFF"
             }
-        },
-        {
-            "name": "local",
-            "displayName": "MSPM0G3507 Local",
-            "inherits": "default",
-            "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "D:/STM32_Tools/ninja-win/ninja.exe",
-                "MSPM0_SDK_DIR": "D:/tools/ti/mspm0_sdk_2_10_00_04",
-                "SYSCONFIG_CLI": "D:/tools/ti/ccs/utils/sysconfig_1.27.1/sysconfig_cli.bat",
-                "OPENOCD_EXE": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
-                "OPENOCD_SCRIPTS_DIR": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts"
-            },
-            "environment": {
-                "PATH": "D:/STM32_Tools/arm-gnu-toolchain/bin;D:/STM32_Tools/ninja-win;$penv{PATH}"
-            }
-        },
-        {
-            "name": "local-no-rtos",
-            "displayName": "MSPM0G3507 Local NoRTOS",
-            "inherits": "no-rtos",
-            "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "D:/STM32_Tools/ninja-win/ninja.exe",
-                "MSPM0_SDK_DIR": "D:/tools/ti/mspm0_sdk_2_10_00_04",
-                "SYSCONFIG_CLI": "D:/tools/ti/ccs/utils/sysconfig_1.27.1/sysconfig_cli.bat",
-                "OPENOCD_EXE": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/bin/openocd.exe",
-                "OPENOCD_SCRIPTS_DIR": "D:/STM32_Tools/xpack-openocd/xpack-openocd-0.12.0-7/openocd/scripts"
-            },
-            "environment": {
-                "PATH": "D:/STM32_Tools/arm-gnu-toolchain/bin;D:/STM32_Tools/ninja-win;$penv{PATH}"
-            }
         }
     ],
     "buildPresets": [
@@ -68,16 +38,6 @@
             "name": "no-rtos",
             "configurePreset": "no-rtos",
             "displayName": "Build MSPM0G3507 NoRTOS"
-        },
-        {
-            "name": "local",
-            "configurePreset": "local",
-            "displayName": "Build MSPM0G3507 Local"
-        },
-        {
-            "name": "local-no-rtos",
-            "configurePreset": "local-no-rtos",
-            "displayName": "Build MSPM0G3507 Local NoRTOS"
         }
     ]
 }

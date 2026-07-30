@@ -4,16 +4,10 @@
         {
             "label": "CMake: Configure FreeRTOS",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
-                "-S",
-                "${workspaceFolder}",
-                "-B",
-                "${workspaceFolder}/build",
-                "-G",
-                "Ninja",
-                "-DCMAKE_MAKE_PROGRAM=D:/STM32_Tools/ninja-win/ninja.exe",
-                "-DUSE_FREERTOS=ON"
+                "--preset",
+                "local"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -23,16 +17,10 @@
         {
             "label": "CMake: Configure NoRTOS",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
-                "-S",
-                "${workspaceFolder}",
-                "-B",
-                "${workspaceFolder}/build-nortos",
-                "-G",
-                "Ninja",
-                "-DCMAKE_MAKE_PROGRAM=D:/STM32_Tools/ninja-win/ninja.exe",
-                "-DUSE_FREERTOS=OFF"
+                "--preset",
+                "local-no-rtos"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -42,10 +30,11 @@
         {
             "label": "CMake: Build",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build"
+                "--preset",
+                "local"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -59,10 +48,11 @@
         {
             "label": "CMake: Build NoRTOS",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build-nortos"
+                "--preset",
+                "local-no-rtos"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -72,10 +62,11 @@
         {
             "label": "OpenOCD: Probe CMSIS-DAP",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "--preset",
+                "local",
                 "--target",
                 "probe"
             ],
@@ -87,10 +78,11 @@
         {
             "label": "OpenOCD: Flash CMSIS-DAP",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "--preset",
+                "local",
                 "--target",
                 "flash"
             ],
@@ -109,10 +101,11 @@
         {
             "label": "OpenOCD: Erase CMSIS-DAP",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "--preset",
+                "local",
                 "--target",
                 "erase"
             ],
@@ -124,10 +117,11 @@
         {
             "label": "OpenOCD: Probe XDS110",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "--preset",
+                "local",
                 "--target",
                 "probe-xds110"
             ],
@@ -139,10 +133,11 @@
         {
             "label": "OpenOCD: Flash XDS110",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "--preset",
+                "local",
                 "--target",
                 "flash-xds110"
             ],
@@ -157,10 +152,11 @@
         {
             "label": "OpenOCD: Erase XDS110",
             "type": "process",
-            "command": "D:/Program Files/STM32CubeCLT_1.21.0/CMake/bin/cmake.exe",
+            "command": "cmake",
             "args": [
                 "--build",
-                "${workspaceFolder}/build",
+                "--preset",
+                "local",
                 "--target",
                 "erase-xds110"
             ],
