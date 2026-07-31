@@ -64,6 +64,7 @@ typedef struct {
 
 bool Motor_Init(Motor_Device_t *motor, const Motor_Init_Config_t *config);
 void Motor_SetTargetSpeed(Motor_Device_t *motor, float counts_per_second);
+void Motor_SetOpenLoop(Motor_Device_t *motor, float output);
 bool Motor_Update(Motor_Device_t *motor, float dt_seconds);
 void Motor_Enable(Motor_Device_t *motor);
 void Motor_Stop(Motor_Device_t *motor);

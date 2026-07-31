@@ -63,13 +63,22 @@ int main(void)
     assert(output.line_valid);
     assert(output.vx_mps == LINE_FOLLOW_BASE_SPEED_MPS);
     assert(output.wz_radps < 0.0f);
+    const float last_wz_radps = output.wz_radps;
 
     sample.active_count = 0U;
     sample.raw_value = 0U;
     sample.offset = 0.0f;
     LineFollowTask(true, 0.005f, &output);
     assert(line_follow_debug_active_count == 0U);
-    assert(line_follow_debug_wz_radps == 0.0f);
+    assert(line_follow_debug_wz_radps == last_wz_radps);
+    assert(output.line_valid);
+    assert(output.vx_mps == LINE_FOLLOW_BASE_SPEED_MPS);
+    assert(output.wz_radps == last_wz_radps);
+    for (uint32_t i = 1U; i < LINE_FOLLOW_LOST_LINE_HOLD_SAMPLES; i++) {
+        LineFollowTask(true, 0.005f, &output);
+        assert(output.line_valid);
+    }
+    LineFollowTask(true, 0.005f, &output);
     assert(!output.line_valid);
     assert(output.vx_mps == 0.0f);
     assert(output.wz_radps == 0.0f);

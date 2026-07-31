@@ -72,6 +72,25 @@ static void ChassisSetWheelTargets(const Chassis_Command_t *command)
     Motor_SetTargetSpeed(&chassis_motors[1], right_mps * counts_per_meter);
 }
 
+#if CHASSIS_OPEN_LOOP_TEST_ENABLED
+static void ChassisSetOpenLoopOutputs(const Chassis_Command_t *command)
+{
+    float turn_output = command->wz_radps /
+        CHASSIS_OPEN_LOOP_TEST_TURN_WZ_FULL_SCALE_RADPS *
+        CHASSIS_OPEN_LOOP_TEST_TURN_OUTPUT;
+    if (turn_output > CHASSIS_OPEN_LOOP_TEST_TURN_OUTPUT) {
+        turn_output = CHASSIS_OPEN_LOOP_TEST_TURN_OUTPUT;
+    } else if (turn_output < -CHASSIS_OPEN_LOOP_TEST_TURN_OUTPUT) {
+        turn_output = -CHASSIS_OPEN_LOOP_TEST_TURN_OUTPUT;
+    }
+
+    Motor_SetOpenLoop(&chassis_motors[0],
+        CHASSIS_OPEN_LOOP_TEST_OUTPUT - turn_output);
+    Motor_SetOpenLoop(&chassis_motors[1],
+        CHASSIS_OPEN_LOOP_TEST_OUTPUT + turn_output);
+}
+#endif
+
 static void ChassisWriteStatus(Chassis_Status_t *status, bool enabled)
 {
     chassis_debug_enabled = enabled;
@@ -131,11 +150,17 @@ void ChassisTask(const Chassis_Command_t *command,
         }
     }
 
+#if CHASSIS_OPEN_LOOP_TEST_ENABLED
+    ChassisSetWheelTargets(command);
+    (void) dt_seconds;
+    ChassisSetOpenLoopOutputs(command);
+#else
     ChassisSetWheelTargets(command);
     if (dt_seconds > 0.0f) {
         for (uint8_t i = 0U; i < CHASSIS_MOTOR_COUNT; i++) {
             (void) Motor_Update(&chassis_motors[i], dt_seconds);
         }
     }
+#endif
     ChassisWriteStatus(status, true);
 }

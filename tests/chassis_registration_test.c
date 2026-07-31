@@ -25,6 +25,8 @@ static uint32_t motor_init_count;
 static uint32_t motor_stop_count[2];
 static uint32_t motor_enable_count[2];
 static uint32_t motor_update_count[2];
+static uint32_t motor_open_loop_count[2];
+static float motor_open_loop_output[2];
 
 static float AbsFloat(float value)
 {
@@ -68,6 +70,13 @@ bool Motor_Update(Motor_Device_t *motor, float dt_seconds)
 {
     motor_update_count[MotorIndex(motor)]++;
     return dt_seconds > 0.0f;
+}
+
+void Motor_SetOpenLoop(Motor_Device_t *motor, float output)
+{
+    size_t index = MotorIndex(motor);
+    motor_open_loop_count[index]++;
+    motor_open_loop_output[index] = output;
 }
 
 void Motor_Enable(Motor_Device_t *motor)
@@ -135,8 +144,22 @@ int main(void)
     ChassisTask(&command, 0.005f, &status);
     assert(motor_enable_count[0] == 1U);
     assert(motor_enable_count[1] == 1U);
+#if CHASSIS_OPEN_LOOP_TEST_ENABLED
+    assert(motor_open_loop_count[0] == 1U);
+    assert(motor_open_loop_count[1] == 1U);
+    const float open_loop_turn =
+        command.wz_radps / CHASSIS_OPEN_LOOP_TEST_TURN_WZ_FULL_SCALE_RADPS *
+        CHASSIS_OPEN_LOOP_TEST_TURN_OUTPUT;
+    AssertNear(motor_open_loop_output[0],
+        CHASSIS_OPEN_LOOP_TEST_OUTPUT - open_loop_turn);
+    AssertNear(motor_open_loop_output[1],
+        CHASSIS_OPEN_LOOP_TEST_OUTPUT + open_loop_turn);
+    assert(motor_update_count[0] == 0U);
+    assert(motor_update_count[1] == 0U);
+#else
     assert(motor_update_count[0] == 1U);
     assert(motor_update_count[1] == 1U);
+#endif
     assert(status.enabled);
     const float counts_per_meter =
         (CHASSIS_ENCODER_PPR * CHASSIS_ENCODER_QUADRATURE *

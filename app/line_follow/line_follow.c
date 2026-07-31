@@ -13,6 +13,9 @@ static PID_Controller_t g_line_pid;
 static uint32_t g_marker_active_samples;
 static uint32_t g_marker_clear_samples;
 static bool g_marker_latched;
+static uint32_t g_lost_line_samples;
+static float g_last_wz_radps;
+static bool g_has_last_line_command;
 
 volatile bool line_follow_debug_enabled;
 volatile uint8_t line_follow_debug_raw_value;
@@ -30,6 +33,9 @@ static void LineFollowClearOutput(LineFollow_Output_t *output)
 static void LineFollowResetControl(void)
 {
     PID_ControllerReset(&g_line_pid);
+    g_lost_line_samples = 0U;
+    g_last_wz_radps = 0.0f;
+    g_has_last_line_command = false;
 }
 
 static bool LineFollowUpdateMarker(uint8_t active_count)
@@ -92,6 +98,9 @@ bool LineFollowInit(void)
     g_marker_active_samples = 0U;
     g_marker_clear_samples = 0U;
     g_marker_latched = false;
+    g_lost_line_samples = 0U;
+    g_last_wz_radps = 0.0f;
+    g_has_last_line_command = false;
     line_follow_debug_enabled = false;
     line_follow_debug_raw_value = 0U;
     line_follow_debug_active_count = 0U;
@@ -128,13 +137,25 @@ void LineFollowTask(bool enabled, float dt_seconds,
     output->a_marker_event =
         LineFollowUpdateMarker(g_sensor->active_count);
     if (g_sensor->active_count == 0U) {
+        if (g_has_last_line_command &&
+            (g_lost_line_samples < LINE_FOLLOW_LOST_LINE_HOLD_SAMPLES)) {
+            g_lost_line_samples++;
+            output->line_valid = true;
+            output->vx_mps = LINE_FOLLOW_BASE_SPEED_MPS;
+            output->wz_radps = g_last_wz_radps;
+            line_follow_debug_wz_radps = output->wz_radps;
+            return;
+        }
         LineFollowResetControl();
         return;
     }
 
+    g_lost_line_samples = 0U;
     output->line_valid = true;
     output->vx_mps = LINE_FOLLOW_BASE_SPEED_MPS;
     output->wz_radps = PID_ControllerUpdate(
         &g_line_pid, 0.0f, g_sensor->offset, dt_seconds);
+    g_last_wz_radps = output->wz_radps;
+    g_has_last_line_command = true;
     line_follow_debug_wz_radps = output->wz_radps;
 }

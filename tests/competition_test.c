@@ -100,6 +100,31 @@ int main(void)
 
     key1_pressed = false;
     key2_pressed = false;
+    now_ms = 0U;
+    assert(CompetitionInit());
+    CompetitionTask(now_ms, true, &line, &balance, &output);
+    line = (LineFollow_Output_t) {
+        .vx_mps = 0.15f,
+        .line_valid = true,
+    };
+    PressModeKey(true, &now_ms, &line, &balance, &output);
+    line.a_marker_event = true;
+    now_ms += 5U;
+    CompetitionTask(now_ms, true, &line, &balance, &output);
+    assert(output.status.state == COMPETITION_RUNNING);
+    assert(output.status.a_marker_count == 1U);
+    line.a_marker_event = false;
+    now_ms += 5U;
+    CompetitionTask(now_ms, true, &line, &balance, &output);
+    line.a_marker_event = true;
+    now_ms += 5U;
+    CompetitionTask(now_ms, true, &line, &balance, &output);
+    assert(output.status.state == COMPETITION_FINISHED);
+    assert(output.status.a_marker_count == COMPETITION_STOP_A_MARKER_COUNT);
+    assert(!output.chassis.enabled);
+
+    key1_pressed = false;
+    key2_pressed = false;
     key_init_count = 0U;
     now_ms = 0U;
     assert(CompetitionInit());

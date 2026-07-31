@@ -9,5 +9,14 @@ extern GPIO_TypeDef test_key_port;
 #define KEY_GPIO_KEY1_PIN  (1UL << 0U)
 #define KEY_GPIO_KEY2_PORT (&test_key_port)
 #define KEY_GPIO_KEY2_PIN  (1UL << 1U)
+#define KEY_GPIO_KEY3_PORT (&test_key_port)
+#define KEY_GPIO_KEY3_PIN  (1UL << 2U)
+
+static inline uint32_t DL_GPIO_readPins(GPIO_TypeDef *port, uint32_t pins)
+{
+    (void) port;
+    (void) pins;
+    return 0U;
+}
 
 #endif

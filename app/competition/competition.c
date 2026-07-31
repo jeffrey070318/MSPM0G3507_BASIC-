@@ -134,6 +134,10 @@ static void CompetitionRunningHandler(uint32_t now_ms,
     if (line_follow != NULL) {
         if (line_follow->a_marker_event) {
             g_a_marker_count++;
+            if (g_a_marker_count >= COMPETITION_STOP_A_MARKER_COUNT) {
+                g_state = COMPETITION_FINISHED;
+                return;
+            }
         }
         if (line_follow->line_valid) {
             output->chassis.vx_mps = line_follow->vx_mps;
