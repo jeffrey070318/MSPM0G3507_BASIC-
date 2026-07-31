@@ -20,7 +20,8 @@ static bool g_initialized;
 
 static bool ChassisInitMotor(Motor_Device_t *motor,
     TIM_HandleTypeDef *pwm_handle, GPIO_TypeDef *phase_port,
-    uint32_t phase_pin, Encoder_Device_t *encoder, bool reverse)
+    uint32_t phase_pin, Encoder_Device_t *encoder, bool driver_reverse,
+    bool encoder_reverse)
 {
     Motor_Init_Config_t config = {
         .driver = {
@@ -31,7 +32,7 @@ static bool ChassisInitMotor(Motor_Device_t *motor,
                 .pwm_period = CHASSIS_MOTOR_PWM_PERIOD_SEC,
                 .phase_port = phase_port,
                 .phase_pin = phase_pin,
-                .reverse = reverse,
+                .reverse = driver_reverse,
             },
         },
         .encoder = encoder,
@@ -44,7 +45,7 @@ static bool ChassisInitMotor(Motor_Device_t *motor,
             .deadband = 0.0f,
             .derivative_on_measurement = true,
         },
-        .encoder_reverse = reverse,
+        .encoder_reverse = encoder_reverse,
     };
     return Motor_Init(motor, &config);
 }
@@ -96,12 +97,14 @@ bool ChassisInit(void)
 
     if (!ChassisInitMotor(&chassis_motors[0], &htim1,
         MOTOR_GPIO_AIN1_PORT, MOTOR_GPIO_AIN1_PIN, &hencoder_left,
-        (bool) CHASSIS_LEFT_MOTOR_REVERSE)) {
+        (bool) CHASSIS_LEFT_DRIVER_REVERSE,
+        (bool) CHASSIS_LEFT_ENCODER_REVERSE)) {
         return false;
     }
     if (!ChassisInitMotor(&chassis_motors[1], &htim2,
         MOTOR_GPIO_BIN1_PORT, MOTOR_GPIO_BIN1_PIN, &hencoder_right,
-        (bool) CHASSIS_RIGHT_MOTOR_REVERSE)) {
+        (bool) CHASSIS_RIGHT_DRIVER_REVERSE,
+        (bool) CHASSIS_RIGHT_ENCODER_REVERSE)) {
         ChassisStop();
         return false;
     }

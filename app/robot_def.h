@@ -54,15 +54,21 @@
 #define CHASSIS_SPEED_MAX_OUT  1.0f
 #define CHASSIS_SPEED_MAX_IOUT 0.5f
 
-/* 同一个开关同时反转驱动方向与编码器反馈方向。 */
-#define CHASSIS_LEFT_MOTOR_REVERSE  0
-#define CHASSIS_RIGHT_MOTOR_REVERSE 1
+/* Driver and encoder directions are calibrated independently. */
+#define CHASSIS_LEFT_DRIVER_REVERSE  0
+#define CHASSIS_LEFT_ENCODER_REVERSE 0
+#define CHASSIS_RIGHT_DRIVER_REVERSE 1
+#define CHASSIS_RIGHT_ENCODER_REVERSE 0
 
-#if ((CHASSIS_LEFT_MOTOR_REVERSE != 0) && \
-        (CHASSIS_LEFT_MOTOR_REVERSE != 1)) || \
-    ((CHASSIS_RIGHT_MOTOR_REVERSE != 0) && \
-        (CHASSIS_RIGHT_MOTOR_REVERSE != 1))
-#error Chassis motor reverse parameters must be 0 or 1.
+#if ((CHASSIS_LEFT_DRIVER_REVERSE != 0) && \
+        (CHASSIS_LEFT_DRIVER_REVERSE != 1)) || \
+    ((CHASSIS_LEFT_ENCODER_REVERSE != 0) && \
+        (CHASSIS_LEFT_ENCODER_REVERSE != 1)) || \
+    ((CHASSIS_RIGHT_DRIVER_REVERSE != 0) && \
+        (CHASSIS_RIGHT_DRIVER_REVERSE != 1)) || \
+    ((CHASSIS_RIGHT_ENCODER_REVERSE != 0) && \
+        (CHASSIS_RIGHT_ENCODER_REVERSE != 1))
+#error Chassis direction parameters must be 0 or 1.
 #endif
 
 #endif

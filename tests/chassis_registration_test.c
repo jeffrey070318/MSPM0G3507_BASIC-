@@ -95,9 +95,9 @@ int main(void)
         MOTOR_GPIO_AIN1_PIN);
     assert(captured_configs[0].encoder == &hencoder_left);
     assert(captured_configs[0].driver.config.drv8701e.reverse ==
-        captured_configs[0].encoder_reverse);
+        (bool) CHASSIS_LEFT_DRIVER_REVERSE);
     assert(captured_configs[0].encoder_reverse ==
-        (bool) CHASSIS_LEFT_MOTOR_REVERSE);
+        (bool) CHASSIS_LEFT_ENCODER_REVERSE);
     AssertNear(captured_configs[0].speed_pid.kp, CHASSIS_SPEED_KP);
     AssertNear(captured_configs[0].speed_pid.ki, CHASSIS_SPEED_KI);
     AssertNear(captured_configs[0].speed_pid.kd, CHASSIS_SPEED_KD);
@@ -114,9 +114,9 @@ int main(void)
         MOTOR_GPIO_BIN1_PIN);
     assert(captured_configs[1].encoder == &hencoder_right);
     assert(captured_configs[1].driver.config.drv8701e.reverse ==
-        captured_configs[1].encoder_reverse);
+        (bool) CHASSIS_RIGHT_DRIVER_REVERSE);
     assert(captured_configs[1].encoder_reverse ==
-        (bool) CHASSIS_RIGHT_MOTOR_REVERSE);
+        (bool) CHASSIS_RIGHT_ENCODER_REVERSE);
     assert(motor_stop_count[0] == 1U);
     assert(motor_stop_count[1] == 1U);
 
