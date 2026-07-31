@@ -56,7 +56,7 @@
 
 /* 同一个开关同时反转驱动方向与编码器反馈方向。 */
 #define CHASSIS_LEFT_MOTOR_REVERSE  0
-#define CHASSIS_RIGHT_MOTOR_REVERSE 0
+#define CHASSIS_RIGHT_MOTOR_REVERSE 1
 
 #if ((CHASSIS_LEFT_MOTOR_REVERSE != 0) && \
         (CHASSIS_LEFT_MOTOR_REVERSE != 1)) || \
