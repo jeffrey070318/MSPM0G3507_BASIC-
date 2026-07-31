@@ -133,9 +133,9 @@ void RobotOLEDTask(void)
     OLED_printf(0U, 0U, "S:%u T:%lus",
                 (unsigned)g_robot_app.competition.status.state,
                 (unsigned long)(g_robot_app.competition.status.elapsed_ms / 1000U));
-    OLED_printf(1U, 0U, "L:%s V:%s B:%s",
+    OLED_printf(1U, 0U, "L:%s H:%s B:%s",
                 g_robot_app.competition.status.line_valid ? "OK" : "NO",
-                g_robot_app.competition.status.vision_valid ? "OK" : "NO",
+                g_robot_app.ball_balance.level_confirmed ? "OK" : "NO",
                 g_robot_app.ball_balance.enabled ? "ON" : "OFF");
     OLED_printf(2U, 0U, "LT:%6d LM:%6d",
                 (int)g_robot_app.chassis.left_target_counts_s,

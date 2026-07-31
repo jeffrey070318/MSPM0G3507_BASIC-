@@ -14,6 +14,7 @@ typedef struct {
     int32_t step_position;
     bool vision_valid;
     bool enabled;
+    bool level_confirmed;
     bool at_soft_limit;
 } BallBalance_Status_t;
 

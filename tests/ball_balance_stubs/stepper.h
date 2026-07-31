@@ -26,6 +26,7 @@ Device_Status_e Stepper_Enable(Stepper_Device_t *device, bool enable);
 Device_Status_e Stepper_Move(Stepper_Device_t *device,
     Stepper_Direction_e direction, uint32_t steps, uint16_t speed_sps);
 void Stepper_Stop(Stepper_Device_t *device);
+void Stepper_ResetPosition(Stepper_Device_t *device, int32_t position_steps);
 void Stepper_Task(Stepper_Device_t *device, uint16_t elapsed_ms);
 
 #endif

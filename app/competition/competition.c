@@ -1,7 +1,9 @@
 #include "competition.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
+#include "bsp_encoder.h"
 #include "key.h"
 #include "robot_def.h"
 #include "ti_msp_dl_config.h"
@@ -30,6 +32,71 @@ volatile uint8_t competition_debug_key_bits;
 volatile uint8_t competition_debug_key_raw_bits;
 volatile uint8_t competition_debug_key_seen_bits;
 volatile Competition_State_t competition_debug_state;
+volatile int32_t competition_debug_left_encoder_start;
+volatile int32_t competition_debug_right_encoder_start;
+volatile int32_t competition_debug_left_encoder_total;
+volatile int32_t competition_debug_right_encoder_total;
+volatile int32_t competition_debug_left_encoder_traveled;
+volatile int32_t competition_debug_right_encoder_traveled;
+volatile int32_t competition_debug_encoder_average_traveled;
+volatile int32_t competition_debug_encoder_stop_counts =
+    COMPETITION_KEY1_ENCODER_STOP_COUNTS;
+volatile bool competition_debug_encoder_stop_latched;
+
+static int32_t CompetitionAbsDelta(int32_t current, int32_t start)
+{
+    int64_t delta = (int64_t) current - (int64_t) start;
+    if (delta < 0) {
+        delta = -delta;
+    }
+    return (delta > INT32_MAX) ? INT32_MAX : (int32_t) delta;
+}
+
+static void CompetitionResetEncoderStop(void)
+{
+    competition_debug_left_encoder_start =
+        Encoder_Get_Total(&hencoder_left);
+    competition_debug_right_encoder_start =
+        Encoder_Get_Total(&hencoder_right);
+    competition_debug_left_encoder_total =
+        competition_debug_left_encoder_start;
+    competition_debug_right_encoder_total =
+        competition_debug_right_encoder_start;
+    competition_debug_left_encoder_traveled = 0;
+    competition_debug_right_encoder_traveled = 0;
+    competition_debug_encoder_average_traveled = 0;
+    competition_debug_encoder_stop_latched = false;
+}
+
+static void CompetitionUpdateEncoderStop(void)
+{
+    competition_debug_left_encoder_total =
+        Encoder_Get_Total(&hencoder_left);
+    competition_debug_right_encoder_total =
+        Encoder_Get_Total(&hencoder_right);
+    competition_debug_left_encoder_traveled = CompetitionAbsDelta(
+        competition_debug_left_encoder_total,
+        competition_debug_left_encoder_start);
+    competition_debug_right_encoder_traveled = CompetitionAbsDelta(
+        competition_debug_right_encoder_total,
+        competition_debug_right_encoder_start);
+    competition_debug_encoder_average_traveled =
+        (competition_debug_left_encoder_traveled +
+            competition_debug_right_encoder_traveled) / 2;
+}
+
+static bool CompetitionEncoderStopReached(void)
+{
+#if COMPETITION_KEY1_ENCODER_STOP_ENABLED
+    CompetitionUpdateEncoderStop();
+    if ((competition_debug_encoder_stop_counts > 0) &&
+        (competition_debug_encoder_average_traveled >=
+            competition_debug_encoder_stop_counts)) {
+        competition_debug_encoder_stop_latched = true;
+    }
+#endif
+    return competition_debug_encoder_stop_latched;
+}
 
 static void CompetitionSafeOutput(Competition_Output_t *output)
 {
@@ -106,6 +173,9 @@ static void CompetitionReadyHandler(uint32_t now_ms,
         g_start_time_ms = now_ms;
         g_a_marker_count = 0U;
         g_mode = requested_mode;
+        if (g_mode == COMPETITION_MODE_LINE_FOLLOW) {
+            CompetitionResetEncoderStop();
+        }
         g_state = COMPETITION_RUNNING;
     }
 }
@@ -127,6 +197,11 @@ static void CompetitionRunningHandler(uint32_t now_ms,
     }
 
     if (g_mode != COMPETITION_MODE_LINE_FOLLOW) {
+        return;
+    }
+
+    if (CompetitionEncoderStopReached()) {
+        g_state = COMPETITION_FINISHED;
         return;
     }
 
@@ -189,6 +264,7 @@ bool CompetitionInit(void)
     g_mode = COMPETITION_MODE_NONE;
     g_start_time_ms = 0U;
     g_a_marker_count = 0U;
+    CompetitionResetEncoderStop();
     competition_debug_key_bits = 0U;
     competition_debug_key_raw_bits = 0U;
     competition_debug_key_seen_bits = 0U;

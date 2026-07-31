@@ -121,6 +121,15 @@ void Stepper_Stop(Stepper_Device_t *device)
     device->accumulator_milli_steps = 0U;
 }
 
+void Stepper_ResetPosition(Stepper_Device_t *device, int32_t position_steps)
+{
+    if (device == NULL) {
+        return;
+    }
+
+    device->position_steps = position_steps;
+}
+
 /* 周期任务：把 steps/s 转成按毫秒累加的脉冲输出。 */
 void Stepper_Task(Stepper_Device_t *device, uint16_t elapsed_ms)
 {

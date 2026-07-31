@@ -3,16 +3,38 @@
 #include <stdint.h>
 
 #include "ball_balance.h"
+#include "key.h"
 #include "robot_def.h"
 #include "stepper.h"
+#include "ti_msp_dl_config.h"
 #include "vision.h"
 
+GPIO_TypeDef test_key_port;
 static TransparentUART_Port_e captured_port;
 static uint32_t stepper_task_count;
 static uint32_t stepper_stop_count;
 static uint32_t stepper_enable_count;
 static uint32_t stepper_move_count;
+static uint32_t stepper_reset_count;
+static int32_t captured_reset_position;
+static bool level_key_pressed;
 static uint16_t captured_elapsed_ms;
+
+bool KEY_Init(KEY_Device_t *key, GPIO_TypeDef *gpio_port,
+    uint32_t gpio_pin, GPIO_PinState active_state)
+{
+    assert(key != NULL);
+    assert(gpio_port == &test_key_port);
+    assert(gpio_pin == KEY_GPIO_KEY3_PIN);
+    assert(active_state == GPIO_PIN_RESET);
+    return true;
+}
+
+bool KEY_IsPressed(KEY_Device_t *key)
+{
+    assert(key != NULL);
+    return level_key_pressed;
+}
 
 Device_Status_e Vision_Init(
     Vision_Device_t *device, TransparentUART_Port_e port)
@@ -55,6 +77,13 @@ void Stepper_Stop(Stepper_Device_t *device)
     device->running = false;
 }
 
+void Stepper_ResetPosition(Stepper_Device_t *device, int32_t position_steps)
+{
+    stepper_reset_count++;
+    captured_reset_position = position_steps;
+    device->position_steps = position_steps;
+}
+
 void Stepper_Task(Stepper_Device_t *device, uint16_t elapsed_ms)
 {
     assert(device != NULL);
@@ -86,6 +115,19 @@ int main(void)
     assert(stepper_move_count == 0U);
     assert(!status.enabled);
     assert(!status.vision_valid);
+    assert(!status.level_confirmed);
     assert(status.step_position == 0);
+
+    level_key_pressed = true;
+    for (uint32_t i = 0U;
+         i < (BALL_BALANCE_LEVEL_KEY_DEBOUNCE_SAMPLES + 2U);
+         ++i) {
+        BallBalanceTask(&command, 3U + i, 0.001f, &status);
+    }
+    assert(stepper_reset_count == 1U);
+    assert(captured_reset_position == 0);
+    assert(status.level_confirmed);
+    assert(status.enabled);
+    assert(stepper_move_count > 0U);
     return 0;
 }
