@@ -30,9 +30,9 @@
 #define LINE_FOLLOW_A_MARKER_REARM_SAMPLES 3U
 #define LINE_FOLLOW_LOST_LINE_HOLD_SAMPLES 10U
 
-/* KEY1 line-follow debug: stop after average wheel encoder travel. */
-#define COMPETITION_KEY1_ENCODER_STOP_ENABLED 1
-#define COMPETITION_KEY1_ENCODER_STOP_COUNTS 23761
+/* KEY1 line-follow debug: stop after this run time. */
+#define COMPETITION_KEY1_TIME_STOP_ENABLED 1
+#define COMPETITION_KEY1_TIME_STOP_MS 19000U
 
 /* --------------------------平衡机构参数-------------------------- */
 /* UART3 remains reserved for vision; without a camera, use manual level bounce. */
