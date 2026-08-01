@@ -21,6 +21,7 @@ typedef enum {
     COMPETITION_MODE_NONE = 0,
     COMPETITION_MODE_LINE_FOLLOW,
     COMPETITION_MODE_BALL_BALANCE,
+    COMPETITION_MODE_STEPPER_UART_SPEED,
 } Competition_Mode_t;
 
 typedef struct {

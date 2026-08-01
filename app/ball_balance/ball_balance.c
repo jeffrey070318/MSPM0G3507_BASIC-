@@ -5,6 +5,7 @@
 #include "robot_def.h"
 #include "stepper.h"
 #include "vision.h"
+#include "zdt_stepper_uart.h"
 
 typedef enum {
     BALL_BALANCE_OPEN_IDLE = 0,
@@ -17,12 +18,16 @@ typedef enum {
 
 static Vision_Device_t g_vision;
 static Stepper_Device_t g_stepper;
+static ZDTStepperUART_Device_t g_stepper_uart;
 static bool g_level_confirmed;
 static bool g_command_was_enabled;
 static bool g_open_active;
 static bool g_open_state_commanded;
 static BallBalance_Open_State_t g_open_state;
 static uint32_t g_open_state_start_ms;
+static bool g_uart_speed_active;
+static int16_t g_last_uart_speed_rpm;
+static uint32_t g_last_uart_command_ms;
 static bool g_initialized;
 
 volatile int32_t ball_balance_open_pos_go_target_steps =
@@ -55,6 +60,9 @@ volatile int32_t ball_balance_debug_step_position;
 volatile int32_t ball_balance_debug_last_target_steps;
 volatile int32_t ball_balance_debug_rejected_target_steps;
 volatile uint32_t ball_balance_debug_move_error_count;
+volatile int16_t ball_balance_debug_uart_speed_rpm;
+volatile uint32_t ball_balance_debug_uart_command_count;
+volatile Device_Status_e ball_balance_debug_uart_last_status;
 
 #if BALL_BALANCE_SOFT_LIMIT_STEPS > 0
 static int32_t BallBalanceAbsSteps(int32_t steps)
@@ -91,6 +99,30 @@ static void BallBalanceSafeStop(void)
     g_open_active = false;
     g_open_state_commanded = false;
     g_open_state = BALL_BALANCE_OPEN_IDLE;
+}
+
+static Device_Status_e BallBalanceSendUartSpeed(int16_t speed_rpm)
+{
+    Device_Status_e status = ZDTStepperUART_SetSpeed(&g_stepper_uart,
+        speed_rpm, BALL_BALANCE_STEPPER_UART_ACCEL,
+        (bool) BALL_BALANCE_STEPPER_UART_SYNC);
+    ball_balance_debug_uart_last_status = status;
+    if (status == DEVICE_OK) {
+        ball_balance_debug_uart_command_count++;
+        ball_balance_debug_uart_speed_rpm = speed_rpm;
+    }
+    return status;
+}
+
+static void BallBalanceStopUartSpeed(void)
+{
+    if (!g_uart_speed_active) {
+        return;
+    }
+    (void) BallBalanceSendUartSpeed(0);
+    g_uart_speed_active = false;
+    g_last_uart_speed_rpm = 0;
+    g_last_uart_command_ms = 0U;
 }
 
 static void BallBalanceStartFromCurrentLevel(void)
@@ -249,6 +281,11 @@ bool BallBalanceInit(void)
     if (Stepper_Init(&g_stepper) != DEVICE_OK) {
         return false;
     }
+    if (ZDTStepperUART_Init(&g_stepper_uart,
+            BALL_BALANCE_STEPPER_UART_PORT,
+            BALL_BALANCE_STEPPER_UART_ADDRESS) != DEVICE_OK) {
+        return false;
+    }
 
     (void) Stepper_Enable(&g_stepper, false);
     g_level_confirmed = false;
@@ -257,6 +294,12 @@ bool BallBalanceInit(void)
     g_open_state_commanded = false;
     g_open_state = BALL_BALANCE_OPEN_IDLE;
     g_open_state_start_ms = 0U;
+    g_uart_speed_active = false;
+    g_last_uart_speed_rpm = 0;
+    g_last_uart_command_ms = 0U;
+    ball_balance_debug_uart_speed_rpm = 0;
+    ball_balance_debug_uart_command_count = 0U;
+    ball_balance_debug_uart_last_status = DEVICE_OK;
     g_initialized = true;
     return true;
 }
@@ -276,6 +319,7 @@ void BallBalanceTask(const BallBalance_Command_t *command,
 
     if ((command == NULL) || !command->enabled) {
         g_command_was_enabled = false;
+        BallBalanceStopUartSpeed();
         BallBalanceSafeStop();
         BallBalanceWriteStatus(status, false);
         ball_balance_debug_level_confirmed = g_level_confirmed;
@@ -286,6 +330,34 @@ void BallBalanceTask(const BallBalance_Command_t *command,
         return;
     }
 
+    if (command->uart_speed_control_enabled) {
+        g_command_was_enabled = false;
+        g_level_confirmed = true;
+        g_open_active = true;
+        g_open_state = BALL_BALANCE_OPEN_IDLE;
+        g_open_state_commanded = true;
+        Stepper_Stop(&g_stepper);
+        (void) Stepper_Enable(&g_stepper, false);
+        if (!g_uart_speed_active ||
+            (g_last_uart_speed_rpm != command->speed_rpm) ||
+            ((now_ms - g_last_uart_command_ms) >=
+                BALL_BALANCE_STEPPER_UART_COMMAND_PERIOD_MS)) {
+            if (BallBalanceSendUartSpeed(command->speed_rpm) == DEVICE_OK) {
+                g_uart_speed_active = true;
+                g_last_uart_speed_rpm = command->speed_rpm;
+                g_last_uart_command_ms = now_ms;
+            }
+        }
+        BallBalanceWriteStatus(status, true);
+        ball_balance_debug_level_confirmed = g_level_confirmed;
+        ball_balance_debug_open_active = g_open_active;
+        ball_balance_debug_open_state = (uint8_t) g_open_state;
+        ball_balance_debug_open_state_commanded = g_open_state_commanded;
+        ball_balance_debug_step_position = g_stepper.position_steps;
+        return;
+    }
+
+    BallBalanceStopUartSpeed();
     if (!g_command_was_enabled) {
         BallBalanceStartFromCurrentLevel();
         g_command_was_enabled = true;

@@ -7,6 +7,8 @@
 typedef struct {
     float target_position;
     bool enabled;
+    bool uart_speed_control_enabled;
+    int16_t speed_rpm;
 } BallBalance_Command_t;
 
 typedef struct {
